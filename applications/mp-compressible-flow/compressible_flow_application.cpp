@@ -199,7 +199,7 @@ namespace MeltPoolDG::CompressibleFlow
       // create quadrature rule
       // TODO: Undo
       comp_flow_quad_idx = scratch_data->attach_quadrature(
-        dealii::QGaussLobatto<dim>(simulation_case->parameters.flow.fe.degree + 1));
+        dealii::QGauss<dim>(simulation_case->parameters.flow.fe.degree + 1));
 
       comp_flow_dof_idx = scratch_data->attach_dof_handler(dof_handler);
       scratch_data->attach_constraint_matrix(constraints);

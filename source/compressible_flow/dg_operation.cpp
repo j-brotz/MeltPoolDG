@@ -126,40 +126,32 @@ namespace MeltPoolDG::CompressibleFlow
   void
   DGOperation<dim, number, n_species>::set_initial_condition(const Function<dim> &function)
   {
-    if (flow_scratch_data.solution_history.get_current_solution().has_ghost_elements())
+    FECellIntegrator<dim, n_conserved_variables<dim, n_species>, number> phi(
+      flow_scratch_data.scratch_data.get_matrix_free(),
+      flow_scratch_data.dof_idx,
+      flow_scratch_data.quad_idx);
+    MatrixFreeOperators::
+      CellwiseInverseMassMatrix<dim, -1, n_conserved_variables<dim, n_species>, number>
+        inverse(phi);
+    flow_scratch_data.solution_history.get_current_solution().zero_out_ghost_values();
+    for (unsigned int cell = 0;
+         cell < flow_scratch_data.scratch_data.get_matrix_free().n_cell_batches();
+         ++cell)
       {
-        FECellIntegrator<dim, n_conserved_variables<dim, n_species>, number> phi(
-          flow_scratch_data.scratch_data.get_matrix_free(),
-          flow_scratch_data.dof_idx,
-          flow_scratch_data.quad_idx);
-        MatrixFreeOperators::
-          CellwiseInverseMassMatrix<dim, -1, n_conserved_variables<dim, n_species>, number>
-            inverse(phi);
-        flow_scratch_data.solution_history.get_current_solution().zero_out_ghost_values();
-        for (unsigned int cell = 0;
-             cell < flow_scratch_data.scratch_data.get_matrix_free().n_cell_batches();
-             ++cell)
-          {
-            phi.reinit(cell);
-            for (const unsigned int q : phi.quadrature_point_indices())
-              phi.submit_dof_value(
-                VectorTools::evaluate_function_at_vectorized_points<
-                  dim,
-                  number,
-                  n_conserved_variables<dim, n_species>>(function, phi.quadrature_point(q)),
-                q);
+        phi.reinit(cell);
+        for (const unsigned int q : phi.quadrature_point_indices())
+          phi.submit_dof_value(VectorTools::evaluate_function_at_vectorized_points<
+                                 dim,
+                                 number,
+                                 n_conserved_variables<dim, n_species>>(function,
+                                                                        phi.quadrature_point(q)),
+                               q);
 
-            inverse.transform_from_q_points_to_basis(n_conserved_variables<dim, n_species>,
-                                                     phi.begin_dof_values(),
-                                                     phi.begin_dof_values());
-            phi.set_dof_values(flow_scratch_data.solution_history.get_current_solution());
-          }
+        inverse.transform_from_q_points_to_basis(n_conserved_variables<dim, n_species>,
+                                                 phi.begin_dof_values(),
+                                                 phi.begin_dof_values());
+        phi.set_dof_values(flow_scratch_data.solution_history.get_current_solution());
       }
-    dealii::VectorTools::interpolate(flow_scratch_data.scratch_data.get_dof_handler(
-                                       flow_scratch_data.dof_idx),
-                                     function,
-                                     flow_scratch_data.solution_history.get_current_solution());
-    flow_scratch_data.solution_history.get_current_solution().update_ghost_values();
   }
 
   template <int dim, typename number, int n_species>
