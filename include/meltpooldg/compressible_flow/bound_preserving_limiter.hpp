@@ -46,6 +46,12 @@ namespace MeltPoolDG::CompressibleFlow
         FECellIntegrator<dim, n_conserved_variables<dim, n_species>, number> phi(
           matrix_free, mf_context.dof_idx, mf_context.quad_idx);
 
+        FECellIntegrator<dim, n_conserved_variables<dim, n_species>, number> phi_gauss_lobatto(
+          matrix_free, mf_context.dof_idx, 1);
+
+        std::vector<FECellIntegrator<dim, n_conserved_variables<dim, n_species>, number> *>
+          phi_array = {&phi, &phi_gauss_lobatto};
+
         //
         //
         const auto compute_cell_average = [&]() -> ConservedVariablesType<dim, number, n_species> {
@@ -65,11 +71,14 @@ namespace MeltPoolDG::CompressibleFlow
         //
         const auto limit_density = [&](const CellStateView &cell_average_state_view) {
           VectorizedArrayType min_density = std::numeric_limits<number>::max();
-          for (const unsigned int q : phi.quadrature_point_indices())
+          for (const auto &evaluator : phi_array)
             {
-              const auto density = phi.get_value(q)[0];
-              min_density = dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than>(
-                density, min_density, density, min_density);
+              for (const unsigned int q : evaluator->quadrature_point_indices())
+                {
+                  const auto density = evaluator->get_value(q)[0];
+                  min_density = dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than>(
+                    density, min_density, density, min_density);
+                }
             }
 
           VectorizedArrayType density_limiter_mask =
@@ -127,6 +136,7 @@ namespace MeltPoolDG::CompressibleFlow
                     }
 
                   phi.submit_dof_value(limited_value, dof_index);
+                  phi_gauss_lobatto.submit_dof_value(limited_value, dof_index);
                 }
             }
         };
@@ -136,27 +146,30 @@ namespace MeltPoolDG::CompressibleFlow
         //
         const auto limit_partial_density = [&](const CellStateView &cell_average_state_view) {
           VectorizedArrayType theta = 0;
-          for (const unsigned int q : phi.quadrature_point_indices())
+          for (const auto &evaluator : phi_array)
             {
-              ConservedVariablesType<dim, number, n_species> w_q = phi.get_value(q);
-              CellStateView                                  w_q_view(w_q, material_data);
-
-              for (unsigned int s = 0; s < n_species; ++s)
+              for (const unsigned int q : evaluator->quadrature_point_indices())
                 {
-                  VectorizedArrayType theta_q =
-                    (-w_q_view.partial_density(s) * cell_average_state_view.density()) /
-                    (cell_average_state_view.partial_density(s) * w_q_view.density() -
-                     w_q_view.partial_density(s) * cell_average_state_view.density());
+                  ConservedVariablesType<dim, number, n_species> w_q = evaluator->get_value(q);
+                  CellStateView                                  w_q_view(w_q, material_data);
 
-                  theta_q =
-                    dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than_or_equal>(
-                      w_q_view.partial_density(s),
-                      VectorizedArrayType(0.0),
-                      theta_q,
-                      VectorizedArrayType(std::numeric_limits<number>::min()));
+                  for (unsigned int s = 0; s < n_species; ++s)
+                    {
+                      VectorizedArrayType theta_q =
+                        (-w_q_view.partial_density(s) * cell_average_state_view.density()) /
+                        (cell_average_state_view.partial_density(s) * w_q_view.density() -
+                         w_q_view.partial_density(s) * cell_average_state_view.density());
 
-                  theta = dealii::compare_and_apply_mask<dealii::SIMDComparison::greater_than>(
-                    theta_q, theta, theta_q, theta);
+                      theta_q =
+                        dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than_or_equal>(
+                          w_q_view.partial_density(s),
+                          VectorizedArrayType(0.0),
+                          theta_q,
+                          VectorizedArrayType(std::numeric_limits<number>::min()));
+
+                      theta = dealii::compare_and_apply_mask<dealii::SIMDComparison::greater_than>(
+                        theta_q, theta, theta_q, theta);
+                    }
                 }
             }
 
@@ -174,27 +187,34 @@ namespace MeltPoolDG::CompressibleFlow
                              w_dof_view.partial_density(s));
                 }
               phi.submit_dof_value(w_dof, dof_index);
+              phi_gauss_lobatto.submit_dof_value(w_dof, dof_index);
             }
         };
 
         const auto modify_pressure = [&](const CellStateView &cell_average_state_view) {
           VectorizedArrayType theta = std::numeric_limits<number>::max();
-          for (unsigned int q : phi.quadrature_point_indices())
+          for (const auto &evaluator : phi_array)
             {
-              ConservedVariablesType<dim, number, n_species> w_q = phi.get_value(q);
-              CellStateView                                  w_q_view(w_q, material_data);
-              VectorizedArrayType                            theta_q =
-                cell_average_state_view.pressure() /
-                (cell_average_state_view.pressure() - w_q_view.pressure());
+              for (unsigned int q : evaluator->quadrature_point_indices())
+                {
+                  ConservedVariablesType<dim, number, n_species> w_q = evaluator->get_value(q);
+                  CellStateView                                  w_q_view(w_q, material_data);
+                  VectorizedArrayType                            theta_q =
+                    cell_average_state_view.pressure() /
+                    (cell_average_state_view.pressure() - w_q_view.pressure());
 
-              // TODO: Do not only check pressure but also density and partial density
-              theta_q = dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than>(
-                w_q_view.pressure(), VectorizedArrayType(0.0), theta_q, VectorizedArrayType(1.0));
+                  // TODO: Do not only check pressure but also density and partial density
+                  theta_q = dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than>(
+                    w_q_view.pressure(),
+                    VectorizedArrayType(0.0),
+                    theta_q,
+                    VectorizedArrayType(1.0));
 
-              theta = dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than>(theta_q,
-                                                                                        theta,
-                                                                                        theta_q,
-                                                                                        theta);
+                  theta = dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than>(theta_q,
+                                                                                            theta,
+                                                                                            theta_q,
+                                                                                            theta);
+                }
             }
 
           for (unsigned int dof_index = 0; dof_index < phi.dofs_per_component; ++dof_index)
@@ -204,6 +224,7 @@ namespace MeltPoolDG::CompressibleFlow
                 cell_average_state_view.value() + theta * (w_dof - cell_average_state_view.value());
 
               phi.submit_dof_value(w_dof, dof_index);
+              phi_gauss_lobatto.submit_dof_value(w_dof, dof_index);
             }
         };
 
@@ -211,6 +232,9 @@ namespace MeltPoolDG::CompressibleFlow
           {
             phi.reinit(cell);
             phi.gather_evaluate(src, dealii::EvaluationFlags::values);
+
+            phi_gauss_lobatto.reinit(cell);
+            phi_gauss_lobatto.gather_evaluate(src, dealii::EvaluationFlags::values);
 
             // Step 1: Compute the cell average values of each component
             ConservedVariablesType<dim, number, n_species> cell_average_value =
@@ -238,10 +262,12 @@ namespace MeltPoolDG::CompressibleFlow
                 // Step 2: Limit the density if necessary
                 limit_density(cell_average_state_view);
                 phi.evaluate(dealii::EvaluationFlags::values);
+                phi_gauss_lobatto.evaluate(dealii::EvaluationFlags::values);
 
                 // Step 3: Limit the partial densities
                 limit_partial_density(cell_average_state_view);
                 phi.evaluate(dealii::EvaluationFlags::values);
+                phi_gauss_lobatto.evaluate(dealii::EvaluationFlags::values);
 
                 // Step 4: Modify the pressure
                 modify_pressure(cell_average_state_view);
