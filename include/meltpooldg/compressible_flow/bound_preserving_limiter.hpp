@@ -147,11 +147,13 @@ namespace MeltPoolDG::CompressibleFlow
                     (-w_q_view.partial_density(s) * cell_average_state_view.density()) /
                     (cell_average_state_view.partial_density(s) * w_q_view.density() -
                      w_q_view.partial_density(s) * cell_average_state_view.density());
-                  theta_q = dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than>(
-                    w_q_view.partial_density(s),
-                    VectorizedArrayType(0.0),
-                    theta_q,
-                    VectorizedArrayType(std::numeric_limits<number>::min()));
+
+                  theta_q =
+                    dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than_or_equal>(
+                      w_q_view.partial_density(s),
+                      VectorizedArrayType(0.0),
+                      theta_q,
+                      VectorizedArrayType(std::numeric_limits<number>::min()));
 
                   theta = dealii::compare_and_apply_mask<dealii::SIMDComparison::greater_than>(
                     theta_q, theta, theta_q, theta);
@@ -184,6 +186,11 @@ namespace MeltPoolDG::CompressibleFlow
               VectorizedArrayType                            theta_q =
                 cell_average_state_view.pressure() /
                 (cell_average_state_view.pressure() - w_q_view.pressure());
+
+              // TODO: Do not only check pressure but also density and partial density
+              theta_q = dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than>(
+                w_q_view.pressure(), VectorizedArrayType(0.0), theta_q, VectorizedArrayType(1.0));
+
               theta = dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than>(theta_q,
                                                                                         theta,
                                                                                         theta_q,
