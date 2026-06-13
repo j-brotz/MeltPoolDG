@@ -220,8 +220,10 @@ namespace MeltPoolDG::TimeIntegration
         if (stage_post_processing)
           stage_post_processing(current_time + ci[stage] * time_step,
                                 ci[stage] * time_step,
-                                rk_register_ki,
-                                rk_register_ki);
+                                stage < bi.size() - 1 ? rk_register_ki :
+                                                        solution_history.get_current_solution(),
+                                stage < bi.size() - 1 ? rk_register_ki :
+                                                        solution_history.get_current_solution());
 
         rk_register_ri.swap(rk_register_ki);
       }

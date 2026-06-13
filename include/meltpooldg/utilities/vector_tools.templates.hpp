@@ -5,6 +5,8 @@
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/types.h>
 
+#include <deal.II/lac/solver_cg.h>
+#include <deal.II/lac/solver_control.h>
 #include <deal.II/lac/vector_operation.h>
 
 #include <deal.II/matrix_free/operators.h>
@@ -137,5 +139,39 @@ namespace MeltPoolDG::VectorTools
     for (unsigned int i = 0; i < vec.locally_owned_size(); ++i)
       if (weights.local_element(i) != 0.0)
         vec.local_element(i) /= weights.local_element(i);
+  }
+
+  template <int n_components, int dim, typename VectorType>
+  void
+  project_vector(const dealii::Mapping<dim>                                       &mapping,
+                 const dealii::DoFHandler<dim>                                    &dof,
+                 const dealii::AffineConstraints<typename VectorType::value_type> &constraints,
+                 const dealii::Quadrature<dim>                                    &quadrature,
+                 const VectorType                                                 &vec_in,
+                 VectorType                                                       &vec_out)
+  {
+    using number = typename VectorType::value_type;
+
+    typename dealii::MatrixFree<dim, number>::AdditionalData additional_data;
+    additional_data.tasks_parallel_scheme =
+      dealii::MatrixFree<dim, number>::AdditionalData::partition_color;
+    additional_data.mapping_update_flags = dealii::update_values | dealii::update_JxW_values;
+
+    const auto matrix_free = std::make_shared<dealii::MatrixFree<dim, number>>();
+    matrix_free->reinit(mapping, dof, constraints, quadrature, additional_data);
+
+    using MatrixType =
+      dealii::MatrixFreeOperators::MassOperator<dim, -1, 0, n_components, VectorType>;
+    MatrixType mass_matrix;
+    mass_matrix.initialize(matrix_free);
+
+    mass_matrix.compute_diagonal();
+
+    dealii::ReductionControl                  control(6 * vec_in.size(), 0., 1e-12, false, false);
+    dealii::SolverCG<VectorType>              cg(control);
+    const dealii::DiagonalMatrix<VectorType> &preconditioner =
+      *mass_matrix.get_matrix_diagonal_inverse();
+
+    cg.solve(mass_matrix, vec_out, vec_in, preconditioner);
   }
 } // namespace MeltPoolDG::VectorTools
