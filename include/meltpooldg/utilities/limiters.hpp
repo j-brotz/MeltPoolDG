@@ -120,10 +120,11 @@ namespace MeltPoolDG::Utilities
   template <int dim, int n_components, typename number>
   std::array<dealii::Tensor<1, n_components, number>, dim>
   compute_minmod_type_limited_slopes(
-    const std::vector<dealii::Tensor<1, n_components, number>>            &cell_average_values,
-    const typename dealii::Triangulation<dim>::active_cell_iterator       &cell,
-    const dealii::Tensor<1, n_components, dealii::Tensor<1, dim, number>> &average_cell_gradient,
-    const LimiterData<number>                                             &limiter_data);
+    const std::vector<std::pair<dealii::Tensor<1, n_components, number>,
+                                dealii::Tensor<1, n_components, dealii::Tensor<1, dim, number>>>>
+                                                                    &cell_average_values,
+    const typename dealii::Triangulation<dim>::active_cell_iterator &cell,
+    const LimiterData<number>                                       &limiter_data);
 
   /**
    * This function applies a minmod-type limiter to the solution vector in a cell-wise manner using
