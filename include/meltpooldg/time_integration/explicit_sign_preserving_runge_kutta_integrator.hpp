@@ -1,0 +1,158 @@
+/**
+ * @brief Class providing different low storage explicit Runge-Kutta schemes. The schemes
+ * implemented in this class are presented in
+ *
+ * Kennedy, C.A., Carpenter, M.H & Lewis, R.M. (2000). Low-storage, explicit Runge-Kutta schemes for
+ * the compressible Navier-Stokes equations. Applied Numerical Mathematics, 35(2000), 177-219.
+ */
+
+#pragma once
+
+#include <deal.II/lac/la_parallel_vector.h>
+
+#include <meltpooldg/time_integration/solution_history.hpp>
+#include <meltpooldg/time_integration/time_integrator_base.hpp>
+#include <meltpooldg/time_integration/time_integrator_data.hpp>
+
+#include <functional>
+#include <vector>
+
+namespace MeltPoolDG::TimeIntegration
+{
+  /// The time integrator schemes supported by the low storage explicit Runge-Kutta time integrator.
+  inline static constexpr std::array<TimeIntegratorSchemes, 5>
+    explicit_sign_preserving_supported_schemes{{
+      TimeIntegratorSchemes::LSRK_stage_1_order_1,
+      TimeIntegratorSchemes::LSRK_stage_3_order_3,
+      TimeIntegratorSchemes::LSRK_stage_5_order_4,
+      TimeIntegratorSchemes::LSRK_stage_7_order_4,
+      TimeIntegratorSchemes::LSRK_stage_9_order_5,
+    }};
+
+  template <typename number>
+  class ExplicitSignPreservingRungeKuttaIntegrator final : public TimeIntegratorBase<number>
+  {
+  public:
+    using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
+
+    using RhsFunctionType = std::function<void(number,
+                                               number,
+                                               VectorType &,
+                                               const VectorType &,
+                                               std::function<void(unsigned, unsigned)>)>;
+
+
+
+    /**
+     * Constructor. Set the coefficients for the low storage explicit Runge-Kutta scheme.
+     *
+     * @param time_integrator_data Time integrator data struct setting the scheme of the integrator.
+     */
+    explicit ExplicitSignPreservingRungeKuttaIntegrator(
+      const TimeIntegratorData<number> &time_integrator_data);
+
+    /**
+     * Returns the number of previous solutions, that is solutions at time step n - x, where x >= 0,
+     * required by the time integrator.
+     */
+    unsigned int
+    required_solution_history_size() const override;
+
+
+    /**
+     * @brief Configure the function used to compute the right-hand side of the ODE.
+     *
+     * Sets the class member @ref compute_rhs to the provided function.
+     * For details on the expected function signature and behavior, see the
+     * documentation of the corresponding class member.
+     *
+     * @param compute_rhs_in Function to compute the right-hand side of the ODE.
+     */
+    void
+    configure_rhs(const RhsFunctionType &compute_rhs_in);
+
+    /**
+     * Allocate memory for the required vectors used during the integration. This function needs to
+     * be called once before the function @ref perform_time_step() can be called.
+     *
+     * @param vector_template Reference vector used to define the partitioning for all internal
+     * vectors.
+     */
+    void
+    reinit(const VectorType &vector_template) override;
+
+    /**
+     * Sets up the necessary internal data structures by internally calling
+     * @ref reinit(solution_history.get_current_solution()).
+     */
+    void
+    reinit(const SolutionHistory<VectorType> &solution_history) override;
+
+    /**
+     * Perform the actual time integration for a single time step using the low storage explicit
+     * Runge-Kutta scheme.
+     *
+     * @param current_time Current time.
+     * @param time_step Current time step size.
+     * @param solution_history Solution history object providing the current and all required
+     * previous solutions.
+     * @param stage_pre_processing Function which is executed at the beginning of each Runge-Kutta
+     * stage. Three variables are passed to the function: the current time, the vector which is
+     * later used in the stage computation, and the current stage solution.
+     * @param stage_post_processing Function which is executed at the end of each Runge-Kutta stage.
+     * Three variables are passed to the function: the current time after perfoming the stage, the
+     * vector which is later used in the subsequent computations, and the solution of the
+     * Runge-Kutta stage.
+     */
+    void
+    perform_time_step(const number                 current_time,
+                      const number                 time_step,
+                      SolutionHistory<VectorType> &solution_history,
+                      const std::function<void(number, number, VectorType &, const VectorType &)>
+                        &stage_pre_processing,
+                      const std::function<void(number, number, VectorType &, const VectorType &)>
+                        &stage_post_processing) override;
+
+  private:
+    std::vector<std::vector<number>> alpha;
+
+    std::vector<std::vector<number>> beta;
+
+    /// Number of stages of the Runge-Kutta scheme.
+    unsigned int n_stages;
+
+    dealii::LinearAlgebra::distributed::Vector<number> w_1;
+
+    dealii::LinearAlgebra::distributed::Vector<number> w_2;
+
+    dealii::LinearAlgebra::distributed::Vector<number> w_new;
+
+    dealii::LinearAlgebra::distributed::Vector<number> w_helper;
+
+    /// Given an ODE system of the form
+    /// \f[
+    ///   y' = F(y),
+    /// \f]
+    /// this function computes the right-hand side \f$F(y)\f$.
+    ///
+    /// **Function Signature:**
+    /// ```cpp
+    /// void f(number time,
+    ///        number time_step,
+    ///        VectorType &dst,
+    ///        const VectorType &src,
+    ///        std::function<void(unsigned, unsigned)> post);
+    /// ```
+    ///
+    /// **Parameters:**
+    /// - `time`         : Current simulation time at \f$t^n\f$.
+    /// - `time_step`    : Current step size \f$\Delta t\f$.
+    /// - `dst`          : Destination vector for the RHS result.
+    /// - `src`          : Source solution vector \f$y^n\f$.
+    /// - `post`         : Post-processing function applied after computing the RHS. Receives
+    ///                    a range of global indices `[begin, end)` to process, ensuring all
+    ///                    indices are handled. Designed for efficient integration with deal.II’s
+    ///                    matrix-free framework.
+    RhsFunctionType compute_rhs;
+  };
+} // namespace MeltPoolDG::TimeIntegration

@@ -11,6 +11,7 @@
 #include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/compressible_flow/viscous_kernels.hpp>
 #include <meltpooldg/time_integration/explicit_low_storage_runge_kutta_integrator.hpp>
+#include <meltpooldg/time_integration/explicit_sign_preserving_runge_kutta_integrator.hpp>
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
 #include <meltpooldg/utilities/dg_generic_convection_diffusion_worker.hpp>
 
@@ -115,7 +116,7 @@ namespace MeltPoolDG::CompressibleFlow
     OperationScratchData<dim, number> &flow_scratch_data;
 
     /// Time integrator class used for the time integration.
-    TimeIntegration::LowStorageExplicitRungeKuttaIntegrator<number> time_integrator;
+    TimeIntegration::ExplicitSignPreservingRungeKuttaIntegrator<number> time_integrator;
 
     /// This pointer may hold an instance of an external fluid force contribution
     /// (e.g., gravity, body forces, or user - defined source terms)
