@@ -19,6 +19,8 @@ namespace MeltPoolDG::TimeIntegration
               LSRK_stage_5_order_4, /* Kennedy, Carpenter, Lewis, 2000 */
               LSRK_stage_7_order_4, /* Tselios, Simos, 2007 */
               LSRK_stage_9_order_5, /* Kennedy, Carpenter, Lewis, 2000 */
+              SSP_stage_2_order_2,
+              SSP_stage_3_order_3,
               implicit_euler,
               explicit_euler,
               crank_nicolson,

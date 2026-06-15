@@ -85,6 +85,18 @@ namespace MeltPoolDG::TimeIntegration
             n_stages = 9;
             break;
           }
+          case TimeIntegratorSchemes::SSP_stage_2_order_2: {
+            bi       = {{0.5, 0.5}};
+            ai       = {{1.}};
+            n_stages = 2;
+            break;
+          }
+          case TimeIntegratorSchemes::SSP_stage_3_order_3: {
+            bi       = {{1., 1. / 4., 2. / 3.}};
+            ai       = {{3. / 4., 1. / 3.}};
+            n_stages = 3;
+            break;
+          }
         default:
           AssertThrow(false, dealii::ExcNotImplemented());
       }

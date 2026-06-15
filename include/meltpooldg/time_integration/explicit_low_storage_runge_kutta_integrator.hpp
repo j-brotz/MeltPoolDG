@@ -20,13 +20,14 @@
 namespace MeltPoolDG::TimeIntegration
 {
   /// The time integrator schemes supported by the low storage explicit Runge-Kutta time integrator.
-  inline static constexpr std::array<TimeIntegratorSchemes, 5> explicit_lsrk_supported_schemes{{
-    TimeIntegratorSchemes::LSRK_stage_1_order_1,
-    TimeIntegratorSchemes::LSRK_stage_3_order_3,
-    TimeIntegratorSchemes::LSRK_stage_5_order_4,
-    TimeIntegratorSchemes::LSRK_stage_7_order_4,
-    TimeIntegratorSchemes::LSRK_stage_9_order_5,
-  }};
+  inline static constexpr std::array<TimeIntegratorSchemes, 7> explicit_lsrk_supported_schemes{
+    {TimeIntegratorSchemes::LSRK_stage_1_order_1,
+     TimeIntegratorSchemes::LSRK_stage_3_order_3,
+     TimeIntegratorSchemes::LSRK_stage_5_order_4,
+     TimeIntegratorSchemes::LSRK_stage_7_order_4,
+     TimeIntegratorSchemes::LSRK_stage_9_order_5,
+     TimeIntegratorSchemes::SSP_stage_2_order_2,
+     TimeIntegratorSchemes::SSP_stage_3_order_3}};
 
   template <typename number>
   class LowStorageExplicitRungeKuttaIntegrator final : public TimeIntegratorBase<number>
