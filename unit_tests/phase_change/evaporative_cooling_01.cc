@@ -1,7 +1,6 @@
 #include <deal.II/base/vectorization.h>
 
 #include <meltpooldg/core/material_data.hpp>
-#include <meltpooldg/phase_change/evaporative_cooling.hpp>
 #include <meltpooldg/phase_change/evaporative_cooling.templates.hpp>
 
 #include <iostream>

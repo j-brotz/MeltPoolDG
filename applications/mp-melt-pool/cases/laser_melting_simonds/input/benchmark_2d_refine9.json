@@ -1,0 +1,247 @@
+{
+  "profiling": {
+    "enable": true,
+    "write time step size": 3600
+  },
+  "restart": {
+    "load": -1,
+    "prefix": "restart",
+    "save": 0,
+    "time type": "real",
+    "write time step size": 3600
+  },
+  "base": {
+    "case name": "laser_melting_simonds",
+    "dimension": 2,
+    "do print parameters": true,
+    "global refinements": 5,
+    "verbosity level": 3,
+    "fe": {
+      "degree": 1
+    }
+  },
+  "time stepping": {
+    "end time": 0.001,
+    "start time": 0.0,
+    "time step size": 2e-08
+  },
+  "laser": {
+    "beam rotation angle": 7,
+    "model": "interface_projection_sharp",
+    "intensity profile": "Gauss",
+    "radius": 6.125e-05,
+    "power": 27.926
+  },
+  "material": {
+    "boiling temperature": 3550,
+    "latent heat of evaporation": 8900000.0,
+    "liquidus temperature": 1928,
+    "material template": "none",
+    "molar mass": 0.0458,
+    "solid liquid properties transition type": "mushy_zone",
+    "solidus temperature": 1628,
+    "specific enthalpy reference temperature": 538,
+    "two phase fluid properties transition type": "smooth",
+    "gas": {
+      "density": 1.784,
+      "dynamic viscosity": 0.0001,
+      "specific heat capacity": 520,
+      "thermal conductivity": 0.018
+    },
+    "liquid": {
+      "density": 4420,
+      "dynamic viscosity": 0.004,
+      "specific heat capacity": 1126,
+      "thermal conductivity": 28.8
+    },
+    "solid": {
+      "density": 4420,
+      "dynamic viscosity": 0.004,
+      "specific heat capacity": 1126,
+      "thermal conductivity": 28.8
+    }
+  },
+  "evaporation": {
+    "evaporative mass flux model": "saturated_vapor_pressure",
+    "interface temperature evaluation type": "interface_value",
+    "recoil pressure": {
+      "dirac delta function approximation": {
+        "auto weights": true,
+        "type": "heaviside_phase_weighted"
+      },
+      "interface distributed flux type": "interface_value",
+      "enable": true,
+      "enable linear activation ramp": false,
+      "subtract ambient pressure": true,
+      "activation temperature": 3550,
+      "ambient gas pressure": 101325
+    },
+    "evaporative cooling": {
+      "enable": true,
+      "activation temperature": 0,
+      "enable linear activation ramp": false,
+      "consider enthalpy transport vapor mass flux": false
+    }
+  },
+  "heat": {
+    "operator type": "cut",
+    "cut": {
+      "two phase": false,
+      "theta": 0.5,
+      "do explicit symmetry term": true,
+      "stabilization": {
+        "ghost-penalty": {
+          "gamma A degree 1": 1.5,
+          "gamma M degree 1": 0.75
+        },
+        "nitsche parameter": 500
+      }
+    },
+    "@predictor": {
+      "type": "linear_extrapolation"
+    },
+    "nlsolve": {
+      "max nonlinear iterations": 30,
+      "field correction tolerance": 1e-06,
+      "residual tolerance": 1e-07
+    },
+    "linear solver": {
+      "rel tolerance": 1e-07,
+      "abs tolerance": 1e-09
+    },
+    "fe": {
+      "type": "FE_Q",
+      "degree": 1
+    }
+  },
+  "simulation specific": {
+    "bc": {
+      "inflow velocity": 0.0
+    }
+  },
+  "application specific": {
+    "do heat transfer": true,
+    "do solidification": true,
+    "do advect level set": true,
+    "do extrapolate coupling terms": false,
+    "amr": {
+      "strategy": "generic",
+      "do refine all interface cells": true,
+      "do auto detect frequency": true,
+      "automatic grid refinement type": "fixed_fraction",
+      "fraction of melting point refined in solid": 0.95
+    },
+    "mp heat up": {
+      "max temperature": 3000,
+      "time step size": 1e-07,
+      "max change factor time step size": 2.5
+    }
+  },
+  "adaptive meshing": {
+    "do amr": true,
+    "every n step": 50,
+    "lower perc to coarsen": 0.2,
+    "max grid refinement level": 9,
+    "n initial refinement cycles": 5,
+    "upper perc to refine": 0.2
+  },
+  "output": {
+    "directory": "output_laser_melting_simonds_refine9",
+    "write time step size": 1e-06,
+    "output variables": "heaviside,temperature,velocity,pressure,density,liquid,solid",
+    "paraview": {
+      "enable": true
+    }
+  },
+  "level set": {
+    "advection diffusion": {
+      "predictor": {
+        "type": "linear_extrapolation"
+      }
+    },
+    "nearest point": {
+      "type": "nearest_point_fast",
+      "narrow band threshold": 0.98,
+      "verbosity level": 0
+    },
+    "reinitialization": {
+      "linear solver": {
+        "preconditioner type": "ILU"
+      },
+      "enable": true,
+      "type": "olsson2007",
+      "hyperbolic": {
+        "Continuous Galerkin": {
+          "tangential diffusion factor": 0.01
+        },
+        "pseudo time stepping": {
+          "pseudo time step size": 2e-08,
+          "n initial steps": 0,
+          "max n steps": 100,
+          "tolerance": 5e-05
+        }
+      },
+      "interface thickness parameter": {
+        "type": "absolute_value",
+        "val": 1.171875e-06
+      }
+    },
+    "normal vector": {
+      "linear solver": {
+        "preconditioner type": "ILU"
+      },
+      "filter parameter": 2
+    },
+    "fe": {
+      "type": "FE_Q_iso_Q1",
+      "degree": 2
+    }
+  },
+  "flow": {
+    "surface tension": {
+      "dirac delta function approximation": {
+        "auto weights": true,
+        "type": "heaviside_phase_weighted"
+      },
+      "interface temperature evaluation type": "interface_value",
+      "surface tension coefficient": 1.52,
+      "temperature dependent surface tension coefficient": 0.00055,
+      "reference temperature": 1928,
+      "zero surface tension in solid": false,
+      "coefficient residual fraction": 0.0001
+    },
+    "adaflo": {
+      "Navier-Stokes": {
+        "Solver": {
+          "NL max iterations": 25,
+          "NL tolerance": 1e-10,
+          "lin its before inner solvers": 50,
+          "lin max iterations": 50,
+          "lin pressure mass preconditioner": "ilu",
+          "lin relative tolerance": 1,
+          "lin tolerance": 0.001,
+          "lin velocity preconditioner": "ilu scalar",
+          "linearization scheme": "coupled implicit Newton"
+        },
+        "dimension": 2,
+        "global refinements": 0,
+        "physical type": "incompressible",
+        "velocity degree": 2
+      },
+      "Output options": {
+        "output verbosity": 3,
+        "output wall times": 0,
+        "output memory": 0
+      },
+      "Time stepping": {
+        "scheme": "bdf_2"
+      }
+    },
+    "gravity": 0,
+    "darcy damping": {
+      "avoid div zero constant": 1,
+      "formulation": "implicit_formulation",
+      "mushy zone morphology": 1000000000000.0
+    }
+  }
+}

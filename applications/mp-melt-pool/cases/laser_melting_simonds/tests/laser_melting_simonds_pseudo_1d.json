@@ -1,36 +1,31 @@
 {
-  "profiling": {
-    "write time step size": 3600
-  },
   "base": {
-    "case name": "cunningham",
-    "dimension": 2,
-    "do print parameters": true,
+    "case name": "laser_melting_simonds",
+    "dimension": 1,
+    "do print parameters": false,
     "global refinements": 6,
-    "verbosity level": 3,
+    "verbosity level": 1,
     "fe": {
       "degree": 1
     }
   },
   "time stepping": {
-    "end time": "2.e-3",
+    "end time": 5e-05,
     "start time": 0.0,
-    "time step size": 2e-08
+    "time step size": 1e-06
   },
   "laser": {
     "dirac delta function approximation": {
-      "auto weights": true,
+      "gas phase weight": 927.68,
+      "heavy phase weight": 4976920,
       "type": "heaviside_phase_weighted"
     },
-    "absorptivity gas": 0.27926,
-    "absorptivity liquid": 0.27926,
     "model": "interface_projection_regularized",
-    "intensity profile": "Gauss",
-    "radius": 6.125e-05,
-    "power": 100
+    "intensity profile": "uniform",
+    "power": 3546880000.0
   },
   "material": {
-    "material template": "Ti64Cunningham"
+    "material template": "Ti64Benchmark"
   },
   "evaporation": {
     "evaporative mass flux model": "saturated_vapor_pressure",
@@ -40,8 +35,7 @@
         "type": "heaviside_phase_weighted"
       },
       "interface distributed flux type": "local_value",
-      "enable": true,
-      "activation temperature": 2700
+      "enable": true
     },
     "evaporative cooling": {
       "enable": true,
@@ -56,24 +50,15 @@
     "diffuse": {
       "use volume-specific thermal capacity for phase interpolation": true
     },
-    "predictor": {
-      "type": "linear_extrapolation"
-    },
     "nlsolve": {
-      "max nonlinear iterations": 20,
       "field correction tolerance": 1e-09,
-      "residual tolerance": 1e-07
-    },
-    "fe": {
-      "type": "FE_Q",
-      "degree": 1
+      "residual tolerance": 0.0001
     }
   },
   "application specific": {
     "do heat transfer": true,
     "do solidification": true,
-    "do advect level set": true,
-    "do extrapolate coupling terms": false,
+    "do advect level set": false,
     "amr": {
       "strategy": "generic",
       "do refine all interface cells": true,
@@ -83,7 +68,7 @@
     },
     "mp heat up": {
       "max temperature": 3000,
-      "time step size": 1e-07,
+      "time step size": 1e-05,
       "max change factor time step size": 2.5
     }
   },
@@ -95,26 +80,12 @@
     "n initial refinement cycles": 5,
     "upper perc to refine": 0.2
   },
-  "output": {
-    "directory": "output_cunningham_2d_refine9",
-    "write time step size": 1e-06,
-    "output variables": "heaviside,temperature,velocity,pressure,density,liquid,solid",
-    "paraview": {
-      "enable": true
-    }
-  },
   "level set": {
-    "advection diffusion": {
-      "predictor": {
-        "type": "linear_extrapolation"
-      }
-    },
     "reinitialization": {
       "linear solver": {
         "preconditioner type": "ILU"
       },
       "enable": true,
-      "type": "olsson2007",
       "hyperbolic": {
         "pseudo time stepping": {
           "n initial steps": 0,
@@ -123,37 +94,25 @@
       },
       "interface thickness parameter": {
         "type": "absolute_value",
-        "val": 2e-06
+        "val": 1.171875e-06
       }
-    },
-    "normal vector": {
-      "linear solver": {
-        "preconditioner type": "ILU"
-      },
-      "filter parameter": 2
     },
     "fe": {
       "type": "FE_Q_iso_Q1",
       "degree": 2
     }
   },
+  "simulation specific": {
+    "bc": {
+      "inflow velocity": 0.0
+    }
+  },
   "flow": {
-    "surface tension": {
-      "dirac delta function approximation": {
-        "auto weights": true,
-        "type": "heaviside_phase_weighted"
-      },
-      "surface tension coefficient": 1.52,
-      "temperature dependent surface tension coefficient": 0.00055,
-      "reference temperature": 1928,
-      "zero surface tension in solid": true,
-      "coefficient residual fraction": 0.01
-    },
     "adaflo": {
       "Navier-Stokes": {
         "Solver": {
           "NL max iterations": 25,
-          "NL tolerance": 1e-10,
+          "NL tolerance": 1e-08,
           "lin its before inner solvers": 50,
           "lin max iterations": 50,
           "lin pressure mass preconditioner": "ilu",
@@ -168,19 +127,19 @@
         "velocity degree": 2
       },
       "Output options": {
-        "output verbosity": 3,
-        "output walltimes": 0,
+        "output verbosity": 0,
+        "output wall times": 0,
         "output memory": 0
       },
       "Time stepping": {
         "scheme": "bdf_2"
       }
     },
-    "gravity": 9.81,
+    "gravity": 0.0,
     "darcy damping": {
       "avoid div zero constant": 1,
       "formulation": "implicit_formulation",
-      "mushy zone morphology": 1000000000000.0
+      "mushy zone morphology": 100000000000.0
     }
   }
 }
