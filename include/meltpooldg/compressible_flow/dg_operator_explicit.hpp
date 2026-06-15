@@ -116,7 +116,7 @@ namespace MeltPoolDG::CompressibleFlow
     OperationScratchData<dim, number> &flow_scratch_data;
 
     /// Time integrator class used for the time integration.
-    TimeIntegration::ExplicitSignPreservingRungeKuttaIntegrator<number> time_integrator;
+    TimeIntegration::LowStorageExplicitRungeKuttaIntegrator<number> time_integrator;
 
     /// This pointer may hold an instance of an external fluid force contribution
     /// (e.g., gravity, body forces, or user - defined source terms)

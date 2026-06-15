@@ -28,10 +28,10 @@ namespace MeltPoolDG::TimeIntegration
     beta[2].resize(3);
     beta[0][0] = 2. / 3.;
     beta[1][0] = 1. / 12.;
-    beta[1][1] = 1. / 2.;
+    beta[1][1] = 0.5;
     beta[2][0] = 1. / 12.;
     beta[2][1] = 1. / 12.;
-    beta[2][2] = 1. / 2.;
+    beta[2][2] = 0.5;
   }
 
   template <typename number>
@@ -108,15 +108,15 @@ namespace MeltPoolDG::TimeIntegration
                       w_1.local_element(i) =
                         inverse_a_1 *
                         (alpha[0][0] * solution_history.get_current_solution().local_element(i) +
-                         beta[0][0] * w_helper.local_element(i));
+                         beta[0][0] * time_step * w_helper.local_element(i));
                       w_2.local_element(i) =
                         inverse_a_2 *
                         (alpha[1][0] * solution_history.get_current_solution().local_element(i) +
-                         beta[1][0] * w_helper.local_element(i));
+                         beta[1][0] * time_step * w_helper.local_element(i));
                       w_new.local_element(i) =
                         inverse_a_3 *
                         (alpha[2][0] * solution_history.get_current_solution().local_element(i) +
-                         beta[2][0] * w_helper.local_element(i));
+                         beta[2][0] * time_step * w_helper.local_element(i));
                     }
                 });
 
@@ -135,10 +135,10 @@ namespace MeltPoolDG::TimeIntegration
                     {
                       w_2.local_element(i) +=
                         inverse_a_2 * (alpha[1][1] * w_1.local_element(i) +
-                                       beta[1][1] * w_helper.local_element(i));
+                                       beta[1][1] * time_step * w_helper.local_element(i));
                       w_new.local_element(i) +=
                         inverse_a_3 * (alpha[2][1] * w_1.local_element(i) +
-                                       beta[2][1] * w_helper.local_element(i));
+                                       beta[2][1] * time_step * w_helper.local_element(i));
                     }
                 });
 
@@ -150,7 +150,7 @@ namespace MeltPoolDG::TimeIntegration
     compute_rhs(current_time,
                 time_step,
                 w_helper,
-                w_1,
+                w_2,
                 [&](const unsigned int start_range, const unsigned int end_range) {
                   DEAL_II_OPENMP_SIMD_PRAGMA
                   for (unsigned int i = start_range; i < end_range; ++i)
@@ -158,7 +158,7 @@ namespace MeltPoolDG::TimeIntegration
                       solution_history.get_current_solution().local_element(i) =
                         w_new.local_element(i) +
                         inverse_a_3 * (alpha[2][2] * w_2.local_element(i) +
-                                       beta[2][2] * w_helper.local_element(i));
+                                       beta[2][2] * time_step * w_helper.local_element(i));
                     }
                 });
 
