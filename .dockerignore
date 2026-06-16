@@ -1,0 +1,6 @@
+build/
+build-*/
+adaflo/
+adaflo-build/
+.git
+doc/
