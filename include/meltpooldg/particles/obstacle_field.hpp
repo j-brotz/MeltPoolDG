@@ -257,20 +257,6 @@ namespace MeltPoolDG
     global_particle_range();
 
   private:
-    /**
-     * @brief Reads the obstacle state input file and returns obstacle locations and properties.
-     *
-     * This function reads the obstacle data file specified in the configuration and generates
-     * obstacle representations accordingly. The resulting vectors for the obstacle properties and
-     * locations are returned. It populates the internal particle handler with the parsed obstacle
-     * positions and properties, preparing the obstacle field for use in subsequent computations.
-     *
-     * @return A pair consisting of a vector of obstacle locations and a vector of  corresponding
-     * properties.
-     */
-    std::pair<std::vector<dealii::Point<dim, number>>, std::vector<std::vector<number>>>
-    read_obstacle_state_input_file();
-
     /// Struct holding configuration data for obstacles.
     const ObstacleData<number> &data;
 

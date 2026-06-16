@@ -1,6 +1,8 @@
 #pragma once
 #include <deal.II/base/exceptions.h>
 
+#include <string>
+
 #define AssertThrowZeroTimeIncrement(dt) AssertThrow(dt > 0, MeltPoolDG::ExcZeroTimeIncrement())
 
 namespace MeltPoolDG
@@ -22,4 +24,15 @@ namespace MeltPoolDG
                    "the time increment is larger than zero.");
   DeclExceptionMsg(ExcNewtonDidNotConverge, "The Newton-Raphson solver did not converge.");
   DeclExceptionMsg(ExcHeatTransferNoConvergence, "The heat transfer solver did not converge.");
+  DeclException2(ExcInvalidCSVInputColumns,
+                 unsigned int,
+                 unsigned int,
+                 << "Expected " << arg1 << " columns in each line of the CSV file, but got " << arg2
+                 << ". Please check your input file.");
+  DeclException1(
+    ExcFailedToConvertStringToNumber,
+    std::string,
+    << "Failed to convert the string \"" << arg1
+    << "\" to a number. Please ensure that the string is a valid representation of a number and "
+    << "does not contain any extraneous characters.");
 } // namespace MeltPoolDG
