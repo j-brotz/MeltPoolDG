@@ -35,4 +35,7 @@ namespace MeltPoolDG::numbers
   {
     return angle_deg * number(dealii::numbers::PI / 180.0);
   }
+
+  /// Square root of pi
+  constexpr double sqrt_pi = std::sqrt(dealii::numbers::PI);
 } // namespace MeltPoolDG::numbers

@@ -171,4 +171,24 @@ namespace MeltPoolDG::UtilityFunctions
   {
     return weight_a * term_a + weight_b * term_b;
   }
+
+  /**
+   * @brief Helper function for the element-wise computation of the complementary error function of
+   * a vectorized array.
+   *
+   * @param x Given vectorized array.
+   *
+   * @return The vectorized result of the complementary error function.
+   */
+  template <typename number>
+  [[nodiscard]] dealii::VectorizedArray<number>
+  calculate_complementary_error_function_vec(const dealii::VectorizedArray<number> &x)
+  {
+    dealii::VectorizedArray<number> result;
+
+    for (unsigned int i = 0; i < dealii::VectorizedArray<number>::size(); ++i)
+      result[i] = std::erfc(x[i]);
+
+    return result;
+  }
 } // namespace MeltPoolDG::UtilityFunctions

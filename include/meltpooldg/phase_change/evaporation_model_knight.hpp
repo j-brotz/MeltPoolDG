@@ -1,5 +1,7 @@
 #pragma once
 
+#include <deal.II/base/vectorization.h>
+
 namespace MeltPoolDG::Evaporation
 {
   /**
@@ -12,11 +14,17 @@ namespace MeltPoolDG::Evaporation
    * It is derived from kinetic gas theory and couples the liquid and gaseous phase in a
    * thermodynamically consistent way.
    *
+   * @tparam number Floating point type.
+   * @tparam number_2 A vectorized array data type can be passed as second template parameter, that
+   * is used for vectorized computation.
+   *
+   * @note By default, @p number_2 is set to the given floating point type @p number.
+   *
    * @note Currently, a monoatomic ideal gas is assumed. In addition, the material is assumed to consist of one species
    * with averaged material properties. No component-wise evaporation behavior is considered for
    * alloys.
    */
-  template <typename number>
+  template <typename number, typename number_2 = number>
   class EvaporationModelKnight
   {
   public:
@@ -42,20 +50,23 @@ namespace MeltPoolDG::Evaporation
      *
      * @param T_liquid Current liquid surface temperature.
      * @param Ma_gas Current Mach number in the gas phase at interface position.
+     * @param n_active_lanes Number of active lanes in the VectorizedArray.
      *
      * @note This function just updates the current values for the evaporative mass flux and
      * temperature jump. Use the provided getter functions for access. Make sure to properly call
      * this function before you apply the getter functions for mass flux and temperature jump.
      */
     void
-    reinit(const number &T_liquid, const number &Ma_gas);
+    reinit(const number_2    &T_liquid,
+           const number_2    &Ma_gas,
+           const unsigned int n_active_lanes = dealii::VectorizedArray<number>::size());
 
     /**
      * @brief Getter function for the evaporative mass flux.
      *
      * @return Evaporative mass flux.
      */
-    number
+    [[nodiscard]] number_2
     get_evaporative_mass_flux() const
     {
       return evaporative_mass_flux;
@@ -66,7 +77,7 @@ namespace MeltPoolDG::Evaporation
      *
      * @return Temperature jump T_liquid - T_gas.
      */
-    number
+    [[nodiscard]] number_2
     get_temperature_jump() const
     {
       return temperature_jump;
@@ -91,32 +102,43 @@ namespace MeltPoolDG::Evaporation
     /// Temperature constant for Clausius-Clapeyron equation
     const number temperature_constant;
 
+    /// Precomputed helper variable for the mass flux computation
+    const number helper_mass_flux;
+
+    /// Precomputed helper variable for the temperature ratio computation
+    const number helper_temperature_ratio;
+
     /// Evaporative mass flux from Knight's theory
-    number evaporative_mass_flux = 0.;
+    number_2 evaporative_mass_flux{};
 
     /// Temperature jump from Knight's theory
-    number temperature_jump = 0.;
+    number_2 temperature_jump{};
 
     /**
      * @brief Calculate the temperature ratio T_gas/T_sat according to Knight's theory.
      *
-     * @param m Dimensionless velocity.
+     * @param m_g Dimensionless gas velocity.
      *
      * @return Temperature ratio T_gas/T_sat.
      */
-    number
-    compute_temperature_ratio(const number &m) const;
+    number_2
+    compute_temperature_ratio(const number_2 &m_g) const;
 
     /**
      * @brief Calculate the density ratio rho_gas/rho_sat according to Knight's theory.
      *
      * @param T_gas_over_T_sat Temperature ratio T_gas/T_sat.
-     * @param m Dimensionless velocity.
+     * @param m_g Dimensionless gas velocity.
+     * @param exp_m_g_2 Precomputed exponential of the squared dimensionless gas velocity @p m_g.
+     * @param erfc_m_g Precomputed complementary error function of the dimensionless gas velocity @p m_g.
      *
      * @return Density ratio rho_gas/rho_sat.
      */
-    number
-    compute_density_ratio(const number &T_gas_over_T_sat, const number &m) const;
+    number_2
+    compute_density_ratio(const number_2 &T_gas_over_T_sat,
+                          const number_2 &m_g,
+                          const number_2 &exp_m_g_2,
+                          const number_2 &erfc_m_g) const;
 
     /**
      * @brief Calculate the factor beta according to Knight's theory.
@@ -126,13 +148,26 @@ namespace MeltPoolDG::Evaporation
      *
      * @param T_gas_over_T_sat Temperature ratio T_gas/T_sat.
      * @param rho_gas_over_rho_sat Density ratio rho_gas/rho_sat.
-     * @param m Dimensionless velocity.
+     * @param m_g Dimensionless velocity.
+     * @param exp_m_g_2 Precomputed exponential of the squared dimensionless velocity @p m_g.
      *
      * @return Factor beta.
      */
-    number
-    compute_factor_beta(const number &T_gas_over_T_sat,
-                        const number &rho_gas_over_rho_sat,
-                        const number &m) const;
+    number_2
+    compute_factor_beta(const number_2 &T_gas_over_T_sat,
+                        const number_2 &rho_gas_over_rho_sat,
+                        const number_2 &m_g,
+                        const number_2 &exp_m_g_2) const;
+
+    /**
+     * @brief Restrict evaporation to liquid temperatures above the boiling temperature.
+     *
+     * This function simply sets the @p evaporative_mass_flux and @p temperature_jump to zero, if the
+     * liquid surface temperature @p T_sat is below the boiling temperature.
+     *
+     * @param T_sat Saturated vapor temperature at liquid surface (=liquid surface temperature).
+     */
+    void
+    apply_boiling_threshold(const number_2 &T_sat);
   };
 } // namespace MeltPoolDG::Evaporation

@@ -3,14 +3,16 @@
 
 #include <meltpooldg/phase_change/evaporation_model_knight.hpp>
 #include <meltpooldg/phase_change/evaporation_tools.hpp>
+#include <meltpooldg/utilities/numbers.hpp>
+#include <meltpooldg/utilities/utility_functions.hpp>
 
 #include <cmath>
 #include <numbers>
 
 namespace MeltPoolDG::Evaporation
 {
-  template <typename number>
-  EvaporationModelKnight<number>::EvaporationModelKnight(
+  template <typename number, typename number_2>
+  EvaporationModelKnight<number, number_2>::EvaporationModelKnight(
     const number atmospheric_pressure,
     const number boiling_temperature_at_atmospheric_pressure,
     const number latent_heat_of_evaporation,
@@ -22,6 +24,9 @@ namespace MeltPoolDG::Evaporation
     , specific_gas_constant(specific_gas_constant)
     , specific_heat_ratio_vapor(specific_heat_ratio_vapor)
     , temperature_constant(latent_heat_of_evaporation / specific_gas_constant)
+    , helper_mass_flux(std::sqrt(specific_gas_constant / (2. * std::numbers::pi)))
+    , helper_temperature_ratio(0.5 * (specific_heat_ratio_vapor - 1.) /
+                               (specific_heat_ratio_vapor + 1.))
   {
     AssertThrow(boiling_temperature_at_atmospheric_pressure > 1e-12,
                 dealii::ExcMessage("The boiling temperature must not be zero."));
@@ -31,129 +36,157 @@ namespace MeltPoolDG::Evaporation
                 dealii::ExcMessage("The specific heat ratio of the vapor phase must not be zero."));
   }
 
-  template <typename number>
+  template <typename number, typename number_2>
   void
-  EvaporationModelKnight<number>::reinit(const number &T_liquid, const number &Ma_gas)
+  EvaporationModelKnight<number, number_2>::reinit(const number_2    &T_liquid,
+                                                   const number_2    &Ma_gas,
+                                                   const unsigned int n_active_lanes)
   {
     // Assert when Mach numbers are very high. The result is expected to be non-physical.
-    AssertThrow(Ma_gas < 10.,
-                dealii::ExcMessage("The Mach number exceeds Ma = 10. The result is expected to"
-                                   " be non-physical!"));
+    bool valid = true;
 
-    // Correct potentially slightly negative Ma numbers at interface position due to numerical
-    // inaccuracies
-    const number Ma_gas_corrected = std::max(Ma_gas, 0.);
+    if constexpr (std::is_same_v<number_2, number>)
+      {
+        valid = Ma_gas < 10.;
+      }
+    else
+      {
+        for (unsigned int v = 0; v < n_active_lanes; ++v)
+          if (Ma_gas[v] >= 10.)
+            {
+              valid = false;
+              break;
+            }
+      }
 
-    // Dimensionless velocity
-    const number m = Ma_gas_corrected * std::sqrt(0.5 * specific_heat_ratio_vapor);
+    AssertThrow(valid,
+                dealii::ExcMessage(
+                  "The Mach number exceeds Ma = 10. The result is expected to be non-physical!"));
+
+    // Choose a minimum finite Mach number to trigger evaporation initially
+    const number_2 Ma_gas_corrected = std::max(Ma_gas, number_2(1.e-6));
+
+    // Dimensionless gas velocity
+    const number_2 m_g = Ma_gas_corrected * std::sqrt(0.5 * specific_heat_ratio_vapor);
+
+    // Pre-compute expensive functions of m_g
+    number_2 erfc_m_g{};
+    if constexpr (std::is_same_v<number_2, number>)
+      erfc_m_g = std::erfc(m_g);
+    else
+      erfc_m_g = UtilityFunctions::calculate_complementary_error_function_vec(m_g);
+
+    const number_2 exp_m_g_2 = std::exp(m_g * m_g);
 
     // Saturated vapor temperature (assumption of thermal equilibrium with liquid surface)
-    const number T_sat = T_liquid;
+    const number_2 T_sat = T_liquid;
 
     // Saturated vapor pressure according to Clausius-Clapeyron
-    const number p_sat =
-      compute_saturated_gas_pressure<number, number>(T_sat,
-                                                     boiling_temperature_at_atmospheric_pressure,
-                                                     atmospheric_pressure,
-                                                     temperature_constant);
+    const number_2 p_sat =
+      compute_saturated_gas_pressure<number, number_2>(T_sat,
+                                                       boiling_temperature_at_atmospheric_pressure,
+                                                       atmospheric_pressure,
+                                                       temperature_constant);
 
     // Saturated vapor density from ideal gas law
-    const number rho_sat = p_sat / (specific_gas_constant * T_sat);
+    const number_2 rho_sat = p_sat / (specific_gas_constant * T_sat);
 
     // Temperature ratio: T_gas / T_sat
-    const number T_gas_over_T_sat = compute_temperature_ratio(m);
+    const number_2 T_gas_over_T_sat = compute_temperature_ratio(m_g);
 
     // Density ratio: rho_gas / rho_sat
-    const number rho_gas_over_rho_sat = compute_density_ratio(T_gas_over_T_sat, m);
+    const number_2 rho_gas_over_rho_sat =
+      compute_density_ratio(T_gas_over_T_sat, m_g, exp_m_g_2, erfc_m_g);
 
     // Factor beta for back-scattered atoms
-    const number beta = compute_factor_beta(T_gas_over_T_sat, rho_gas_over_rho_sat, m);
+    const number_2 beta =
+      compute_factor_beta(T_gas_over_T_sat, rho_gas_over_rho_sat, m_g, exp_m_g_2);
 
-    const number rho_gas = rho_gas_over_rho_sat * rho_sat;
+    const number_2 rho_gas = rho_gas_over_rho_sat * rho_sat;
 
-    const number T_gas = T_gas_over_T_sat * T_sat;
+    const number_2 T_gas = T_gas_over_T_sat * T_sat;
 
     // Temperature jump across interface for the current conditions
-    number T_jump = T_liquid - T_gas;
+    temperature_jump = T_liquid - T_gas;
 
     // Mass flux computation
 
-    const number helper = std::sqrt(specific_gas_constant / (2. * std::numbers::pi));
-
     // Evaporative mass flux
-    const number m_dot_plus = rho_sat * helper * std::sqrt(T_sat);
+    const number_2 m_dot_plus = rho_sat * helper_mass_flux * std::sqrt(T_sat);
 
     // Condensation mass flux
-    constexpr number sqrt_pi = std::sqrt(std::numbers::pi);
-    const number     m_dot_minus =
-      beta * rho_gas * helper * std::sqrt(T_gas) * (sqrt_pi * m * std::erfc(m) - std::exp(-m * m));
+    const number_2 m_dot_minus = beta * rho_gas * helper_mass_flux * std::sqrt(T_gas) *
+                                 (numbers::sqrt_pi * m_g * erfc_m_g - number_2(1.) / exp_m_g_2);
 
     // Net mass flux
-    number m_dot = m_dot_plus + m_dot_minus;
+    evaporative_mass_flux = m_dot_plus + m_dot_minus;
 
-    // Exponential ramp correction (Knight's theory predicts mass flux for T_liquid < T_v).
-    // The value for the damping factor was empirically determined and should not be changed.
-    constexpr number damping_factor = 0.2;
-    m_dot *=
-      1 - std::exp(-damping_factor * (T_liquid - boiling_temperature_at_atmospheric_pressure));
-
-    // No evaporation below boiling temperature
-    if (T_sat < boiling_temperature_at_atmospheric_pressure)
-      {
-        m_dot  = 0.;
-        T_jump = 0.;
-      }
-
-    // Set computed values
-    evaporative_mass_flux = m_dot;
-    temperature_jump      = T_jump;
+    // Restrict evaporation to liquid temperatures above the boiling temperature
+    apply_boiling_threshold(T_sat);
   }
 
-  template <typename number>
-  number
-  EvaporationModelKnight<number>::compute_temperature_ratio(const number &m) const
+  template <typename number, typename number_2>
+  number_2
+  EvaporationModelKnight<number, number_2>::compute_temperature_ratio(const number_2 &m_g) const
   {
-    const number helper =
-      0.5 * (specific_heat_ratio_vapor - 1.) / (specific_heat_ratio_vapor + 1.) * m;
-    constexpr number sqrt_pi = std::sqrt(std::numbers::pi);
+    const number_2 tmp = helper_temperature_ratio * m_g;
 
-    const number sqrt_T_gas_over_T_sat =
-      std::sqrt(1. + std::numbers::pi * helper * helper) - sqrt_pi * helper;
+    const number_2 sqrt_T_gas_over_T_sat =
+      std::sqrt(1. + std::numbers::pi * tmp * tmp) - numbers::sqrt_pi * tmp;
 
     return sqrt_T_gas_over_T_sat * sqrt_T_gas_over_T_sat;
   }
 
-  template <typename number>
-  number
-  EvaporationModelKnight<number>::compute_density_ratio(const number &T_gas_over_T_sat,
-                                                        const number &m) const
+  template <typename number, typename number_2>
+  number_2
+  EvaporationModelKnight<number, number_2>::compute_density_ratio(const number_2 &T_gas_over_T_sat,
+                                                                  const number_2 &m_g,
+                                                                  const number_2 &exp_m_g_2,
+                                                                  const number_2 &erfc_m_g) const
   {
-    const number     exp_m_2 = std::exp(m * m);
-    const number     erfc_m  = std::erfc(m);
-    constexpr number sqrt_pi = std::sqrt(std::numbers::pi);
-
-    const number rho_gas_over_rho_sat =
-      ((m * m + 0.5) * exp_m_2 * erfc_m - m / sqrt_pi) / std::sqrt(T_gas_over_T_sat) +
-      0.5 / T_gas_over_T_sat * (1. - sqrt_pi * m * exp_m_2 * erfc_m);
-
-    return rho_gas_over_rho_sat;
+    return ((m_g * m_g + 0.5) * exp_m_g_2 * erfc_m_g - m_g / numbers::sqrt_pi) /
+             std::sqrt(T_gas_over_T_sat) +
+           0.5 / T_gas_over_T_sat * (1. - numbers::sqrt_pi * m_g * exp_m_g_2 * erfc_m_g);
   }
 
-  template <typename number>
-  number
-  EvaporationModelKnight<number>::compute_factor_beta(const number &T_gas_over_T_sat,
-                                                      const number &rho_gas_over_rho_sat,
-                                                      const number &m) const
+  template <typename number, typename number_2>
+  number_2
+  EvaporationModelKnight<number, number_2>::compute_factor_beta(
+    const number_2 &T_gas_over_T_sat,
+    const number_2 &rho_gas_over_rho_sat,
+    const number_2 &m_g,
+    const number_2 &exp_m_g_2) const
   {
-    const number     sqrt_T_sat_over_T_gas = 1. / std::sqrt(T_gas_over_T_sat);
-    const number     m_2                   = m * m;
-    constexpr number sqrt_pi               = std::sqrt(std::numbers::pi);
+    const number_2 sqrt_T_sat_over_T_gas = 1. / std::sqrt(T_gas_over_T_sat);
 
-    const number beta = (2. * m_2 + 1. - m * sqrt_pi * sqrt_T_sat_over_T_gas) * std::exp(m_2) /
-                        rho_gas_over_rho_sat * sqrt_T_sat_over_T_gas;
+    return (2. * m_g * m_g + 1. - m_g * numbers::sqrt_pi * sqrt_T_sat_over_T_gas) * exp_m_g_2 /
+           rho_gas_over_rho_sat * sqrt_T_sat_over_T_gas;
+  }
 
-    return beta;
+  template <typename number, typename number_2>
+  void
+  EvaporationModelKnight<number, number_2>::apply_boiling_threshold(const number_2 &T_sat)
+  {
+    if constexpr (std::is_same_v<number_2, number>)
+      {
+        if (T_sat < boiling_temperature_at_atmospheric_pressure)
+          {
+            evaporative_mass_flux = 0.;
+            temperature_jump      = 0.;
+          }
+      }
+    else
+      {
+        const dealii::VectorizedArray<number> zero_vec = dealii::make_vectorized_array(0.);
+        const dealii::VectorizedArray<number> boiling_temperature_at_atmospheric_pressure_vec =
+          dealii::make_vectorized_array(boiling_temperature_at_atmospheric_pressure);
+        evaporative_mass_flux = dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than>(
+          T_sat, boiling_temperature_at_atmospheric_pressure_vec, zero_vec, evaporative_mass_flux);
+        temperature_jump = dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than>(
+          T_sat, boiling_temperature_at_atmospheric_pressure_vec, zero_vec, temperature_jump);
+      }
   }
 
   template class EvaporationModelKnight<double>;
+  template class EvaporationModelKnight<double, dealii::VectorizedArray<double>>;
 } // namespace MeltPoolDG::Evaporation
