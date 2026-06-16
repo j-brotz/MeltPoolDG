@@ -3,6 +3,12 @@ name: Indent
 on:
   pull_request:
     branches: [ master ]
+  
+  push:
+    branches: [ master ]
+  
+  schedule:
+    - cron: '0 0 * * *'
 
 jobs:
   build:
