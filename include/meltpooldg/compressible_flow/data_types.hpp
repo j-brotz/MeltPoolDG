@@ -189,4 +189,17 @@ namespace MeltPoolDG::CompressibleFlow
       view.grad_total_energy()
     };
   };
+
+  /// Concept that ensures that a given flux kernel type has the functionality to return a specified
+  /// flux.
+  template <typename T, typename StateType, typename FluxType>
+  concept IsFluxKernel = requires(const T &kernel, const StateType &u) {
+    {
+      kernel.flux(u)
+    } -> std::same_as<FluxType>;
+  } || requires(const T &kernel, const StateType &u, const StateType &grad_u) {
+    {
+      kernel.flux(u, grad_u)
+    } -> std::same_as<FluxType>;
+  };
 } // namespace MeltPoolDG::CompressibleFlow
