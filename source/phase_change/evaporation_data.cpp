@@ -153,11 +153,13 @@ namespace MeltPoolDG::Evaporation
   void
   EvaporationData<number>::check_input_parameters(const MaterialData<number> &material) const
   {
-    AssertThrow(!recoil.enable ||
-                  (evaporative_dilation_rate.enable ||
-                   recoil.type == Evaporation::RecoilPressureModelType::phenomenological),
-                dealii::ExcMessage("For the phenomenological recoil pressure model, no velocity "
-                                   "jump is allowed."));
+    if (recoil.enable)
+      AssertThrow(!evaporative_dilation_rate.enable ||
+                    recoil.type == Evaporation::RecoilPressureModelType::hybrid,
+                  dealii::ExcMessage(
+                    "The evaporative dilation rate is only supported for the hybrid recoil "
+                    "pressure model."));
+
 
     AssertThrow(!evaporative_cooling.enable || material.latent_heat_of_evaporation > 0.0,
                 dealii::ExcMessage("To consider the evaporative heat flux the value for "
