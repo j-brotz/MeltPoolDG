@@ -27,6 +27,14 @@ namespace MeltPoolDG
     DEMParticleAccessor(dealii::Particles::ParticleAccessor<dim> &particle);
 
     /**
+     * Construct accessor from a location and properties view.
+     *
+     * @param location Reference to the particle location.
+     * @param properties View to the particle properties.
+     */
+    DEMParticleAccessor(dealii::Point<dim, number> &location, dealii::ArrayView<number> properties);
+
+    /**
      * @brief Construct accessor from a PropertyPool handle.
      *
      * @param property_pool Reference to the deal.II property pool.
@@ -166,6 +174,13 @@ namespace MeltPoolDG
     dealii::Particles::ParticleAccessor<dim> &particle)
     : location(particle.get_location())
     , properties(particle.get_properties())
+  {}
+
+  template <int dim, typename number>
+  DEMParticleAccessor<dim, number>::DEMParticleAccessor(dealii::Point<dim, number> &location,
+                                                        dealii::ArrayView<number>   properties)
+    : location(location)
+    , properties(properties)
   {}
 
   template <int dim, typename number>

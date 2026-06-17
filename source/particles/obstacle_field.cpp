@@ -10,6 +10,7 @@
 
 #include <meltpooldg/particles/obstacle_field.hpp>
 #include <meltpooldg/particles/particle.hpp>
+#include <meltpooldg/particles/particle_tools.hpp>
 #include <meltpooldg/utilities/amr_regions.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 
@@ -31,7 +32,8 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
   , obstacle_data_structure(obstacle_handler)
   , mpi_communicator(triangulation.get_mpi_communicator())
 {
-  auto [obstacle_locations, obstacle_properties] = read_obstacle_state_input_file();
+  auto [obstacle_locations, obstacle_properties] =
+    read_particle_state_input_file<dim, number>(data.obstacle_state_input_file, mpi_communicator);
   insert_obstacles(triangulation, obstacle_locations, obstacle_properties);
   obstacle_data_structure.reinit();
 }
@@ -211,33 +213,6 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::deserialize()
 {
   // Assumes that triangulation.load() has already been called!
   obstacle_handler.deserialize();
-}
-
-template <int dim, typename number, typename ObstacleType>
-std::pair<std::vector<dealii::Point<dim, number>>, std::vector<std::vector<number>>>
-MeltPoolDG::ObstacleField<dim, number, ObstacleType>::read_obstacle_state_input_file()
-{
-  std::vector<dealii::Point<dim>> particle_locations;
-  // Make global particle properties vector
-  std::vector<std::vector<number>> properties{};
-  if (dealii::Utilities::MPI::this_mpi_process(mpi_communicator) == 0)
-    {
-      std::fstream file;
-      file.open(data.obstacle_state_input_file, std::ios::in);
-      AssertThrow(!(file.fail()),
-                  dealii::ExcMessage("Unable to open particle data file \"" +
-                                     data.obstacle_state_input_file + "\". Aborting!"));
-      std::string line;
-      std::getline(file, line); // Ignore the first line
-      while (std::getline(file, line))
-        {
-          auto obstacle_properties = ObstacleType::read_state_input(line);
-          properties.push_back(obstacle_properties.first);
-          particle_locations.push_back(obstacle_properties.second);
-        }
-    }
-
-  return {particle_locations, properties};
 }
 
 template <int dim, typename number, typename ObstacleType>

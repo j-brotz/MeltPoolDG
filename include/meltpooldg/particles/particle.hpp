@@ -15,6 +15,7 @@
 
 #include <meltpooldg/utilities/utility_functions.hpp>
 
+#include <iostream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -137,19 +138,6 @@ namespace MeltPoolDG
         }
       return property_names_and_interpretations;
     }
-
-    /**
-     * @brief Parses particle properties and location from a single CSV-formatted line. This
-     * function reads a single line of CSV-formatted text containing data for one particle. It
-     * extracts the particle's properties and its location, and returns them as a pair.
-     *
-     * @param input_data A string containing one CSV-formatted line representing a single particle's
-     * data.
-     * @return A pair consisting of a std::vector containing the particle's properties and a
-     * dealii::Point representing the particle's location.
-     */
-    static std::pair<std::vector<number>, dealii::Point<dim, number>>
-    read_state_input(const std::string &input_data);
 
     /**
      * This function returns a vector from the given point, towards the particle's center of
@@ -553,59 +541,6 @@ namespace MeltPoolDG
     get_characteristic_length(const dealii::Particles::ParticleAccessor<dim> &particle);
   };
 } // namespace MeltPoolDG
-
-
-template <int dim, typename number>
-std::pair<std::vector<number>, dealii::Point<dim, number>>
-MeltPoolDG::SphericalParticle<dim, number>::read_state_input(const std::string &input_data)
-{
-  dealii::Point<dim, number> particle_location;
-  std::vector<number>        particle_properties(n_obstacle_properties, 0.0);
-  std::string                temp;
-  std::istringstream         data_string(input_data);
-  // particle position
-  for (int i = 0; i < dim; i++)
-    {
-      std::getline(data_string, temp, ',');
-      particle_location[i] = std::stod(temp);
-    }
-
-  // set particle translational velocity and angular velocity to zero by default
-  for (unsigned int i = Properties::velocity; i < Properties::angular_acceleration; ++i)
-    {
-      particle_properties[i] = 0;
-    }
-
-  // density and radius
-  std::getline(data_string, temp, ',');
-  particle_properties[Properties::density] = std::stod(temp);
-  std::getline(data_string, temp, ',');
-  particle_properties[Properties::radius] = std::stod(temp);
-
-  // Compute remaining variables
-  if constexpr (dim == 3)
-    {
-      particle_properties[Properties::volume] =
-        4.0 / 3.0 * M_PI * std::pow(particle_properties[Properties::radius], 3);
-      particle_properties[Properties::mass] =
-        particle_properties[Properties::volume] * particle_properties[Properties::density];
-      particle_properties[Properties::moment_of_inertia] =
-        0.4 * particle_properties[Properties::mass] *
-        std::pow(particle_properties[Properties::radius], 2);
-    }
-  else if constexpr (dim == 2)
-    {
-      particle_properties[Properties::volume] =
-        M_PI * std::pow(particle_properties[Properties::radius], 2);
-      particle_properties[Properties::mass] =
-        particle_properties[Properties::volume] * particle_properties[Properties::density];
-      particle_properties[Properties::moment_of_inertia] =
-        0.5 * particle_properties[Properties::mass] *
-        std::pow(particle_properties[Properties::radius], 2);
-    }
-
-  return {particle_properties, particle_location};
-}
 
 template <int dim, typename number>
 number
