@@ -2,6 +2,7 @@
 
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/base/tensor.h>
+#include <deal.II/base/utilities.h>
 #include <deal.II/base/vectorization.h>
 
 #include <deal.II/grid/grid_tools.h>
@@ -106,6 +107,10 @@ MeltPoolDG::Utilities::tvb_minmod(const Container           &values,
   else
     {
       result = tvd_minmod<n_components, TensorType, Container>(values);
+
+      // TODO: Does this make sense to only apply the TVB modification to the components that are
+      // below the slope limit? Or should we rather apply the TVB modification to all components if
+      // at least one component is above the slope limit?
       for (unsigned int i = 0; i < n_components; ++i)
         {
           if (below_limit_mask[i])
@@ -119,10 +124,11 @@ MeltPoolDG::Utilities::tvb_minmod(const Container           &values,
 template <int dim, int n_components, typename number>
 std::array<dealii::Tensor<1, n_components, number>, dim>
 MeltPoolDG::Utilities::compute_minmod_type_limited_slopes(
-  const std::vector<dealii::Tensor<1, n_components, number>>            &cell_average_values,
-  const typename dealii::Triangulation<dim>::active_cell_iterator       &cell,
-  const dealii::Tensor<1, n_components, dealii::Tensor<1, dim, number>> &average_cell_gradient,
-  const MeltPoolDG::Utilities::LimiterData<number>                      &limiter_data)
+  const std::vector<std::pair<dealii::Tensor<1, n_components, number>,
+                              dealii::Tensor<1, n_components, dealii::Tensor<1, dim, number>>>>
+                                                                  &cell_average_values,
+  const typename dealii::Triangulation<dim>::active_cell_iterator &cell,
+  const MeltPoolDG::Utilities::LimiterData<number>                &limiter_data)
 {
   std::array<dealii::Tensor<1, n_components, number>, dim> limited_slopes;
 
@@ -132,34 +138,85 @@ MeltPoolDG::Utilities::compute_minmod_type_limited_slopes(
         minmod_input_values;
       minmod_input_values.emplace_back();
       for (unsigned int i = 0; i < n_components; ++i)
-        minmod_input_values[0][i] = average_cell_gradient[i][d];
+        minmod_input_values[0][i] = cell_average_values[cell->active_cell_index()].second[i][d];
       for (unsigned int face_no = 0; face_no < 2; ++face_no)
         {
-          const auto neighbor = cell->neighbor(2 * d + face_no);
+          unsigned int face_index = 2 * d + face_no;
+          const auto   neighbor   = cell->neighbor(face_index);
 
-          if (!cell->at_boundary(2 * d + face_no) and neighbor->is_active())
+          if (!cell->at_boundary(face_index))
             {
-              // TODO: What happens in case of local refinement?
-              AssertThrow(
-                neighbor->level() == cell->level(),
-                dealii::ExcMessage(
-                  "The current implementation of the minmod-type limiters does not support local mesh refinement."));
+              number                                  distance_to_neighbor;
+              dealii::Tensor<1, n_components, number> neighbor_cell_average_value;
+              if ((cell->level() == neighbor->level() and neighbor->is_active()) or dim == 1)
+                {
+                  // Case: Neighbor is active and on the same level as the current cell
+                  distance_to_neighbor = cell->center().distance(neighbor->center());
+                  neighbor_cell_average_value =
+                    cell_average_values[neighbor->active_cell_index()].first;
+                }
+              else if (cell->level() == neighbor->level() and !neighbor->is_active())
+                {
+                  // Case: Neighbor has active children which due to two-to-one refinement must be
+                  // one level finer than the current cell
+                  Assert(
+                    cell->reference_cell().is_hyper_cube() and
+                      neighbor->reference_cell().is_hyper_cube(),
+                    dealii::ExcMessage(
+                      "The minmod limiter currently only supports 3D hexahedral meshes with isotropic refinement."));
 
-              auto   vector_to_neighbor   = cell->center() - neighbor->center();
-              number distance_to_neighbor = vector_to_neighbor.norm();
+                  // Only use active cells that share a face with the current cell. If the face lies
+                  // on a partition boundary, we only have access to ghost cell averages for direct
+                  // face-neighbors. Average values for other child cells of the neighbor cell
+                  // (those not sharing a face) might be unavailable across the partition.
+                  distance_to_neighbor =
+                    0.5 * cell->extent_in_direction(d) +
+                    0.25 * cell->neighbor_child_on_subface(face_index, 0)->extent_in_direction(d);
+
+                  // Assuming isotropic refinement
+                  constexpr unsigned int n_subfaces = dealii::Utilities::fixed_power<dim - 1>(2);
+                  for (unsigned int subface = 0; subface < n_subfaces; ++subface)
+                    {
+                      neighbor_cell_average_value +=
+                        cell_average_values[cell->neighbor_child_on_subface(face_index, subface)
+                                              ->active_cell_index()]
+                          .first;
+                    }
+                  neighbor_cell_average_value /= n_subfaces;
+                }
+              else
+                {
+                  // Case: Neighbor is active but one level coarser than the current cell.
+                  Assert(
+                    cell->reference_cell().is_hyper_cube() and
+                      neighbor->reference_cell().is_hyper_cube(),
+                    dealii::ExcMessage(
+                      "The minmod limiter currently only supports 3D hexahedral meshes with isotropic refinement."));
+
+
+                  auto vec_neighbor_to_cell = cell->center() - neighbor->center();
+                  distance_to_neighbor =
+                    cell->extent_in_direction(d) * 0.5 + 0.25 * neighbor->extent_in_direction(d);
+                  for (unsigned int c = 0; c < n_components; ++c)
+                    neighbor_cell_average_value[c] =
+                      cell_average_values[neighbor->active_cell_index()].first[c] +
+                      (vec_neighbor_to_cell[d] - 0.5 * cell->extent_in_direction(d) -
+                       0.25 * neighbor->extent_in_direction(d)) *
+                        cell_average_values[neighbor->active_cell_index()].second[c][d];
+                }
 
               if (face_no == 0)
                 {
                   minmod_input_values.push_back(
-                    (cell_average_values[cell->active_cell_index()] -
-                     cell_average_values[neighbor->active_cell_index()]) /
+                    (cell_average_values[cell->active_cell_index()].first -
+                     neighbor_cell_average_value) /
                     distance_to_neighbor);
                 }
               else
                 {
                   minmod_input_values.push_back(
-                    (cell_average_values[neighbor->active_cell_index()] -
-                     cell_average_values[cell->active_cell_index()]) /
+                    (neighbor_cell_average_value -
+                     cell_average_values[cell->active_cell_index()].first) /
                     distance_to_neighbor);
                 }
             }
@@ -208,7 +265,7 @@ MeltPoolDG::Utilities::apply_minmod_type_limiter(
               dealii::ExcMessage(
                 "The minmod type limiter currently only supports linear elements (degree 1)."));
 
-  std::vector<dealii::Tensor<1, n_components, number>> cell_average_values =
+  const auto cell_average_values =
     compute_cell_average_quantities<dim, number, n_components>(mf_context, src);
 
   // The cell loop lambda that will be passed to the matrix-free object to apply the limiter in
@@ -236,9 +293,7 @@ MeltPoolDG::Utilities::apply_minmod_type_limiter(
       for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
         {
           fe_cell_integrator.reinit(cell);
-          fe_cell_integrator.gather_evaluate(src,
-                                             dealii::EvaluationFlags::values |
-                                               dealii::EvaluationFlags::gradients);
+          fe_cell_integrator.gather_evaluate(src, dealii::EvaluationFlags::values);
 
           const auto &cells = cells_in_cell_batch(mf_context.mf, cell);
 
@@ -255,7 +310,7 @@ MeltPoolDG::Utilities::apply_minmod_type_limiter(
             {
               for (unsigned int c = 0; c < n_components; ++c)
                 cell_average_values_cell[c][i] =
-                  cell_average_values[cells[i]->active_cell_index()][c];
+                  cell_average_values[cells[i]->active_cell_index()].first[c];
             }
 
           for (const unsigned int q : fe_cell_integrator.quadrature_point_indices())
@@ -274,16 +329,9 @@ MeltPoolDG::Utilities::apply_minmod_type_limiter(
                        lane < mf_context.mf.n_active_entries_per_cell_batch(cell);
                        ++lane)
                     {
-                      dealii::Tensor<1, n_components, dealii::Tensor<1, dim, number>>
-                        gradient_value_lane;
-                      for (unsigned int c = 0; c < n_components; ++c)
-                        for (unsigned int d = 0; d < dim; ++d)
-                          gradient_value_lane[c][d] =
-                            fe_cell_integrator.get_gradient(q)[c][d][lane];
-
                       std::array<dealii::Tensor<1, n_components, number>, dim> limited_slope_lane =
                         compute_minmod_type_limited_slopes<dim, n_components, number>(
-                          cell_average_values, cells[lane], gradient_value_lane, limiter_data);
+                          cell_average_values, cells[lane], limiter_data);
 
                       for (unsigned int c = 0; c < n_components; ++c)
                         for (unsigned int d = 0; d < dim; ++d)
