@@ -14,8 +14,8 @@
 #include <meltpooldg/utilities/amr_regions.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 
-#include <fstream>
 #include <functional>
+#include <vector>
 
 
 template <int dim, typename number, typename ObstacleType>
@@ -25,10 +25,6 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
   const dealii::Mapping<dim>       &mapping)
   : data(data)
   , obstacle_handler(triangulation, mapping, ObstacleType::n_obstacle_properties)
-  , obstacle_handler_vector_views(
-      std::vector<std::reference_wrapper<dealii::Particles::ParticleHandler<dim>>>(
-        {obstacle_handler}),
-      1)
   , obstacle_data_structure(obstacle_handler)
   , mpi_communicator(triangulation.get_mpi_communicator())
 {
@@ -47,10 +43,6 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
   const std::vector<std::vector<number>>        &obstacle_properties)
   : data(data)
   , obstacle_handler(triangulation, mapping, ObstacleType::n_obstacle_properties)
-  , obstacle_handler_vector_views(
-      std::vector<std::reference_wrapper<dealii::Particles::ParticleHandler<dim>>>(
-        {obstacle_handler}),
-      1)
   , obstacle_data_structure(obstacle_handler)
   , mpi_communicator(triangulation.get_mpi_communicator())
 {
@@ -65,36 +57,8 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::advance_time(const number 
 {
   compute_loads_on_obstacles();
 
-  symplectic_euler_advance_time_step<dim, double, ParticleHandlerBlockVectorView<dim, number>>(
-    current_time,
-    time_step,
-    obstacle_handler_vector_views.location,
-    obstacle_handler_vector_views.translational_velocity,
-    obstacle_handler_vector_views.translational_acceleration,
-    obstacle_handler_vector_views.angular_velocity,
-    obstacle_handler_vector_views.angular_acceleration,
-    [&](number, ParticleHandlerBlockVectorView<dim, number> &) {
-      for (auto &obstacle : obstacle_handler)
-        {
-          ObstacleType::set_acceleration(
-            obstacle,
-            ObstacleType::get_force(obstacle) /
-              ObstacleType::get_property(obstacle, ObstacleType::Properties::mass));
-        }
-    },
-    [&](number, ParticleHandlerBlockVectorView<dim, number> &) {
-      for (auto &obstacle : obstacle_handler)
-        {
-          ObstacleType::set_angular_acceleration(
-            obstacle,
-            ObstacleType::get_torque(obstacle) /
-              ObstacleType::get_property(obstacle, ObstacleType::Properties::moment_of_inertia));
-        }
-    },
-    [&]() {
-      obstacle_handler.exchange_ghost_particles(true);
-      obstacle_handler.update_ghost_particles();
-    });
+  symplectic_euler_advance_time_step<dim, number, ObstacleType>(time_step,
+                                                                locally_owned_particle_range());
 
   // Temporary workaround: prevent particles from moving below ground level. We check whether the
   // particle’s vertical coordinate (y in 2D, z in 3D) is less than its radius, i.e., meaning part

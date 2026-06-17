@@ -5,4 +5,5 @@ mpdg_setup_mpi_unit_tests(
    obstacle_forces_test.cpp
    contact_forces.cpp
    cohesive_forces.cpp
+   dem_time_integrators.cpp
 )

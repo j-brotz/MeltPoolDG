@@ -271,7 +271,7 @@ namespace MeltPoolDG
     if constexpr (dim == 3)
       {
         relative_velocity.value =
-          self.get_linear_velocity() - other.get_linear_velocity() +
+          self.linear_velocity() - other.linear_velocity() +
           dealii::cross_product_3d(self.get_property(ObstacleType::Properties::radius) *
                                        self.get_angular_velocity() +
                                      other.get_property(ObstacleType::Properties::radius) *
@@ -281,7 +281,7 @@ namespace MeltPoolDG
     else if constexpr (dim == 2)
       {
         relative_velocity.value =
-          self.get_linear_velocity() - other.get_linear_velocity() +
+          self.linear_velocity() - other.linear_velocity() +
           (self.get_property(ObstacleType::Properties::radius) * self.get_angular_velocity()[0] +
            other.get_property(ObstacleType::Properties::radius) * other.get_angular_velocity()[0]) *
             dealii::cross_product_2d(normal_vector);
@@ -323,17 +323,17 @@ namespace MeltPoolDG
     if constexpr (dim == 3)
       {
         relative_velocity.value =
-          particle.get_linear_velocity() +
+          particle.linear_velocity() +
           dealii::cross_product_3d(particle.get_property(ObstacleType::Properties::radius) *
                                      particle.get_angular_velocity(),
                                    normal_vector);
       }
     else if constexpr (dim == 2)
       {
-        relative_velocity.value = particle.get_linear_velocity() +
-                                  (particle.get_property(ObstacleType::Properties::radius) *
-                                   particle.get_angular_velocity()[0]) *
-                                    dealii::cross_product_2d(normal_vector);
+        relative_velocity.value =
+          particle.linear_velocity() + (particle.get_property(ObstacleType::Properties::radius) *
+                                        particle.get_angular_velocity()[0]) *
+                                         dealii::cross_product_2d(normal_vector);
       }
     else
       {
