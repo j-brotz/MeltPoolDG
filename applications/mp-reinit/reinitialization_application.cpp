@@ -11,6 +11,7 @@
 #include <deal.II/numerics/error_estimator.h>
 #include <deal.II/numerics/vector_tools_interpolate.h>
 
+#include "meltpooldg/level_set/reinitialization_data.hpp"
 #include <meltpooldg/level_set/reinitialization_elliptic_operation.hpp>
 #include <meltpooldg/level_set/reinitialization_geometric_operation.hpp>
 #include <meltpooldg/level_set/reinitialization_hyperbolic_CG_operation.hpp>
@@ -96,8 +97,7 @@ namespace MeltPoolDG::LevelSet
               refine_mesh();
           }
       }
-    else if (param.reinit.modeltype == ModelType::elliptic ||
-             param.reinit.modeltype == ModelType::geometric)
+    else if (param.reinit.modeltype == ModelType::geometric)
       {
         // Solve a nonlinear system instead of advancing in pseudo-time
         reinit_operation->solve();
@@ -106,6 +106,32 @@ namespace MeltPoolDG::LevelSet
 
         output_results(time_iterator->get_current_time_step_number(),
                        time_iterator->get_current_time());
+      }
+    else if (param.reinit.modeltype == ModelType::elliptic)
+      {
+        auto *elliptic_reinit =
+          dynamic_cast<ReinitializationEllipticOperation<dim, number> *>(reinit_operation.get());
+        time_iterator->reset_max_n_time_steps(
+          param.reinit.elliptic.fix_point_iteration.max_n_steps);
+
+        while (elliptic_reinit->get_relative_change_level_set() >
+                 param.reinit.elliptic.fix_point_iteration.tolerance and
+               !time_iterator->is_finished())
+          {
+            time_iterator->print_me(scratch_data->get_pcout(1));
+            elliptic_reinit->solve_one_iter();
+            time_iterator->compute_next_time_increment();
+
+            output_results(time_iterator->get_current_time_step_number(),
+                           time_iterator->get_current_time());
+
+            if (profiling_monitor && profiling_monitor->now())
+              {
+                profiling_monitor->print(scratch_data->get_pcout(1),
+                                         scratch_data->get_timer(),
+                                         scratch_data->get_mpi_comm());
+              }
+          }
       }
     else
       AssertThrow(false, ExcNotImplemented());

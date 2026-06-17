@@ -126,6 +126,26 @@ namespace MeltPoolDG::LevelSet
                                      const unsigned int                lane,
                                      const number                      penalty_coefficient) const;
 
+    /**
+     * @brief Compute and assemble the system matrix from matrix-free operator evaluations.
+     *      Used by the preconditioner.
+     *
+     * @param system_matrix  Output sparse matrix.
+     */
+    void
+    compute_system_matrix_from_matrixfree(
+      dealii::TrilinosWrappers::SparseMatrix &system_matrix) const final;
+
+    /**
+     * @brief Compute the inverse diagonal of the system matrix.
+     *      Used by the preconditioner.
+     *
+     * @param diagonal  Output vector containing the diagonal inverse values.
+     */
+    void
+    compute_inverse_diagonal_from_matrixfree(VectorType &diagonal) const final;
+
+
   private:
     /// Mesh classifier, which contains information if a cell is inside or outside the physically
     /// relevant region, or cut by the immersed boundary. It corresponds to the current level set
@@ -143,6 +163,22 @@ namespace MeltPoolDG::LevelSet
     VectorizedArrayType
     evaluate_rhs_coefficient(const FECellIntegrator<dim, n_components, number> &psi_old,
                              const unsigned int                                 q_index) const;
+
+    /**
+     * @brief Calculate the contribution of a single cell integral to the left-hand side.
+     *      First-level function for the evaluation of the laplace operator and the surface
+     * penalty term.
+     *
+     * @param interface_penalty Cell integrator for the penalty term.
+     * @param cell_eval Cell integrator for the laplace operator (plus, provides function values for the penalty term).
+     * @param interface_penalty_surface Point evaluation object for the surface integral.
+     * @param cell_batch Batch index for the current cell.
+     */
+    void
+    lhs_cell_operation(FECellIntegrator<dim, 1, number> &interface_penalty,
+                       FECellIntegrator<dim, 1, number> &cell_eval,
+                       PointEvaluationType              &interface_penalty_surface,
+                       const unsigned int                cell_batch) const;
 
     /**
      * @brief Calculate the contribution of the laplace operator of a cell to the lhs
@@ -174,7 +210,6 @@ namespace MeltPoolDG::LevelSet
     const unsigned int ls_dof_idx;
 
     /// Solution vector from the previous iteration or time step (used in matrix-free mode).
-    /// @note Marked as mutable to allow updates in const functions.
     dealii::AlignedVector<dealii::VectorizedArray<number>> solution_old;
 
     /// This vector is used to create an empty cell integrator buffer for cut cells.
