@@ -24,7 +24,7 @@ mkdir build && \
 cd build && \
 cmake \
 -D CMAKE_CXX_STANDARD=20 \
--D CMAKE_CXX_FLAGS="-Werror" \
+-D CMAKE_CXX_FLAGS="-Werror -Wno-error=cpp -Wno-error=deprecated-declarations" \
 -D CMAKE_BUILD_TYPE=${BUILD_TYPE} \
 -D ADAFLO_LIB=/app/adaflo-build/ \
 -D ADAFLO_INCLUDE=/app/adaflo/include/ \
