@@ -15,6 +15,7 @@ mkdir adaflo-build && \
 cd adaflo-build && \
 cmake \
 -D CMAKE_CXX_STANDARD=20 \
+-D CMAKE_CXX_FLAGS="-Werror -Wno-error=cpp -Wno-error=deprecated-declarations" \
 -D BUILD_SHARED_LIBS=ON \
 -D CMAKE_BUILD_TYPE=${BUILD_TYPE} \
 ../adaflo && \
