@@ -1,0 +1,3 @@
+[submodule "applications-dev"]
+	path = applications-dev
+	url = git@github.com:tum-sam/applications-dev.git

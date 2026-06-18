@@ -35,6 +35,15 @@ endif ()
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # ##############################################################################
+# include custom cmake commands
+# ##############################################################################
+
+file(GLOB custom_cmake_commands "${CMAKE_SOURCE_DIR}/cmake/*.cmake")
+foreach (command ${custom_cmake_commands})
+    include(${command})
+endforeach ()
+
+# ##############################################################################
 # find deal.II
 # ##############################################################################
 
@@ -176,3 +185,6 @@ endif ()
 # Applications
 # ##############################################################################
 add_subdirectory(applications)
+if (EXISTS ${CMAKE_SOURCE_DIR}/applications-dev/CMakeLists.txt)
+    add_subdirectory(applications-dev)
+endif ()
