@@ -1,9 +1,10 @@
 #!/bin/sh
 
+SCRIPT_DIR=$(dirname "$0")
+
 # format json-files
-for i in $(find applications/ doc/ unit_tests/ -type f -name "*.json" \
-           ! -name "parameters.schema.json" ); do
-  python3 scripts/formatting/format_json.py $i $i &
+for i in $(find . -type f -name "*.json" ! -name "parameters.schema.json" -not -path "./build*"); do
+  python3 $SCRIPT_DIR/format_json.py $i $i &
 done
 
 wait

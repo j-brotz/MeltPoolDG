@@ -16,11 +16,15 @@ if [[ "${1:-}" == "--force_md" ]]; then
   FORCE_MD=true
 fi
 
-find applications/ -type f -name "detailed_parameters.output" -print0 |
+find . -type f -path "*/mp-*" -name "detailed_parameters.output" -print0 |
 while IFS= read -r -d '' file; do
-  rel_path="${file#applications/}"
-  app_name="${rel_path%%/*}"
-  app_dir="applications/${app_name}"
+  relative_file_dir=$(dirname "$file")
+  absolute_dir=$(realpath "$relative_file_dir")
+
+  # The detailed_parameters.output file is located in the unit_tests/ directory
+  # of the application, so we need to go up one level to get to the
+  # application directory.
+  app_dir="${absolute_dir%/*}"
 
   out="${app_dir}/parameters.schema.json"
 
@@ -30,7 +34,8 @@ while IFS= read -r -d '' file; do
 
   tmp="$(mktemp)"
 
-  python3 scripts/parameters/dealii_json_to_schema.py "$file" "$tmp"
+  SCRIPT_DIR=$(dirname "$0")
+  python3 "$SCRIPT_DIR/dealii_json_to_schema.py" "$file" "$tmp"
 
   if [ ! -f "$out" ] || ! cmp -s "$tmp" "$out"; then
     mv "$tmp" "$out"

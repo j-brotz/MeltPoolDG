@@ -1,5 +1,7 @@
 #!/bin/sh
 
-scripts/formatting/format-all-code
-scripts/formatting/format-all-py
-scripts/formatting/format-all-json
+SCRIPT_DIR=$(dirname "$0")
+
+$SCRIPT_DIR/format-all-code
+$SCRIPT_DIR/format-all-py
+$SCRIPT_DIR/format-all-json
