@@ -52,8 +52,7 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
 
 template <int dim, typename number, typename ObstacleType>
 void
-MeltPoolDG::ObstacleField<dim, number, ObstacleType>::advance_time(const number current_time,
-                                                                   const number time_step)
+MeltPoolDG::ObstacleField<dim, number, ObstacleType>::advance_time(const number time_step)
 {
   compute_loads_on_obstacles();
 

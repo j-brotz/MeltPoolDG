@@ -70,12 +70,10 @@ namespace MeltPoolDG
     /**
      * @brief Advances the state of all obstacles in time by a single time step.
      *
-     * @param current_time The current simulation time after the time step.
      * @param time_step The size of the time step to advance.
-     * @param n_time_step The current time step number in the simulation.
      */
     void
-    advance_time(const number current_time, const number time_step);
+    advance_time(const number time_step);
 
     /**
      * @brief Computes and applies the total load acting on each obstacle in the field. This

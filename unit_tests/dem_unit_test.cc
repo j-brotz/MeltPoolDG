@@ -355,8 +355,7 @@ public:
         time_iterator->compute_next_time_increment();
         time_iterator->print_me(pcout);
 
-        obstacle_field->advance_time(time_iterator->get_current_time(),
-                                     time_iterator->get_current_time_increment());
+        obstacle_field->advance_time(time_iterator->get_current_time_increment());
 
         print_obstacle_field_information();
       }
