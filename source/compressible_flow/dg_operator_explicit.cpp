@@ -40,10 +40,8 @@ namespace MeltPoolDG::CompressibleFlow
   void
   DGOperatorExplicit<dim, number, n_species>::advance_time_step(number time, number time_step)
   {
-    std::function<void(number, number, VectorType &, const VectorType &)> pre_processing =
-      [&](number time, number, VectorType &, const VectorType &) -> void {
-      flow_scratch_data.boundary_conditions.update_boundary_conditions(time);
-    };
+    // No pre-processing is required here
+    std::function<void(number, number, VectorType &, const VectorType &)> pre_processing;
 
     std::function<void(number, number, VectorType &, const VectorType &)> post_processing =
       [&](number, number, VectorType &dst, const VectorType &src) -> void {
