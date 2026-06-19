@@ -176,3 +176,6 @@ endif ()
 # Applications
 # ##############################################################################
 add_subdirectory(applications)
+if (EXISTS ${CMAKE_SOURCE_DIR}/applications-dev/CMakeLists.txt)
+    add_subdirectory(applications-dev)
+endif ()
