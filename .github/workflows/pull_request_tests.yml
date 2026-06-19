@@ -1,9 +1,13 @@
 name: Pull request run of GitHub CI
 
 on:
-  pull_request:
+  pull_request_target:
     branches: [ master ]
     types: [ opened, synchronize, reopened, labeled ]
+
+permissions:
+  contents: read
+  pull-requests: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref || github.run_id }}
@@ -31,7 +35,37 @@ jobs:
       options: --user root
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout PR Code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          allow-unsafe-pr-checkout: true
+
+      - name: Verify Actor Authorization
+        id: verify_user
+        run: |
+          ACTOR="${{ github.actor }}"
+
+          # Query GitHub API for the actor's permission level on this repository
+          RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/collaborators/${ACTOR}/permission")
+
+          # Extract the permission string (e.g., "admin", "write", "read", "none")
+          PERM=$(echo "$RESPONSE" | grep -o '"permission": "[^"]*"' | cut -d':' -f2 | tr -d '" ')
+
+          echo "Event triggered by user: $ACTOR"
+          echo "User repository permission level: $PERM"
+
+          # Strict Gate: Only allow repository admins or write-access collaborators
+          if [ "$PERM" != "admin" ] && [ "$PERM" != "write" ]; then
+            echo "User '$ACTOR' does not have authorization to trigger self-hosted builds."
+            echo "Only repository maintainers can apply the 'ready to test' label to execute this workflow."
+            exit 1
+          else
+            echo "Authorization verified. Proceeding to environment setup."
+          fi
+
       - name: Determine filters for ctest
         id: test_command
         run: |
