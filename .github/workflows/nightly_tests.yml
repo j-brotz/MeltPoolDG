@@ -34,6 +34,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup SSH Keys
+        uses: webfactory/ssh-agent@v0.10.0
+        with:
+          ssh-private-key: ${{ secrets.APPLICATION_DEV_PRIVATE_KEY }}
+
       - name: Compile adaflo
         if: matrix.adaflo == 'adaflo=on'
         run: |
@@ -49,6 +54,7 @@ jobs:
 
       - name: Compile MeltPoolDG
         run: |
+          git clone git@github.com:tum-sam/applications-dev.git
           mkdir build
           cd build
           cmake \
