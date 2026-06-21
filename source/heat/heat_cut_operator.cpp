@@ -1263,22 +1263,40 @@ namespace MeltPoolDG::Heat
   {
     const auto              face_category = matrix_free.get_face_range_category(face_batch_range);
     const CutUtil::FaceType face_type     = CutUtil::get_face_type(face_category);
+
     if (face_type == CutUtil::FaceType::intersected_face or
         face_type == CutUtil::FaceType::mixed_face_liquid_intersected or
         face_type == CutUtil::FaceType::mixed_face_intersected_liquid)
       {
+        auto liquid_minus_category = CutUtil::CellCategory::intersected;
+        auto liquid_plus_category  = CutUtil::CellCategory::intersected;
+
+        if (face_type == CutUtil::FaceType::mixed_face_liquid_intersected)
+          {
+            liquid_minus_category = CutUtil::CellCategory::liquid;
+          }
+        else if (face_type == CutUtil::FaceType::mixed_face_intersected_liquid)
+          {
+            liquid_plus_category = CutUtil::CellCategory::liquid;
+          }
+        else
+          {
+            AssertThrow(face_type == CutUtil::FaceType::intersected_face,
+                        dealii::ExcInternalError());
+          }
+
         FaceEval eval_minus_l(matrix_free,
                               true /*is_interior_face*/,
                               heat_cut_dof_idx /*dof_no*/,
                               heat_quad_idx /*quad_no*/,
                               0 /*selected component*/,
-                              CutUtil::CellCategory::liquid /*active_fe_index*/);
+                              liquid_minus_category /*active_fe_index*/);
         FaceEval eval_plus_l(matrix_free,
                              false /*is_interior_face*/,
                              heat_cut_dof_idx /*dof_no*/,
                              heat_quad_idx /*quad_no*/,
                              0 /*selected component*/,
-                             CutUtil::CellCategory::liquid /*active_fe_index*/);
+                             liquid_plus_category /*active_fe_index*/);
 
         for (unsigned int face_batch = face_batch_range.first; face_batch < face_batch_range.second;
              face_batch++)
@@ -1308,19 +1326,37 @@ namespace MeltPoolDG::Heat
          face_type == CutUtil::FaceType::mixed_face_intersected_gas) and
         heat_data.cut.two_phase)
       {
+        auto gas_minus_category = CutUtil::CellCategory::intersected;
+        auto gas_plus_category  = CutUtil::CellCategory::intersected;
+
+        if (face_type == CutUtil::FaceType::mixed_face_gas_intersected)
+          {
+            gas_minus_category = CutUtil::CellCategory::gas;
+          }
+        else if (face_type == CutUtil::FaceType::mixed_face_intersected_gas)
+          {
+            gas_plus_category = CutUtil::CellCategory::gas;
+          }
+        else
+          {
+            AssertThrow(face_type == CutUtil::FaceType::intersected_face,
+                        dealii::ExcInternalError());
+          }
+
+
         FaceEval eval_minus_g(matrix_free,
                               true /*is_interior_face*/,
                               heat_cut_dof_idx /*dof_no*/,
                               heat_quad_idx /*quad_no*/,
                               1 /*selected component*/,
-                              CutUtil::CellCategory::gas /*active_fe_index*/);
+                              gas_minus_category /*active_fe_index*/);
 
         FaceEval eval_plus_g(matrix_free,
                              false /*is_interior_face*/,
                              heat_cut_dof_idx /*dof_no*/,
                              heat_quad_idx /*quad_no*/,
                              1 /*selected component*/,
-                             CutUtil::CellCategory::gas /*active_fe_index*/);
+                             gas_plus_category /*active_fe_index*/);
 
         for (unsigned int face_batch = face_batch_range.first; face_batch < face_batch_range.second;
              face_batch++)
@@ -1963,18 +1999,35 @@ namespace MeltPoolDG::Heat
         face_type == CutUtil::FaceType::mixed_face_liquid_intersected or
         face_type == CutUtil::FaceType::mixed_face_intersected_liquid)
       {
+        auto liquid_minus_category = CutUtil::CellCategory::intersected;
+        auto liquid_plus_category  = CutUtil::CellCategory::intersected;
+
+        if (face_type == CutUtil::FaceType::mixed_face_liquid_intersected)
+          {
+            liquid_minus_category = CutUtil::CellCategory::liquid;
+          }
+        else if (face_type == CutUtil::FaceType::mixed_face_intersected_liquid)
+          {
+            liquid_plus_category = CutUtil::CellCategory::liquid;
+          }
+        else
+          {
+            AssertThrow(face_type == CutUtil::FaceType::intersected_face,
+                        dealii::ExcInternalError());
+          }
+
         FaceEval T_new_eval_minus_l(matrix_free,
                                     true /*is_interior_face*/,
                                     heat_cut_dof_idx /*dof_no*/,
                                     heat_quad_idx /*quad_no*/,
                                     0 /*selected component*/,
-                                    CutUtil::CellCategory::liquid /*active_fe_index*/);
+                                    liquid_minus_category /*active_fe_index*/);
         FaceEval T_new_eval_plus_l(matrix_free,
                                    false /*is_interior_face*/,
                                    heat_cut_dof_idx /*dof_no*/,
                                    heat_quad_idx /*quad_no*/,
                                    0 /*selected component*/,
-                                   CutUtil::CellCategory::liquid /*active_fe_index*/);
+                                   liquid_plus_category /*active_fe_index*/);
 
         for (unsigned int face_batch = face_batch_range.first; face_batch < face_batch_range.second;
              face_batch++)
@@ -2006,19 +2059,36 @@ namespace MeltPoolDG::Heat
          face_type == CutUtil::FaceType::mixed_face_intersected_gas) and
         heat_data.cut.two_phase)
       {
+        auto gas_minus_category = CutUtil::CellCategory::intersected;
+        auto gas_plus_category  = CutUtil::CellCategory::intersected;
+
+        if (face_type == CutUtil::FaceType::mixed_face_gas_intersected)
+          {
+            gas_minus_category = CutUtil::CellCategory::gas;
+          }
+        else if (face_type == CutUtil::FaceType::mixed_face_intersected_gas)
+          {
+            gas_plus_category = CutUtil::CellCategory::gas;
+          }
+        else
+          {
+            AssertThrow(face_type == CutUtil::FaceType::intersected_face,
+                        dealii::ExcInternalError());
+          }
+
         FaceEval T_new_eval_minus_g(matrix_free,
                                     true /*is_interior_face*/,
                                     heat_cut_dof_idx /*dof_no*/,
                                     heat_quad_idx /*quad_no*/,
                                     1 /*selected component*/,
-                                    CutUtil::CellCategory::gas /*active_fe_index*/);
+                                    gas_minus_category /*active_fe_index*/);
 
         FaceEval T_new_eval_plus_g(matrix_free,
                                    false /*is_interior_face*/,
                                    heat_cut_dof_idx /*dof_no*/,
                                    heat_quad_idx /*quad_no*/,
                                    1 /*selected component*/,
-                                   CutUtil::CellCategory::gas /*active_fe_index*/);
+                                   gas_plus_category /*active_fe_index*/);
 
         for (unsigned int face_batch = face_batch_range.first; face_batch < face_batch_range.second;
              face_batch++)
@@ -2278,8 +2348,6 @@ namespace MeltPoolDG::Heat
         static_cast<DomainEval<> &>(*evaluators[i]).reinit(cell_index);
     };
 
-
-
     data_cell.op_compute = [&](auto &evaluators) {
       auto &eval_1 = static_cast<DomainEval<> &>(*evaluators[0]);
 
@@ -2371,6 +2439,7 @@ namespace MeltPoolDG::Heat
                                      data_face.first_selected_components[index]));
       };
 
+
       const auto              face_category = matrix_free.get_face_range_category(face_range);
       const CutUtil::FaceType face_type     = CutUtil::get_face_type(face_category);
 
@@ -2389,17 +2458,14 @@ namespace MeltPoolDG::Heat
           emplace_face_eval(2);
           emplace_face_eval(3);
         }
+
       return eval_data;
     };
-
-
 
     data_face.op_reinit = [](auto &evaluators, const unsigned face_index) {
       for (unsigned int i = 0; i < evaluators.size(); ++i)
         static_cast<FaceEval &>(*evaluators[i]).reinit(face_index);
     };
-
-
 
     data_face.op_compute = [&](auto &evaluators) {
       auto &eval_minus_l = static_cast<FaceEval &>(*evaluators[0]);
