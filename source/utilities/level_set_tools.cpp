@@ -37,7 +37,7 @@
 #include <deal.II/non_matching/mesh_classifier.h>
 
 #include <meltpooldg/utilities/generate_points_along_vector.hpp>
-#include <meltpooldg/utilities/triangulation_type.hpp>
+#include <meltpooldg/utilities/triangulation_utils.hpp>
 
 #include <algorithm>
 #include <cmath>
