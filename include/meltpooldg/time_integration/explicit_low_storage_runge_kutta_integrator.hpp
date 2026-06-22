@@ -38,6 +38,7 @@ namespace MeltPoolDG::TimeIntegration
                                                number,
                                                VectorType &,
                                                const VectorType &,
+                                               std::function<void(unsigned, unsigned)>,
                                                std::function<void(unsigned, unsigned)>)>;
 
 

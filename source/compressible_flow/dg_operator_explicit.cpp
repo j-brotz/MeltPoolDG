@@ -75,7 +75,8 @@ namespace MeltPoolDG::CompressibleFlow
     const number                                           time_step,
     VectorType                                            &dst,
     const VectorType                                      &src,
-    const std::function<void(unsigned int, unsigned int)> &func) const
+    const std::function<void(unsigned int, unsigned int)> &pre,
+    const std::function<void(unsigned int, unsigned int)> &post) const
   {
     current_time_step        = time_step;
     using local_applier_type = std::function<void(const dealii::MatrixFree<dim, number> &,
@@ -88,7 +89,14 @@ namespace MeltPoolDG::CompressibleFlow
     local_applier_type face          = MPDG_LAMBDA_WRAPPER(this->local_apply_face);
     local_applier_type boundary_face = MPDG_LAMBDA_WRAPPER(this->local_apply_boundary_face);
     flow_scratch_data.scratch_data.get_matrix_free().loop(
-      cell, face, boundary_face, dst, src, false);
+      cell,
+      face,
+      boundary_face,
+      dst,
+      src,
+      pre,
+      std::function<void(unsigned int, unsigned int)>(),
+      flow_scratch_data.dof_idx);
 
     local_applier_type inverse =
       [dof_idx = flow_scratch_data.dof_idx,
@@ -102,7 +110,7 @@ namespace MeltPoolDG::CompressibleFlow
             matrix_free, dst, src, cell_range, dof_idx, quad_idx);
       };
     flow_scratch_data.scratch_data.get_matrix_free().cell_loop(
-      inverse, dst, dst, std::function<void(unsigned int, unsigned int)>(), func);
+      inverse, dst, dst, std::function<void(unsigned int, unsigned int)>(), post);
   }
 
   template <int dim, typename number, int n_species>

@@ -67,7 +67,8 @@ namespace MeltPoolDG::LevelSet
     number const                                           time,
     VectorType                                            &dst,
     VectorType const                                      &src,
-    const std::function<void(unsigned int, unsigned int)> &func) const
+    const std::function<void(unsigned int, unsigned int)> &pre,
+    const std::function<void(unsigned int, unsigned int)> &post) const
   {
     compute_godunov_hamiltonian(src);
 
@@ -76,7 +77,9 @@ namespace MeltPoolDG::LevelSet
       this,
       dst,
       num_Hamiltonian,
-      true);
+      pre,
+      std::function<void(unsigned int, unsigned int)>(),
+      reinit_dof_idx);
 
     using local_applier_type =
       std::function<void(const dealii::MatrixFree<dim, number> &,
@@ -118,7 +121,7 @@ namespace MeltPoolDG::LevelSet
 
         dst.add(1.0, num_Hamiltonian);
       }
-    func(0, dst.locally_owned_size());
+    post(0, dst.locally_owned_size());
   }
 
   template <int dim, typename number>

@@ -56,7 +56,8 @@ namespace MeltPoolDG::LevelSet
     apply_operator(number const                                           time,
                    VectorType                                            &dst,
                    VectorType const                                      &src,
-                   const std::function<void(unsigned int, unsigned int)> &func) const;
+                   const std::function<void(unsigned int, unsigned int)> &pre,
+                   const std::function<void(unsigned int, unsigned int)> &post) const;
 
     /**
      * Function is needed for a conistent time integration interface. In this case the function is

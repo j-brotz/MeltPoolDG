@@ -79,7 +79,8 @@ namespace MeltPoolDG::LevelSet
     apply_operator(number                                                 time,
                    VectorType                                            &dst,
                    const VectorType                                      &src,
-                   const std::function<void(unsigned int, unsigned int)> &func = {}) const;
+                   const std::function<void(unsigned int, unsigned int)> &pre  = {},
+                   const std::function<void(unsigned int, unsigned int)> &post = {}) const;
     /**
      * Applies the dirichlet contribution of the DG advection operator to the @param src vector and stores
      * the result in the @param dst vector. The dst vector is NOT zeroed out before the operation.

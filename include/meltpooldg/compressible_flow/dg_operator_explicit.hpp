@@ -96,15 +96,18 @@ namespace MeltPoolDG::CompressibleFlow
      * @param time The current time at which the function is evaluated.
      * @param dst Vector where the computed value of f(y) is stored.
      * @param src The solution vector, y, at the current time.
-     * @param func A function to be executed after f(y) has been computed. This function is applied
-     * to the resulting vector in @p dst.
+     * @param pre A function to be executed before f(y) is computed. It expects a range of indices
+     * (start and end) on which it should be applied.
+     * @param post A function to be executed after f(y) has been computed. It expects a range of
+     * indices (start and end) on which it should be applied.
      */
     void
     apply_operator(number                                                 time,
                    number                                                 time_step,
                    VectorType                                            &dst,
                    const VectorType                                      &src,
-                   const std::function<void(unsigned int, unsigned int)> &func) const;
+                   const std::function<void(unsigned int, unsigned int)> &pre,
+                   const std::function<void(unsigned int, unsigned int)> &post) const;
 
     void
     add_external_force(std::shared_ptr<ExternalFlowForce<dim, number, n_species>> external_force,

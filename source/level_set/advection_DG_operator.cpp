@@ -312,7 +312,8 @@ namespace MeltPoolDG::LevelSet
     const number                                           time,
     LinearAlgebra::distributed::Vector<number>            &dst,
     LinearAlgebra::distributed::Vector<number> const      &src,
-    const std::function<void(unsigned int, unsigned int)> &func) const
+    const std::function<void(unsigned int, unsigned int)> &pre,
+    const std::function<void(unsigned int, unsigned int)> &post) const
   {
     if (boundary_conditions)
       boundary_conditions->set_time(time);
@@ -324,7 +325,9 @@ namespace MeltPoolDG::LevelSet
       this,
       dst,
       src,
-      false,
+      pre,
+      std::function<void(unsigned int, unsigned int)>(),
+      advec_diff_dof_idx,
       MatrixFree<dim, number>::DataAccessOnFaces::values,
       MatrixFree<dim, number>::DataAccessOnFaces::values);
 
@@ -345,7 +348,7 @@ namespace MeltPoolDG::LevelSet
       };
 
     this->scratch_data_.get_matrix_free().cell_loop(
-      inverse, dst, dst, std::function<void(unsigned int, unsigned int)>(), func);
+      inverse, dst, dst, std::function<void(unsigned int, unsigned int)>(), post);
   }
 
   template <int dim, typename number>

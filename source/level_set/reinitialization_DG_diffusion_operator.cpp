@@ -292,7 +292,8 @@ namespace MeltPoolDG::LevelSet
     [[maybe_unused]] const number                          time,
     VectorType                                            &dst,
     const VectorType                                      &src,
-    const std::function<void(unsigned int, unsigned int)> &func) const
+    const std::function<void(unsigned int, unsigned int)> &pre,
+    const std::function<void(unsigned int, unsigned int)> &post) const
   {
     scratch_data.get_matrix_free().loop(
       &ReinitializationDGDiffusionOperator<dim, number>::local_apply_domain,
@@ -301,7 +302,9 @@ namespace MeltPoolDG::LevelSet
       this,
       dst,
       src,
-      true,
+      pre,
+      std::function<void(unsigned int, unsigned int)>(),
+      reinit_dof_idx,
       MatrixFree<dim, number>::DataAccessOnFaces::unspecified,
       MatrixFree<dim, number>::DataAccessOnFaces::unspecified);
 
@@ -322,7 +325,7 @@ namespace MeltPoolDG::LevelSet
       };
 
     scratch_data.get_matrix_free().cell_loop(
-      inverse, dst, dst, std::function<void(unsigned int, unsigned int)>(), func);
+      inverse, dst, dst, std::function<void(unsigned int, unsigned int)>(), post);
   }
 
   template class ReinitializationDGDiffusionOperator<1, double>;

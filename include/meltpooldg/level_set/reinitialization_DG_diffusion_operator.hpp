@@ -61,7 +61,8 @@ namespace MeltPoolDG::LevelSet
     apply_operator([[maybe_unused]] const number                          time,
                    VectorType                                            &dst,
                    const VectorType                                      &src,
-                   const std::function<void(unsigned int, unsigned int)> &func = {}) const;
+                   const std::function<void(unsigned int, unsigned int)> &pre  = {},
+                   const std::function<void(unsigned int, unsigned int)> &post = {}) const;
 
     /**
      * Applies the dirichlet contribution of the DG diffusion operator to the src vector and stores

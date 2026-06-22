@@ -155,8 +155,9 @@ namespace MeltPoolDG::TimeIntegration
                           number,
                           dealii::LinearAlgebra::distributed::Vector<number>       &dst,
                           const dealii::LinearAlgebra::distributed::Vector<number> &src,
+                          std::function<void(unsigned, unsigned)>                   pre,
                           std::function<void(unsigned, unsigned)>                   post) {
-            pde_operator.apply_operator(time, dst, src, post);
+            pde_operator.apply_operator(time, dst, src, pre, post);
           });
         return integrator;
       }

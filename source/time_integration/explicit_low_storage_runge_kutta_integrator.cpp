@@ -150,27 +150,34 @@ namespace MeltPoolDG::TimeIntegration
              "The size of the solution history object does not fit the requirements of the "
              "chosen time integration scheme."));
 
-    rk_register_ri = 0.;
     if (stage_pre_processing)
       stage_pre_processing(current_time,
                            ci[0] * time_step,
                            rk_register_ri,
                            solution_history.get_current_solution());
-    compute_rhs(current_time,
-                ci[0] * time_step,
-                rk_register_ri,
-                solution_history.get_current_solution(),
-                [&](const unsigned int start_range, const unsigned int end_range) {
-                  DEAL_II_OPENMP_SIMD_PRAGMA
-                  for (unsigned int i = start_range; i < end_range; ++i)
-                    {
-                      const number k_i   = rk_register_ri.local_element(i);
-                      const number sol_i = solution_history.get_current_solution().local_element(i);
-                      solution_history.get_current_solution().local_element(i) =
-                        sol_i + bi[0] * time_step * k_i;
-                      rk_register_ri.local_element(i) = sol_i + ai[0] * time_step * k_i;
-                    }
-                });
+    compute_rhs(
+      current_time,
+      ci[0] * time_step,
+      rk_register_ri,
+      solution_history.get_current_solution(),
+      [&](const unsigned int start_range, const unsigned int end_range) {
+        DEAL_II_OPENMP_SIMD_PRAGMA
+        for (unsigned int i = start_range; i < end_range; ++i)
+          {
+            rk_register_ri.local_element(i) = 0.;
+          }
+      },
+      [&](const unsigned int start_range, const unsigned int end_range) {
+        DEAL_II_OPENMP_SIMD_PRAGMA
+        for (unsigned int i = start_range; i < end_range; ++i)
+          {
+            const number k_i   = rk_register_ri.local_element(i);
+            const number sol_i = solution_history.get_current_solution().local_element(i);
+            solution_history.get_current_solution().local_element(i) =
+              sol_i + bi[0] * time_step * k_i;
+            rk_register_ri.local_element(i) = sol_i + ai[0] * time_step * k_i;
+          }
+      });
 
     if (stage_post_processing)
       stage_post_processing(current_time + ci[0] * time_step,
@@ -180,43 +187,48 @@ namespace MeltPoolDG::TimeIntegration
 
     for (unsigned int stage = 1; stage < bi.size(); ++stage)
       {
-        rk_register_ki = 0.;
         if (stage_pre_processing)
           stage_pre_processing(current_time + ci[stage - 1] * time_step,
                                ci[stage] * time_step,
                                rk_register_ki,
                                rk_register_ri);
-        compute_rhs(current_time + ci[stage - 1] * time_step,
-                    ci[stage] * time_step,
-                    rk_register_ki,
-                    rk_register_ri,
-                    [&](const unsigned int start_range, const unsigned int end_range) {
-                      if (stage < bi.size() - 1)
-                        {
-                          DEAL_II_OPENMP_SIMD_PRAGMA
-                          for (unsigned int i = start_range; i < end_range; ++i)
-                            {
-                              const number k_i = rk_register_ki.local_element(i);
-                              const number sol_i =
-                                solution_history.get_current_solution().local_element(i);
-                              solution_history.get_current_solution().local_element(i) =
-                                sol_i + bi[stage] * time_step * k_i;
-                              rk_register_ki.local_element(i) = sol_i + ai[stage] * time_step * k_i;
-                            }
-                        }
-                      else
-                        {
-                          DEAL_II_OPENMP_SIMD_PRAGMA
-                          for (unsigned int i = start_range; i < end_range; ++i)
-                            {
-                              const number k_i = rk_register_ki.local_element(i);
-                              const number sol_i =
-                                solution_history.get_current_solution().local_element(i);
-                              solution_history.get_current_solution().local_element(i) =
-                                sol_i + bi[stage] * time_step * k_i;
-                            }
-                        }
-                    });
+        compute_rhs(
+          current_time + ci[stage - 1] * time_step,
+          ci[stage] * time_step,
+          rk_register_ki,
+          rk_register_ri,
+          [&](const unsigned int start_range, const unsigned int end_range) {
+            DEAL_II_OPENMP_SIMD_PRAGMA
+            for (unsigned int i = start_range; i < end_range; ++i)
+              {
+                rk_register_ki.local_element(i) = 0.;
+              }
+          },
+          [&](const unsigned int start_range, const unsigned int end_range) {
+            if (stage < bi.size() - 1)
+              {
+                DEAL_II_OPENMP_SIMD_PRAGMA
+                for (unsigned int i = start_range; i < end_range; ++i)
+                  {
+                    const number k_i   = rk_register_ki.local_element(i);
+                    const number sol_i = solution_history.get_current_solution().local_element(i);
+                    solution_history.get_current_solution().local_element(i) =
+                      sol_i + bi[stage] * time_step * k_i;
+                    rk_register_ki.local_element(i) = sol_i + ai[stage] * time_step * k_i;
+                  }
+              }
+            else
+              {
+                DEAL_II_OPENMP_SIMD_PRAGMA
+                for (unsigned int i = start_range; i < end_range; ++i)
+                  {
+                    const number k_i   = rk_register_ki.local_element(i);
+                    const number sol_i = solution_history.get_current_solution().local_element(i);
+                    solution_history.get_current_solution().local_element(i) =
+                      sol_i + bi[stage] * time_step * k_i;
+                  }
+              }
+          });
         if (stage_post_processing)
           stage_post_processing(current_time + ci[stage] * time_step,
                                 ci[stage] * time_step,

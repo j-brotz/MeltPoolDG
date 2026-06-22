@@ -116,6 +116,7 @@ namespace MeltPoolDG::TimeIntegration
       pde_operator.apply_operator(old_time_,
                                   right_hand_side_,
                                   solution_history.get_recent_old_solution(),
+                                  std::function<void(unsigned int, unsigned int)>(),
                                   std::function<void(unsigned int, unsigned int)>());
       right_hand_side_ *= (1.0 - Theta_);
       buffer = 0.;
@@ -140,6 +141,7 @@ namespace MeltPoolDG::TimeIntegration
           pde_operator.apply_operator(old_time_ + dt_,
                                       dst,
                                       src,
+                                      std::function<void(unsigned int, unsigned int)>(),
                                       std::function<void(unsigned int, unsigned int)>());
           dst *= -1.0;
           dst *= Theta_ * dt_;

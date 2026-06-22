@@ -387,6 +387,7 @@ namespace
         time_step,
         this->data->flow_scratch_data->solution_history.get_current_solution(),
         this->data->flow_scratch_data->solution_history.get_current_solution(),
+        std::function<void(unsigned int, unsigned int)>(),
         std::function<void(unsigned int, unsigned int)>());
       state.counters["DoFs"] = this->data->dof_handler.n_dofs();
     });
@@ -430,6 +431,7 @@ namespace
         time_step,
         this->data->flow_scratch_data->solution_history.get_current_solution(),
         this->data->flow_scratch_data->solution_history.get_current_solution(),
+        std::function<void(unsigned int, unsigned int)>(),
         std::function<void(unsigned int, unsigned int)>());
       state.counters["DoFs"]      = this->data->dof_handler.n_dofs();
       state.counters["Particles"] = state.range(0);
