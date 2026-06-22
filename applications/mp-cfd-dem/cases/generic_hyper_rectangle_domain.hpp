@@ -51,7 +51,8 @@ namespace MeltPoolDG::Simulation::CfdDem
         this->attach_boundary_condition(
           std::make_pair(i,
                          boundary_conditions[i].create_boundary_function(
-                           this->parameters.time_stepping.start_time)),
+                           this->parameters.time_stepping.start_time,
+                           this->parameters.material.number_of_species)),
           CompressibleFlow::BoundaryConditions<dim, number>::boundary_type_to_string_map.at(
             boundary_conditions[i].type),
           "cfd_dem");
