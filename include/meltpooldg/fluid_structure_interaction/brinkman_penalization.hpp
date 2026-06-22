@@ -20,7 +20,7 @@
 namespace MeltPoolDG
 {
 
-  template <int dim, typename number, typename ObstacleType>
+  template <int dim, typename number, typename ObstacleType, int n_species>
   struct BrinkmanObstacleForce
   {
     using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
@@ -81,11 +81,11 @@ namespace MeltPoolDG
    * - \f(\mathbf{u}_s\f) is the local obstacle velocity,
    * - \f(\mathbf{m}_f\f) is the current fluid momentum.
    */
-  template <int dim, typename number, typename ObstacleType>
+  template <int dim, typename number, typename ObstacleType, int n_species = 1>
   struct BrinkmanPenalizationResidualContribution final
-    : public CompressibleFlow::ExternalFlowForce<dim, number>
+    : public CompressibleFlow::ExternalFlowForce<dim, number, n_species>
   {
-    using ConservedVariablesType = CompressibleFlow::ConservedVariablesType<dim, number>;
+    using ConservedVariablesType = CompressibleFlow::ConservedVariablesType<dim, number, n_species>;
 
   public:
     /**
@@ -145,11 +145,11 @@ namespace MeltPoolDG
    * - \f(\mathbf{u}_s\f) is the local obstacle velocity,
    * - \f(\mathbf{m}_f\f) is the current fluid momentum.
    */
-  template <int dim, typename number, typename ObstacleType>
+  template <int dim, typename number, typename ObstacleType, int n_species>
   struct BrinkmanPenalizationJacobianContribution final
-    : public CompressibleFlow::ExternalFlowForceJacobian<dim, number>
+    : public CompressibleFlow::ExternalFlowForceJacobian<dim, number, n_species>
   {
-    using ConservedVariablesType = CompressibleFlow::ConservedVariablesType<dim, number>;
+    using ConservedVariablesType = CompressibleFlow::ConservedVariablesType<dim, number, n_species>;
 
   public:
     /**

@@ -197,7 +197,7 @@ namespace
     // Set up the Brinkman penalization force to compute the forces on the particles
     BrinkmanPenalizationData<number> brinkman_data;
     brinkman_data.permeability = 1e-9;
-    BrinkmanObstacleForce<dim, number, SphericalParticle<dim, number>> brinkman_obstacle_force(
+    BrinkmanObstacleForce<dim, number, SphericalParticle<dim, number>, 1> brinkman_obstacle_force(
       obstacle_field,
       solution,
       MatrixFreeContext<dim, number>(scratch_data.get_matrix_free(), dof_index, quad_index),

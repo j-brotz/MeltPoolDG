@@ -14,7 +14,7 @@
 
 namespace MeltPoolDG
 {
-  template <int dim, typename number, typename ObstacleType>
+  template <int dim, typename number, typename ObstacleType, int n_species>
   struct StokesLawSphericalParticleForce
   {
     using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
@@ -66,10 +66,11 @@ namespace MeltPoolDG
    * (https://doi.org/10.1016/j.actamat.2020.06.033) in the context of vapor–particle interactions
    * during metal additive manufacturing.
    */
-  template <int dim, typename number, typename ObstacleType>
-  struct StokesLawFluidForce final : public CompressibleFlow::ExternalFlowForce<dim, number>
+  template <int dim, typename number, typename ObstacleType, int n_species = 1>
+  struct StokesLawFluidForce final
+    : public CompressibleFlow::ExternalFlowForce<dim, number, n_species>
   {
-    using ConservedVariablesType = CompressibleFlow::ConservedVariablesType<dim, number>;
+    using ConservedVariablesType = CompressibleFlow::ConservedVariablesType<dim, number, n_species>;
     using VectorType             = dealii::LinearAlgebra::distributed::Vector<number>;
 
   public:
