@@ -169,7 +169,7 @@ namespace MeltPoolDG::TimeIntegration
                            rk_register_ri,
                            solution_history.get_current_solution());
     compute_rhs(current_time,
-                time_step,
+                ci[0] * time_step,
                 rk_register_ri,
                 solution_history.get_current_solution(),
                 [&](const unsigned int start_range, const unsigned int end_range) {
@@ -187,8 +187,10 @@ namespace MeltPoolDG::TimeIntegration
     if (stage_post_processing)
       stage_post_processing(current_time + ci[0] * time_step,
                             ci[0] * time_step,
-                            rk_register_ri,
-                            rk_register_ri);
+                            bi.size() == 1 ? solution_history.get_current_solution() :
+                                             rk_register_ri,
+                            bi.size() == 1 ? solution_history.get_current_solution() :
+                                             rk_register_ri);
 
     for (unsigned int stage = 1; stage < bi.size(); ++stage)
       {
@@ -198,8 +200,8 @@ namespace MeltPoolDG::TimeIntegration
                                ci[stage] * time_step,
                                rk_register_ki,
                                rk_register_ri);
-        compute_rhs(current_time,
-                    time_step,
+        compute_rhs(current_time + ci[stage - 1] * time_step,
+                    ci[stage] * time_step,
                     rk_register_ki,
                     rk_register_ri,
                     [&](const unsigned int start_range, const unsigned int end_range) {
