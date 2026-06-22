@@ -1,3 +1,4 @@
+#include <deal.II/base/conditional_ostream.h>
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/vectorization.h>
@@ -136,7 +137,7 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number>
   number
-  CutDGOperation<dim, number>::compute_time_step_size(const bool do_print) const
+  CutDGOperation<dim, number>::compute_time_step_size(const dealii::ConditionalOStream &pcout) const
   {
     const number min_density = compute_minimum_density();
 
@@ -153,16 +154,13 @@ namespace MeltPoolDG::CompressibleFlow
     const number convective_time_step_limit = compute_convective_time_step_limit();
     const number time_step = std::min(convective_time_step_limit, viscous_time_step_limit);
 
-    if (do_print)
-      {
-        flow_scratch_data.scratch_data.get_pcout()
-          << "Time step size: " << time_step
-          << ", convective time step limit: " << convective_time_step_limit
-          << ", viscous time step limit: " << viscous_time_step_limit
-          << ",\nminimum h: " << flow_scratch_data.scratch_data.get_min_cell_size()
-          << ", minimum density: " << min_density << std::endl
-          << std::endl;
-      }
+    if (pcout.is_active())
+      pcout << "Time step size: " << time_step
+            << ", convective time step limit: " << convective_time_step_limit
+            << ", viscous time step limit: " << viscous_time_step_limit
+            << ",\nminimum h: " << flow_scratch_data.scratch_data.get_min_cell_size()
+            << ", minimum density: " << min_density << std::endl
+            << std::endl;
 
     return time_step;
   }

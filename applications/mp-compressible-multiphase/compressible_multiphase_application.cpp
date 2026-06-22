@@ -31,7 +31,8 @@ namespace MeltPoolDG::Multiphase
         // use CFL condition to compute time step size if required
         if (simulation_case->parameters.flow.do_cfl_time_stepping)
           time_iterator->set_current_time_increment(
-            comp_multiphase_operation.compute_time_step_size(), std::numeric_limits<number>::max());
+            comp_multiphase_operation.compute_time_step_size(scratch_data->get_pcout(2)),
+            std::numeric_limits<number>::max());
 
         time_iterator->compute_next_time_increment();
         time_iterator->print_me(scratch_data->get_pcout(1));

@@ -215,7 +215,8 @@ namespace MeltPoolDG::Multiphase
 
   template <int dim, typename number>
   number
-  CompressibleMultiphaseOperation<dim, number>::compute_time_step_size(const bool do_print) const
+  CompressibleMultiphaseOperation<dim, number>::compute_time_step_size(
+    const dealii::ConditionalOStream &pcout) const
   {
     const std::pair<number, number> min_density = compute_minimum_density();
 
@@ -254,17 +255,14 @@ namespace MeltPoolDG::Multiphase
 
     const number time_step = std::min(convective_time_step_limit, viscous_time_step_limit);
 
-    if (do_print)
-      {
-        multiphase_scratch_data.scratch_data.get_pcout()
-          << "Time step size: " << time_step
-          << ", convective time step limit: " << convective_time_step_limit
-          << ", viscous time step limit: " << viscous_time_step_limit
-          << ",\nminimum h: " << multiphase_scratch_data.scratch_data.get_min_cell_size()
-          << ", minimum density liquid: " << min_density.first << std::endl
-          << ", minimum density gas: " << min_density.second << std::endl
-          << std::endl;
-      }
+    if (pcout.is_active())
+      pcout << "Time step size: " << time_step
+            << ", convective time step limit: " << convective_time_step_limit
+            << ", viscous time step limit: " << viscous_time_step_limit
+            << ",\nminimum h: " << multiphase_scratch_data.scratch_data.get_min_cell_size()
+            << ", minimum density liquid: " << min_density.first << std::endl
+            << ", minimum density gas: " << min_density.second << std::endl
+            << std::endl;
 
     return time_step;
   }

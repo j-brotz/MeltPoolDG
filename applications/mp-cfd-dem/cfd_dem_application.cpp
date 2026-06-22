@@ -94,7 +94,7 @@ namespace MeltPoolDG
         // use CFL condition to compute time step size if required
         if (simulation_case->parameters.flow.do_cfl_time_stepping)
           time_iterator->set_current_time_increment(
-            std::min(comp_flow_operation->compute_time_step_size(),
+            std::min(comp_flow_operation->compute_time_step_size(scratch_data->get_pcout(2)),
                      simulation_case->parameters.time_stepping.time_step_size),
             std::numeric_limits<number>::max());
 

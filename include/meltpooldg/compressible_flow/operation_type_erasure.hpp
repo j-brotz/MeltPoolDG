@@ -90,12 +90,13 @@ namespace MeltPoolDG::CompressibleFlow
      * The maximum time step size arises from the convective and viscous time step limits.
      * It is optionally printed to the console.
      *
-     * @param do_print If true, the time step limit is printed to the console.
+     * @param pcout Output stream for printing additional information about the convective and
+     * viscous time step limits.
      */
     number
-    compute_time_step_size(const bool do_print = false) const
+    compute_time_step_size(const dealii::ConditionalOStream &pcout) const
     {
-      return operation_pimpl->compute_time_step_size(do_print);
+      return operation_pimpl->compute_time_step_size(pcout);
     }
 
     /**
@@ -223,7 +224,7 @@ namespace MeltPoolDG::CompressibleFlow
       reinit() = 0;
 
       virtual number
-      compute_time_step_size(bool do_print = false) const = 0;
+      compute_time_step_size(const dealii::ConditionalOStream &pcout) const = 0;
 
       virtual void
       set_initial_condition(const dealii::Function<dim> &function) = 0;
@@ -290,9 +291,9 @@ namespace MeltPoolDG::CompressibleFlow
       }
 
       number
-      compute_time_step_size(const bool do_print = false) const override
+      compute_time_step_size(const dealii::ConditionalOStream &pcout) const override
       {
-        return operation->compute_time_step_size(do_print);
+        return operation->compute_time_step_size(pcout);
       }
 
       void

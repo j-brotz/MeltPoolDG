@@ -121,12 +121,13 @@ namespace MeltPoolDG::CompressibleFlow
      * The maximum time step size arises from the convective and viscous time step limits.
      * Optionally, it is printed to the console.
      *
-     * @param do_print If true, the time step limit is printed to the console.
+     * @param pcout Output stream for printing additional information about the convective and
+     * viscous time step limits.
      *
      * @return The computed maximum time step size.
      */
     number
-    compute_time_step_size(bool do_print = false) const;
+    compute_time_step_size(const dealii::ConditionalOStream &pcout) const;
 
     /**
      * @brief Set the solution vector to the passed initial flow field state.
