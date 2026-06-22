@@ -29,7 +29,9 @@ jobs:
 
     container:
       image: dealii/dealii:${{ matrix.dealii_version }}-noble
-      options: --user root
+      options: --user root -v /tmp/ssh-agent:/tmp/ssh-agent
+      env:
+        SSH_AUTH_SOCK: /tmp/ssh-agent
 
     steps:
       - uses: actions/checkout@v4
@@ -38,6 +40,7 @@ jobs:
         uses: webfactory/ssh-agent@v0.10.0
         with:
           ssh-private-key: ${{ secrets.APPLICATION_DEV_PRIVATE_KEY }}
+          ssh-auth-sock: /tmp/ssh-agent
 
       - name: Compile adaflo
         if: matrix.adaflo == 'adaflo=on'
