@@ -87,7 +87,7 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
       const auto total_energy =
         Functions::ExtractedComponentsFunction<dim, number>(*reference_values, 1 + dim, 1);
       postprocessor_data_vector.emplace_back(
-        DataToPrint{.name = "total energy", .reference_function = total_energy});
+        DataToPrint{.name = "total_energy", .reference_function = total_energy});
 
       std::vector<Functions::ExtractedComponentsFunction<dim, number>> partial_densities;
       for (unsigned int species = 0; species < this->parameters.material.number_of_species - 1;
@@ -97,7 +97,7 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
             *reference_values, 2 + dim + species, 1));
           postprocessor_data_vector.emplace_back(
             DataToPrint{.name =
-                          this->parameters.material.species_data[species].name + " partial density",
+                          this->parameters.material.species_data[species].name + "_partial_density",
                         .reference_function = partial_densities[species]});
         }
 

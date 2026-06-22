@@ -51,7 +51,7 @@ namespace MeltPoolDG::SpeciesTransport
           "The number of provided species names must match the number of species in the simulation."));
       for (std::string &name : this->species_names)
         {
-          name += " mass fraction";
+          name += "_mass_fraction";
         }
     }
 
@@ -145,7 +145,7 @@ namespace MeltPoolDG::SpeciesTransport
           "The number of provided species names must match the number of species in the simulation."));
       for (std::string &name : this->species_names)
         {
-          name += " partial density";
+          name += "_partial_density";
         }
     }
 
