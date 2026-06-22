@@ -309,6 +309,8 @@ namespace MeltPoolDG::Simulation::LaserMeltingSimonds
 
             this->attach_boundary_condition(gas_top_bc, "no_slip", "navier_stokes_u");
 
+            this->attach_boundary_condition(gas_top_bc, "fix_pressure_constant", "navier_stokes_p");
+
             this->attach_boundary_condition(gas_inflow_bc, "no_slip", "navier_stokes_u");
             this->attach_boundary_condition(gas_outlet_bc, "no_slip", "navier_stokes_u");
             this->attach_boundary_condition(substrate_outflow_wall_bc,
