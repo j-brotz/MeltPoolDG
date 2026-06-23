@@ -166,7 +166,7 @@ namespace MeltPoolDG::Simulation::CompressibleFlow
       const auto total_energy =
         Functions::ExtractedComponentsFunction<dim, number>(exact_solution, 1 + dim, 1);
       postprocessor_data_vector.emplace_back(
-        DataToPrint{.name = "total energy", .reference_function = total_energy});
+        DataToPrint{.name = "total_energy", .reference_function = total_energy});
 
       this->print_relative_norm_fitted(generic_data_out, postprocessor_data_vector, "error");
     }
