@@ -29,7 +29,7 @@ jobs:
 
     container:
       image: dealii/dealii:${{ matrix.dealii_version }}-noble
-      options: --user root -v /tmp/ssh-agent:/tmp/ssh-agent
+      options: --user root -v /tmp/ssh-agent
       env:
         SSH_AUTH_SOCK: /tmp/ssh-agent
 
