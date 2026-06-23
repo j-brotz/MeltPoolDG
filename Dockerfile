@@ -2,7 +2,7 @@ ARG DEALII_IMAGE_VERSION="master"
 FROM dealii/dealii:${DEALII_IMAGE_VERSION}-noble AS builder
 
 ARG BUILD_TYPE="Release"
-ARG COMPILE_JOBS=4
+ARG COMPILE_JOBS=2
 USER root
 
 WORKDIR /app
@@ -30,6 +30,7 @@ cmake \
 -D ADAFLO_LIB=/app/adaflo-build/ \
 -D ADAFLO_INCLUDE=/app/adaflo/include/ \
 -D MPDG_ENABLE_BENCHMARKING=OFF \
+--verbose
 .. && \
 make -j${COMPILE_JOBS} 
 
