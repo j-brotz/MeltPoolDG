@@ -30,9 +30,8 @@ cmake \
 -D ADAFLO_LIB=/app/adaflo-build/ \
 -D ADAFLO_INCLUDE=/app/adaflo/include/ \
 -D MPDG_ENABLE_BENCHMARKING=OFF \
---verbose
 .. && \
-make -j${COMPILE_JOBS} 
+make -j${COMPILE_JOBS} VERBOSE=1
 
 ENV HWLOC_HIDE_ERRORS=2
 ENV OMPI_ALLOW_RUN_AS_ROOT=1
