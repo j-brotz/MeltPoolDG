@@ -29,7 +29,7 @@ cmake \
 -D CMAKE_BUILD_TYPE=${BUILD_TYPE} \
 -D ADAFLO_LIB=/app/adaflo-build/ \
 -D ADAFLO_INCLUDE=/app/adaflo/include/ \
--D MPDG_ENABLE_BENCHMARKING=ON \
+-D MPDG_ENABLE_BENCHMARKING=OFF \
 .. && \
 make -j${COMPILE_JOBS} 
 
