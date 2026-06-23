@@ -36,6 +36,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Clear stale SSH socket
+        run: rm -f /tmp/ssh-agent
+
       - name: Setup SSH Keys
         uses: webfactory/ssh-agent@v0.10.0
         with:
