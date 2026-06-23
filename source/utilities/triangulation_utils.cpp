@@ -7,10 +7,12 @@
 #include <deal.II/distributed/tria.h>
 
 #include <deal.II/grid/cell_id.h>
+#include <deal.II/grid/tria_accessor.h>
 
 #include <meltpooldg/utilities/cpp23_functions.h>
 
 #include <map>
+#include <set>
 #include <utility>
 #include <vector>
 
@@ -31,6 +33,130 @@ namespace MeltPoolDG
       return TriangulationType::parallel_fullydistributed;
     else
       return TriangulationType::serial;
+  }
+
+  template <int dim>
+  void
+  LevelAdjacentCellsCache<dim>::build_cache(const dealii::Triangulation<dim> &tria,
+                                            const unsigned int                level)
+  {
+    compute_global_cell_count(tria, level);
+    cache_adjacent_cells(tria, level);
+    is_cache_built = true;
+    cache_level    = level;
+  }
+
+  template <int dim>
+  const std::set<dealii::TriaIterator<dealii::CellAccessor<dim>>> &
+  LevelAdjacentCellsCache<dim>::get_adjacent_cells(const tria_iterator &cell) const
+  {
+    assert_cache_built();
+
+    Assert(static_cast<unsigned int>(cell->level()) == cache_level,
+           dealii::ExcMessage(
+             "The given cell is not on the level for which the adjacency cache has been built."));
+
+    Assert(
+      adjacent_cells_cache.contains(cell),
+      dealii::ExcMessage(
+        "The adjacent cells for the given cell have not been computed yet. Please ensure that the given cell is locally available and that the build_cache() function has been called for the corresponding level."));
+
+    return adjacent_cells_cache.find(cell)->second;
+  }
+
+  template <int dim>
+  unsigned int
+  LevelAdjacentCellsCache<dim>::n_global_cells_on_level() const
+  {
+    assert_cache_built();
+    return n_global_level_cells;
+  }
+
+
+  template <int dim>
+  void
+  LevelAdjacentCellsCache<dim>::assert_cache_built() const
+  {
+    Assert(is_cache_built,
+           dealii::ExcMessage(
+             "The adjacent cell cache has not been built yet. Please call the build_cache() "
+             "function before accessing the cache."));
+  }
+
+  template <int dim>
+  void
+  LevelAdjacentCellsCache<dim>::cache_adjacent_cells(const dealii::Triangulation<dim> &tria,
+                                                     const unsigned int                level)
+  {
+    adjacent_cells_cache.clear();
+
+    // To obtain the neighboring cells for each cell on the given level, we first build a map that
+    // assigns to each vertex index the cells on the given level that share that vertex. Then, for
+    // each cell on the given level, we can look up its vertices in the map and collect all the
+    // cells that share those vertices, which are the neighboring cells.
+    std::map<unsigned int, std::vector<tria_iterator>> vertex_to_cells_map;
+    for (auto cell : tria.cell_iterators_on_level(level))
+      {
+        for (unsigned int vertex_index = 0;
+             vertex_index < dealii::GeometryInfo<dim>::vertices_per_cell;
+             ++vertex_index)
+          {
+            vertex_to_cells_map[cell->vertex_index(vertex_index)].push_back(cell);
+          }
+      }
+
+    // There might be cases where on the current rank there are neighbors which are one level
+    // coarser than the level for which the cache is built. In order to include those neighbors in
+    // the cache, we also need to consider the cells on the level below the current level and add
+    // them to the vertex_to_cells_map.
+    if (level > 0)
+      {
+        for (auto cell : tria.cell_iterators_on_level(level - 1))
+          {
+            if (!cell->has_children())
+              {
+                for (unsigned int vertex_index = 0;
+                     vertex_index < dealii::GeometryInfo<dim>::vertices_per_cell;
+                     ++vertex_index)
+                  {
+                    vertex_to_cells_map[cell->vertex_index(vertex_index)].push_back(cell);
+                  }
+              }
+          }
+      }
+
+    // After building the vertex_to_cells_map, we can now populate the adjacent_cells_cache for
+    // each cell on the given level.
+    for (auto cell : tria.cell_iterators_on_level(level))
+      {
+        for (unsigned int vertex_index = 0;
+             vertex_index < dealii::GeometryInfo<dim>::vertices_per_cell;
+             ++vertex_index)
+          {
+            for (const auto &neighbor : vertex_to_cells_map[cell->vertex_index(vertex_index)])
+              {
+                if (neighbor != cell)
+                  {
+                    adjacent_cells_cache[cell].insert(neighbor);
+                  }
+              }
+          }
+      }
+  }
+
+  template <int dim>
+  void
+  LevelAdjacentCellsCache<dim>::compute_global_cell_count(const dealii::Triangulation<dim> &tria,
+                                                          const unsigned int                level)
+  {
+    n_global_level_cells = 0;
+    for (auto cell : tria.cell_iterators_on_level(level))
+      {
+        if (cell->is_locally_owned_on_level())
+          n_global_level_cells += 1;
+      }
+    n_global_level_cells =
+      dealii::Utilities::MPI::sum(n_global_level_cells, tria.get_mpi_communicator());
   }
 
   template <int dim>
@@ -169,8 +295,9 @@ namespace MeltPoolDG
   template <int dim>
   std::vector<dealii::CellId>
   LevelCommunicationPattern<dim>::adjacent_relevant_cells(
-    const dealii::CellId              &cell_id,
-    const std::vector<dealii::CellId> &owned_active_cell_ancestors) const
+    const dealii::CellId               &cell_id,
+    const std::vector<dealii::CellId>  &owned_active_cell_ancestors,
+    const LevelAdjacentCellsCache<dim> &adjacent_cells_cache) const
   {
     Assert(triangulation.contains_cell(cell_id),
            dealii::ExcMessage(
@@ -187,53 +314,11 @@ namespace MeltPoolDG
         relevant_cells.push_back(cell_id);
       }
 
-
-    // To determine all adjacent cells, we recursively traverse neighboring cells up to a depth of
-    // `dim`. As the mesh data structure provides direct access only to face neighbors, cells that
-    // are adjacent exclusively through a vertex are not immediately accessible. To capture these
-    // cases, we recursively examine the face neighbors of already discovered neighbors, restricting
-    // the search to faces that share a vertex with the cell under consideration. This ensures that
-    // every vertex-connected cell is found.
-    // TODO: What if the neighbor is not on the same level but on one level coarser?
-    auto search_neighbors =
-      [&relevant_cells,
-       &owned_active_cell_ancestors](const auto &search_neighbors,
-                                     const typename dealii::Triangulation<dim>::cell_iterator &cell,
-                                     std::vector<unsigned> excluded_indices = {},
-                                     int                   current_depth    = 1) -> void {
-      for (unsigned int neighbor_index = 0;
-           neighbor_index < dealii::GeometryInfo<dim>::faces_per_cell;
-           ++neighbor_index)
-        {
-          if (std::ranges::find(excluded_indices, neighbor_index) == excluded_indices.end() and
-              not cell->at_boundary(neighbor_index))
-            {
-              // TODO: What if the neighbor is not on the same level but on one level coarser?
-              Assert(cell->neighbor(neighbor_index)->level() == cell->level(),
-                     dealii::ExcMessage(std::string(
-                       "The communication pattern for cells on a given level can currently only be "
-                       "built if all cells on that level have neighbors on the same level, this "
-                       "includes artificial cells which are owned by another rank.")));
-
-              if (Utils::contains(owned_active_cell_ancestors,
-                                  cell->neighbor(neighbor_index)->id()))
-                relevant_cells.push_back(cell->neighbor(neighbor_index)->id());
-              if (current_depth < dim)
-                {
-                  excluded_indices.push_back(neighbor_index);
-                  search_neighbors(search_neighbors,
-                                   cell->neighbor(neighbor_index),
-                                   excluded_indices,
-                                   current_depth + 1);
-                }
-            }
-        }
-    };
-
-    search_neighbors(search_neighbors, cell);
-
-    std::ranges::sort(relevant_cells, [](const auto &a, const auto &b) { return a < b; });
-    relevant_cells.erase(std::ranges::unique(relevant_cells).begin(), relevant_cells.end());
+    for (const auto &neighbor : adjacent_cells_cache.get_adjacent_cells(cell))
+      {
+        if (Utils::contains(owned_active_cell_ancestors, neighbor->id()))
+          relevant_cells.push_back(neighbor->id());
+      }
 
     return relevant_cells;
   }
@@ -247,6 +332,9 @@ namespace MeltPoolDG
     std::vector<std::pair<unsigned, std::vector<dealii::CellId>>>
       locally_owned_relevant_cells_for_ranks;
 
+    LevelAdjacentCellsCache<dim> adjacent_cells_cache;
+    adjacent_cells_cache.build_cache(triangulation, partition_level);
+
     for (const auto &[rank, cells] : requested_cells_by_rank)
       {
         if (rank != dealii::Utilities::MPI::this_mpi_process(mpi_communicator))
@@ -258,7 +346,9 @@ namespace MeltPoolDG
                 if (triangulation.contains_cell(cell_id))
                   {
                     std::vector<dealii::CellId> relevant_cells =
-                      adjacent_relevant_cells(cell_id, owned_active_cell_ancestors);
+                      adjacent_relevant_cells(cell_id,
+                                              owned_active_cell_ancestors,
+                                              adjacent_cells_cache);
                     locally_owned_relevant_cells_for_rank.insert(relevant_cells.begin(),
                                                                  relevant_cells.end());
                   }
@@ -387,7 +477,6 @@ namespace MeltPoolDG
     is_pattern_built = true;
   }
 
-
   template TriangulationType
   get_triangulation_type(const dealii::Triangulation<1, 1> &);
   template TriangulationType
@@ -395,8 +484,11 @@ namespace MeltPoolDG
   template TriangulationType
   get_triangulation_type(const dealii::Triangulation<3, 3> &);
 
+  template class LevelAdjacentCellsCache<1>;
+  template class LevelAdjacentCellsCache<2>;
+  template class LevelAdjacentCellsCache<3>;
+
   template class LevelCommunicationPattern<1>;
   template class LevelCommunicationPattern<2>;
   template class LevelCommunicationPattern<3>;
-
 } // namespace MeltPoolDG

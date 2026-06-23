@@ -2,16 +2,277 @@
 
 #include <deal.II/distributed/tria.h>
 
+#include <deal.II/grid/cell_id.h>
 #include <deal.II/grid/grid_generator.h>
 
 #include <meltpooldg/utilities/triangulation_utils.hpp>
 
 #include <algorithm>
 #include <numeric>
+#include <set>
 #include <vector>
 
 constexpr int dim = 2;
 using number      = double;
+
+class LevelAdjacentCellsCacheTest : public ::testing::Test
+{
+protected:
+  using tria_iterator = dealii::TriaIterator<dealii::CellAccessor<dim>>;
+
+  LevelAdjacentCellsCacheTest()
+    : triangulation(
+        MPI_COMM_WORLD,
+        dealii::Triangulation<dim>::MeshSmoothing::none,
+        dealii::parallel::distributed::Triangulation<dim>::Settings::construct_multigrid_hierarchy)
+  {
+    dealii::GridGenerator::hyper_cube(triangulation, 0.0, 1.0);
+    triangulation.refine_global(4);
+  }
+
+  dealii::parallel::distributed::Triangulation<dim> triangulation;
+  MeltPoolDG::LevelAdjacentCellsCache<dim>          adjacent_cells_cache;
+};
+
+/**
+ * This test verifies that rebuilding the adjacency cache does not affect the actual content of the
+ * cache, i.e., the adjacent cells for each cell on the specified level remain the same after
+ * rebuilding the cache. It also checks that the number of global cells on the specified level
+ * remains unchanged after rebuilding the cache.
+ */
+TEST_F(LevelAdjacentCellsCacheTest, RebuildIsIndependent)
+{
+  adjacent_cells_cache.build_cache(triangulation, 2);
+
+  std::map<tria_iterator, std::set<tria_iterator>> first_adjacent_cells;
+  unsigned int first_n_global_level_cells = adjacent_cells_cache.n_global_cells_on_level();
+  for (const auto &cell : triangulation.cell_iterators_on_level(2))
+    first_adjacent_cells[cell] =
+      std::set<tria_iterator>(adjacent_cells_cache.get_adjacent_cells(cell).begin(),
+                              adjacent_cells_cache.get_adjacent_cells(cell).end());
+
+  adjacent_cells_cache.build_cache(triangulation, 2);
+  for (const auto &cell : triangulation.cell_iterators_on_level(2))
+    {
+      EXPECT_EQ(first_adjacent_cells[cell],
+                std::set<tria_iterator>(adjacent_cells_cache.get_adjacent_cells(cell).begin(),
+                                        adjacent_cells_cache.get_adjacent_cells(cell).end()))
+        << "The adjacent cells for cell " << cell->id()
+        << " have changed after rebuilding the cache.";
+    }
+
+  EXPECT_EQ(first_n_global_level_cells, adjacent_cells_cache.n_global_cells_on_level())
+    << "The number of global cells on level 2 has changed after rebuilding the cache.";
+}
+
+/**
+ * This test verifies the symmetry of the adjacency relationship, i.e., that if cell A lists cell B
+ * as an adjacent cell, then cell B should also list cell A as an adjacent cell.
+ */
+TEST_F(LevelAdjacentCellsCacheTest, AdjacentCellSymmetry)
+{
+  adjacent_cells_cache.build_cache(triangulation, 2);
+  for (const auto &cell : triangulation.cell_iterators_on_level(2))
+    {
+      for (const auto &adjacent_cell : adjacent_cells_cache.get_adjacent_cells(cell))
+        {
+          EXPECT_NE(std::ranges::find(adjacent_cells_cache.get_adjacent_cells(adjacent_cell), cell),
+                    adjacent_cells_cache.get_adjacent_cells(adjacent_cell).end())
+            << "Cell " << cell->id() << " lists cell " << adjacent_cell->id()
+            << " as an adjacent cell, but the reverse is not true.";
+        }
+    }
+}
+
+/**
+ * This test verifies that a cell does not list itself as an adjacent cell.
+ */
+TEST_F(LevelAdjacentCellsCacheTest, AdjacentCellsDoNotIncludeSelf)
+{
+  adjacent_cells_cache.build_cache(triangulation, 2);
+  for (const auto &cell : triangulation.cell_iterators_on_level(2))
+    {
+      EXPECT_EQ(std::ranges::find(adjacent_cells_cache.get_adjacent_cells(cell), cell),
+                adjacent_cells_cache.get_adjacent_cells(cell).end())
+        << "Cell " << cell->id() << " lists itself as an adjacent cell.";
+    }
+}
+
+/**
+ * This test verifies the behavior of the adjacency cache when a cell is located in the interior of
+ * the domain. The following sketch illustrates the grid and the cell of interest (marked with an
+ * "x"):
+ *  +----+----+----+----+
+ *  |    |    |    |    |
+ *  +----+----+----+----+
+ *  |    |  x |    |    |
+ *  +----+----+----+----+
+ *  |    |    |    |    |
+ *  +----+----+----+----+
+ *  |    |    |    |    |
+ *  +----+----+----+----+
+ *
+ * @note This test is designed to run with a maximum of 4 MPI processes. It is skipped for more than
+ * 4 processes.
+ */
+TEST_F(LevelAdjacentCellsCacheTest, AdjacentCellsOfInnerCell)
+{
+  if (dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD) > 4)
+    {
+      GTEST_SKIP() << "This test is designed to run with a maximum of 4 MPI processes. "
+                   << "It is skipped for more than 4 processes.";
+    }
+
+  adjacent_cells_cache.build_cache(triangulation, 2);
+  const dealii::CellId inner_cell_id("0_2:21");
+  tria_iterator        inner_cell = triangulation.create_cell_iterator(inner_cell_id);
+
+  std::set<tria_iterator> expected_adjacent_cells;
+  expected_adjacent_cells.insert(triangulation.create_cell_iterator(dealii::CellId("0_2:02")));
+  expected_adjacent_cells.insert(triangulation.create_cell_iterator(dealii::CellId("0_2:03")));
+  expected_adjacent_cells.insert(triangulation.create_cell_iterator(dealii::CellId("0_2:12")));
+  expected_adjacent_cells.insert(triangulation.create_cell_iterator(dealii::CellId("0_2:20")));
+  expected_adjacent_cells.insert(triangulation.create_cell_iterator(dealii::CellId("0_2:30")));
+  expected_adjacent_cells.insert(triangulation.create_cell_iterator(dealii::CellId("0_2:22")));
+  expected_adjacent_cells.insert(triangulation.create_cell_iterator(dealii::CellId("0_2:23")));
+  expected_adjacent_cells.insert(triangulation.create_cell_iterator(dealii::CellId("0_2:32")));
+
+  // Check that the number of adjacent cells matches the expected number.
+  EXPECT_EQ(expected_adjacent_cells.size(),
+            adjacent_cells_cache.get_adjacent_cells(inner_cell).size())
+    << "The number of adjacent cells for the inner cell " << inner_cell->id()
+    << " does not match the expected number.";
+
+  // Check that the adjacent cells match the expected adjacent cells.
+  for (const auto &adjacent_cell : adjacent_cells_cache.get_adjacent_cells(inner_cell))
+    {
+      EXPECT_NE(expected_adjacent_cells.find(adjacent_cell), expected_adjacent_cells.end())
+        << "Cell " << adjacent_cell->id() << " is listed as an adjacent cell of the inner cell "
+        << inner_cell->id() << ", but it is not in the expected set of adjacent cells.";
+    }
+}
+
+/**
+ * This test verifies the behavior of the adjacency cache when a cell is located on the boundary of
+ * the domain. The following sketch illustrates the grid and the cell of interest (marked with an
+ * "x"):
+ *
+ *  +----+----+----+----+
+ *  |    |    |    |    |
+ *  +----+----+----+----+
+ *  |    |    |    |    |
+ *  +----+----+----+----+
+ *  |    |    |    |    |
+ *  +----+----+----+----+
+ *  |    |  x |    |    |
+ *  +----+----+----+----+
+ *
+ * @note This test is designed to run with a maximum of 4 MPI processes. It is skipped for more than
+ * 4 processes.
+ */
+TEST_F(LevelAdjacentCellsCacheTest, AdjacentCellsOfBoundaryCell)
+{
+  if (dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD) > 4)
+    {
+      GTEST_SKIP() << "This test is designed to run with a maximum of 4 MPI processes. "
+                   << "It is skipped for more than 4 processes.";
+    }
+
+  adjacent_cells_cache.build_cache(triangulation, 2);
+  const dealii::CellId inner_cell_id("0_2:01");
+  tria_iterator        inner_cell = triangulation.create_cell_iterator(inner_cell_id);
+
+  std::set<tria_iterator> expected_adjacent_cells;
+  expected_adjacent_cells.insert(triangulation.create_cell_iterator(dealii::CellId("0_2:00")));
+  expected_adjacent_cells.insert(triangulation.create_cell_iterator(dealii::CellId("0_2:10")));
+  expected_adjacent_cells.insert(triangulation.create_cell_iterator(dealii::CellId("0_2:02")));
+  expected_adjacent_cells.insert(triangulation.create_cell_iterator(dealii::CellId("0_2:03")));
+  expected_adjacent_cells.insert(triangulation.create_cell_iterator(dealii::CellId("0_2:12")));
+
+  // Check that the number of adjacent cells matches the expected number.
+  EXPECT_EQ(expected_adjacent_cells.size(),
+            adjacent_cells_cache.get_adjacent_cells(inner_cell).size())
+    << "The number of adjacent cells for the inner cell " << inner_cell->id()
+    << " does not match the expected number.";
+
+  // Check that the adjacent cells match the expected adjacent cells.
+  for (const auto &adjacent_cell : adjacent_cells_cache.get_adjacent_cells(inner_cell))
+    {
+      EXPECT_NE(expected_adjacent_cells.find(adjacent_cell), expected_adjacent_cells.end())
+        << "Cell " << adjacent_cell->id() << " is listed as an adjacent cell of the inner cell "
+        << inner_cell->id() << ", but it is not in the expected set of adjacent cells.";
+    }
+}
+
+/**
+ * This test verifies the behavior of the adjacency cache when a cell has no neighbor on the same
+ * level but only on one level coarser. For that the following grid is created:
+ *
+ *  +---------+----+----+
+ *  |         |    |    |
+ *  |         +----+----+
+ *  |         |    |    |
+ *  +----+----+----+----+
+ *  |    |  x |    |    |
+ *  +----+----+----+----+
+ *  |    |    |    |    |
+ *  +----+----+----+----+
+ *
+ * The test checks that the cache correctly identifies the adjacent cells of the cell marked with an
+ * "x"  in the sketch including the coarse cell.
+ *
+ * @note This test is designed to run with a maximum of 4 MPI processes. It is skipped for more than
+ * 4 processes.
+ */
+TEST_F(LevelAdjacentCellsCacheTest, AdjacentCellsWithCoarserNeighbor)
+{
+  if (dealii::Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD) > 4)
+    {
+      GTEST_SKIP() << "This test is designed to run with a maximum of 4 MPI processes. "
+                   << "It is skipped for more than 4 processes.";
+    }
+
+  triangulation.clear();
+  dealii::GridGenerator::hyper_cube(triangulation, 0.0, 1.0);
+  triangulation.refine_global(1);
+
+  // Refine three out of the four level-1 cells to create a coarser neighbor for the remaining
+  // level-1 cell.
+  for (auto cell : triangulation.cell_iterators_on_level(1))
+    {
+      if (cell->id() != dealii::CellId("0_1:2"))
+        cell->set_refine_flag();
+    }
+  triangulation.prepare_coarsening_and_refinement();
+  triangulation.execute_coarsening_and_refinement();
+
+  adjacent_cells_cache.build_cache(triangulation, 2);
+  dealii::CellId cell_of_interest("0_2:03");
+  tria_iterator  cell = triangulation.create_cell_iterator(cell_of_interest);
+
+  std::set<tria_iterator> expected_adjacent_cells;
+  expected_adjacent_cells.insert(triangulation.create_cell_iterator(dealii::CellId("0_2:00")));
+  expected_adjacent_cells.insert(triangulation.create_cell_iterator(dealii::CellId("0_2:01")));
+  expected_adjacent_cells.insert(triangulation.create_cell_iterator(dealii::CellId("0_2:02")));
+  expected_adjacent_cells.insert(triangulation.create_cell_iterator(dealii::CellId("0_2:10")));
+  expected_adjacent_cells.insert(triangulation.create_cell_iterator(dealii::CellId("0_2:12")));
+  expected_adjacent_cells.insert(triangulation.create_cell_iterator(dealii::CellId("0_1:2")));
+  expected_adjacent_cells.insert(triangulation.create_cell_iterator(dealii::CellId("0_2:30")));
+
+  // Check that the number of adjacent cells matches the expected number.
+  EXPECT_EQ(expected_adjacent_cells.size(), adjacent_cells_cache.get_adjacent_cells(cell).size())
+    << "The number of adjacent cells for the cell " << cell->id()
+    << " does not match the expected number.";
+
+  // Check that the adjacent cells match the expected adjacent cells.
+  for (const auto &adjacent_cell : adjacent_cells_cache.get_adjacent_cells(cell))
+    {
+      EXPECT_NE(expected_adjacent_cells.find(adjacent_cell), expected_adjacent_cells.end())
+        << "Cell " << adjacent_cell->id() << " is listed as an adjacent cell of the cell "
+        << cell->id() << ", but it is not in the expected set of adjacent cells.";
+    }
+}
+
 
 class LevelCommunicationPatternTest : public ::testing::Test
 {
@@ -34,7 +295,7 @@ protected:
 /**
  * Check that rebuilding the communication pattern with the same level does not change the pattern.
  */
-TEST_F(LevelCommunicationPatternTest, RebuildIsIdempotent)
+TEST_F(LevelCommunicationPatternTest, RebuildIsIndependent)
 {
   constexpr int level_to_store_particles = 1;
   partitioner.build_pattern(level_to_store_particles);
@@ -167,8 +428,6 @@ TEST_F(LevelCommunicationPatternTest, ReceiveSymmetry)
  * is expected to receive data from all level-1 cell owners except itself. For this scenario, this
  * test verifies that the receiver ranks in the communication pattern match this expected
  * communication topology.
- *
- * @note
  */
 TEST_F(LevelCommunicationPatternTest, ReceiverRanksTopology)
 {
