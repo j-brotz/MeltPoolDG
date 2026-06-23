@@ -8,6 +8,7 @@
 
 #include <deal.II/particles/particle_accessor.h>
 
+#include "meltpooldg/particles/particle_accessor.hpp"
 #include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization.hpp>
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization_data.hpp>
@@ -40,8 +41,8 @@ MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::add_load_to_obstac
   constexpr unsigned torque_size = ObstacleType::size_angular_velocity;
 
   // We need a copy of the global particle properties in order to reset obstacle forces.
-  auto global_particle_properties =
-    obstacle_field.get_obstacle_data_structure().get_global_particle_properties();
+  dealii::Particles::PropertyPool<dim> global_particle_properties =
+    obstacle_field.get_global_property_pool();
 
   for (unsigned int src_handle = 0; src_handle < global_particle_properties.n_registered_slots();
        ++src_handle)
@@ -159,21 +160,17 @@ MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::add_load_to_obstac
     }
 
   // Step 4: Return result to actual local particles in obstacle field.
-  for (auto &particle : obstacle_field.get_particle_handler())
+  for (DEMParticleAccessor<dim, number> &particle : obstacle_field.locally_owned_particle_range())
     {
       for (unsigned int src_handle = 0;
            src_handle < global_particle_properties.n_registered_slots();
            ++src_handle)
         {
-          if (particle.get_id() == global_particle_properties.get_properties(
-                                     src_handle)[ObstacleType::Properties::particle_id])
+          if (particle.id() == global_particle_properties.get_properties(
+                                 src_handle)[ObstacleType::Properties::particle_id])
             {
-              ObstacleType::accumulate_force(ObstacleType::get_force(global_particle_properties,
-                                                                     src_handle),
-                                             particle);
-              ObstacleType::accumulate_torque(ObstacleType::get_torque(global_particle_properties,
-                                                                       src_handle),
-                                              particle);
+              particle.add_force(ObstacleType::get_force(global_particle_properties, src_handle));
+              particle.add_torque(ObstacleType::get_torque(global_particle_properties, src_handle));
             }
         }
     }

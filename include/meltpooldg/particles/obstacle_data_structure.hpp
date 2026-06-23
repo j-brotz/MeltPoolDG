@@ -2,12 +2,18 @@
 
 #include <deal.II/base/array_view.h>
 
+#include <deal.II/grid/filtered_iterator.h>
+#include <deal.II/grid/grid_tools.h>
+
 #include <deal.II/matrix_free/matrix_free.h>
 
 #include <deal.II/numerics/solution_transfer.h>
 
 #include <deal.II/particles/particle_handler.h>
 #include <deal.II/particles/property_pool.h>
+
+#include <meltpooldg/particles/particle_iterator.hpp>
+#include <meltpooldg/post_processing/postprocessor.hpp>
 
 #include <memory>
 #include <vector>
@@ -27,8 +33,15 @@ namespace MeltPoolDG
   struct ObstacleCompleteDomainSearch
   {
   public:
-    explicit ObstacleCompleteDomainSearch(
-      const dealii::Particles::ParticleHandler<dim> &obstacle_handler);
+    /**
+     * Constructor. Initializes the internal particle handler and property pool for managing
+     * obstacles.
+     *
+     * @param triangulation The triangulation on which the obstacles are placed.
+     * @param mapping Mapping used to interpret geometry on the given triangulation.
+     */
+    explicit ObstacleCompleteDomainSearch(const dealii::Triangulation<dim> &triangulation,
+                                          const dealii::Mapping<dim>       &mapping);
 
     /**
      * @brief Destructor. Explicitly deregisters all particles from the global obstacle property
@@ -109,25 +122,126 @@ namespace MeltPoolDG
     broadcast_global_particles() const;
 
     /**
+     * Prepares the obstacle data structure for coarsening and refinement of the underlying
+     * triangulation. This call is necessary to ensure that the obstacle data structure remains
+     * consistent with the mesh after coarsening and refinement operations.
+     */
+    void
+    prepare_for_coarsening_and_refinement();
+
+    /**
+     * Unpacks the obstacle data structure after coarsening and refinement operations. This call is
+     * necessary to ensure that the obstacle data structure remains consistent with the mesh after
+     * coarsening and refinement operations.
+     *
+     * @note It is required that prepare_for_coarsening_and_refinement() has been called before the
+     * triangulation was coarsened and refined.
+     */
+    void
+    unpack_after_coarsening_and_refinement();
+
+    /**
+     * Insert obstacles into the particle data structure based on provided locations and properties.
+     * This function takes a set of obstacle locations and their corresponding properties, and
+     * inserts them into the internal particle handler. It ensures that the obstacles are properly
+     * initialized and ready for simulation. Thereby it is not required that the particle locations
+     * passed to this function are located in the local subdomain of the current MPI rank. The
+     * function will automatically determine which MPI rank owns which particles and insert them
+     * accordingly.
+     *
+     * @param obstacle_locations A vector of points representing the locations of the obstacles.
+     * @param obstacle_properties A vector of vectors, where each inner vector contains the
+     * properties associated with the corresponding obstacle location.
+     */
+    void
+    insert_global_particles(const std::vector<dealii::Point<dim, number>> &obstacle_locations,
+                            const std::vector<std::vector<number>>        &obstacle_properties);
+
+    /**
+     * Registers the obstacle handler for particle output.
+     *
+     * @param postprocessor The postprocessor to which the particles are registered for output.
+     */
+    void
+    register_particle_output(Postprocessor<dim, number> &postprocessor) const;
+
+    /**
+     * Returns a subrange for iterating over particles that are owned by the current MPI rank.
+     *
+     * @return An iterable subrange representing the local particles.
+     */
+    std::ranges::subrange<ParticleIterator<dim, number>>
+    locally_owned_particle_range() const;
+
+    /**
+     * Returns a subrange for iterating over particles for which the particle center location is
+     * contained in the specified active cell.
+     *
+     * @param cell The active cell for which to retrieve particles.
+     * @return An iterable subrange representing the particles in the cell.
+     */
+    typename std::ranges::subrange<ParticleIterator<dim, number>>
+    particles_in_cell(typename dealii::Triangulation<dim>::active_cell_iterator cell) const;
+
+    /**
+     * Prepares this object for serialization. This function forwards the call to
+     * dealii::ParticleHandler::prepare_for_serialization(). See the documentation of that function
+     * for further details.
+     */
+    void
+    prepare_for_serialization();
+
+    /**
+     * Serializes the internal state of the class. This function forwards the call to
+     * dealii::ParticleHandler::serialize(). See the documentation of that function for further
+     * details.
+     *
+     * @param ar       The archive used for serialization or deserialization.
+     * @param version  The serialization version.
+     */
+    template <class Archive>
+    void
+    serialize(Archive &ar, const unsigned int version);
+
+    /**
+     * Performs the objects deserialization. This function forwards the call to
+     * dealii::ParticleHandler::deserialize(). See the documentation of that function for further
+     * details.
+     */
+    void
+    deserialize();
+
+    /**
+     * Return the number of global particles, i.e., the total number of particles across all MPI
+     * ranks.
+     */
+    unsigned int
+    n_global_particles() const;
+
+    /**
+     * Return the number of locally owned particles, i.e., the number of particles owned by the
+     * current MPI rank.
+     */
+    unsigned int
+    n_locally_owned_particles() const;
+
+    /**
      * Return a reference to a property pool containing the properties of all globally available
      * particles. The properties stored in the property pool represent those available in the field
      * when broadcast_global_particles() has been called the last time.
      */
     const dealii::Particles::PropertyPool<dim> &
-    get_global_particle_properties() const
-    {
-      return properties_global_obstacles;
-    }
+    get_global_particle_properties() const;
 
+    /**
+     * Same as above but returns a non-const reference to the property pool.
+     */
     dealii::Particles::PropertyPool<dim> &
-    get_global_particle_properties()
-    {
-      return properties_global_obstacles;
-    }
+    get_global_particle_properties();
 
   private:
     /// Handler managing the locally owned obstacles in the domain.
-    const dealii::Particles::ParticleHandler<dim> &obstacle_handler;
+    dealii::Particles::ParticleHandler<dim> obstacle_handler;
 
     /// Property pool containing the properties of all global obstacles, stored locally on each
     /// MPI rank.
@@ -142,4 +256,13 @@ namespace MeltPoolDG
     void
     deregister_property_pool() const;
   };
+
+  template <int dim, typename number, typename ObstacleType>
+  template <class Archive>
+  void
+  ObstacleCompleteDomainSearch<dim, number, ObstacleType>::serialize(Archive           &ar,
+                                                                     const unsigned int version)
+  {
+    obstacle_handler.serialize(ar, version);
+  }
 } // namespace MeltPoolDG
