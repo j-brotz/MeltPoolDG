@@ -13,7 +13,7 @@
   "evaporation": {
     "evaporative mass flux model": "recoil_pressure",
     "recoil pressure": {
-      "temperature constant": "5.e4",
+      "temperature constant": 50000.0,
       "pressure coefficient": 0.493583415597236,
       "enable": true
     },
@@ -43,7 +43,7 @@
     "absorptivity gas": 0.0,
     "absorptivity liquid": 0.5,
     "scan speed": 0.003,
-    "radius": "70.e-6"
+    "radius": 7e-05
   },
   "material": {
     "gas": {

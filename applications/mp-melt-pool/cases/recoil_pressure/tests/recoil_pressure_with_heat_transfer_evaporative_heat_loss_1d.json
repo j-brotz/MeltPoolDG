@@ -67,7 +67,7 @@
     "absorptivity gas": 0.5,
     "absorptivity liquid": 0.5,
     "scan speed": 0.003,
-    "radius": "70.e-6"
+    "radius": 7e-05
   },
   "simulation specific domain": {
     "domain x min": -0.0002,

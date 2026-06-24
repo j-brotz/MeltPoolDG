@@ -3,30 +3,21 @@ set -e
 
 status=0
 
-while IFS= read -r json_file; do
-  tmp="$(mktemp)"
+find applications -type f -name "*.json" ! -name "*parameters.schema.json" | while read -r json_file; do
+  app_dir="$(echo "$json_file" | sed -E 's#^(applications/[^/]+).*#\1#')"
+  schema_file="${app_dir}/parameters.schema.json"
 
-  sed -E '
-    s/^([[:space:]]*"[^"]+"[[:space:]]*:[[:space:]]*)"[[:space:]]*([+-]?[0-9]+)[.][[:space:]]*"([[:space:]]*,?)[[:space:]]*$/\1\2\3/
-    s/^([[:space:]]*"[^"]+"[[:space:]]*:[[:space:]]*)"[[:space:]]*([+-]?[0-9]+[.][0-9]+([eE][+-]?[0-9]+)?|[+-]?[0-9]+([eE][+-]?[0-9]+)?)[[:space:]]*"([[:space:]]*,?)[[:space:]]*$/\1\2\5/
-    s/^([[:space:]]*"[^"]+"[[:space:]]*:[[:space:]]*)"[[:space:]]*(true|false)[[:space:]]*"([[:space:]]*,?)[[:space:]]*$/\1\2\3/
-  ' "$json_file" > "$tmp"
+  echo "Processing JSON file: $json_file"
 
-  if [ -s "$tmp" ]; then
-    last_byte="$(tail -c 1 "$tmp" | od -An -t x1 | tr -d ' \n')"
-    if [ "$last_byte" != "0a" ]; then
-      printf '\n' >> "$tmp"
-    fi
+  if [ ! -f "$schema_file" ]; then
+    continue
   fi
 
-  if ! cmp -s "$json_file" "$tmp"; then
-    mv "$tmp" "$json_file"
-    status=1
+  if python3 scripts/parameters/clean-quotation-marks-json-with-schema.py  "$json_file" "$schema_file"; then
+    :
   else
-    rm "$tmp"
+    status=1
   fi
-done < <(
-  find applications -type f -name "*.json" ! -name "*parameters.schema.json"
-)
+done
 
 exit "$status"
