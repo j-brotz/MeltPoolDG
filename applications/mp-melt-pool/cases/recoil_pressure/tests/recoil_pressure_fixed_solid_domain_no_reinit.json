@@ -12,7 +12,7 @@
   "time stepping": {
     "end time": 5e-06,
     "start time": 0.0,
-    "time step size": "5.e-7"
+    "time step size": 5e-07
   },
   "material": {
     "material template": "stainless_steel",

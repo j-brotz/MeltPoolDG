@@ -66,7 +66,7 @@
     "absorptivity gas": 0.0,
     "absorptivity liquid": 0.5,
     "scan speed": 0.003,
-    "radius": "70.e-6"
+    "radius": 7e-05
   },
   "melt front propagation": {
     "do not reinitialize in solid": false,

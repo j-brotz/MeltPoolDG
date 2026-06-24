@@ -52,7 +52,7 @@
     "power": 156,
     "absorptivity gas": 0.25,
     "absorptivity liquid": 0.25,
-    "radius": "70.e-6"
+    "radius": 7e-05
   },
   "melt front propagation": {
     "do not reinitialize in solid": false,

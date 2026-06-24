@@ -11,7 +11,7 @@
     }
   },
   "time stepping": {
-    "end time": "5.e-5",
+    "end time": 5e-05,
     "start time": 0.0,
     "time step size": 1e-06,
     "max n steps": 10
