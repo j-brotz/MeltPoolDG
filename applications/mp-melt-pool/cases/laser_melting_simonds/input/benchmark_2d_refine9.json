@@ -81,7 +81,7 @@
       "enable": true,
       "activation temperature": 0,
       "enable linear activation ramp": false,
-      "consider enthalpy transport vapor mass flux": false
+      "consider enthalpy transport vapor mass flux": "false"
     }
   },
   "heat": {
@@ -97,9 +97,6 @@
         },
         "nitsche parameter": 500
       }
-    },
-    "@predictor": {
-      "type": "linear_extrapolation"
     },
     "nlsolve": {
       "max nonlinear iterations": 30,

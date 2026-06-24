@@ -51,9 +51,6 @@
     "power": 75,
     "scan speed": 0.003
   },
-  "melt front propagation": {
-    "mp liquid melting point": 1700
-  },
   "simulation specific domain": {
     "domain x min": -0.0002,
     "domain x max": 0.0002,

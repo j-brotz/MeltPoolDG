@@ -33,9 +33,6 @@
     "domain z max": 0.0002,
     "initial temperature": 0.0
   },
-  "melt pool": {
-    "mp set velocity to zero in solid": false
-  },
   "material": {
     "gas": {
       "thermal conductivity": 10,

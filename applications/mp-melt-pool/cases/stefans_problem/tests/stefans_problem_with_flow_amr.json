@@ -38,7 +38,7 @@
   },
   "evaporation": {
     "analytical": {
-      "function": 0.001
+      "function": "0.001"
     },
     "evaporative cooling": {
       "enable": false

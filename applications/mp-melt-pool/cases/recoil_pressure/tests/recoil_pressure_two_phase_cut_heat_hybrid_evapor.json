@@ -80,8 +80,7 @@
       "type": "hybrid"
     },
     "evaporative cooling": {
-      "enable": true,
-      "interface temperature evaluation type": "interface_value"
+      "enable": true
     },
     "evaporative dilation rate": {
       "enable": true

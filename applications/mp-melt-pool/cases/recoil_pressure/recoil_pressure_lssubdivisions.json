@@ -71,7 +71,6 @@
     "two phase fluid properties transition type": "smooth"
   },
   "melt front propagation": {
-    "mp boiling temperature": 3000,
     "do not reinitialize in solid": false,
     "set velocity to zero in solid": false
   },
@@ -172,8 +171,7 @@
     },
     "gravity": 0.0,
     "surface tension": {
-      "surface tension coefficient": 1.8,
-      "do level set pressure gradient interpolation": true
+      "surface tension coefficient": 1.8
     },
     "darcy damping": {
       "avoid div zero constant": 0.001,

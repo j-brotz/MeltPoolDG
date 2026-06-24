@@ -62,7 +62,6 @@
     }
   },
   "level set": {
-    "reinit tol": 0.01,
     "reinitialization": {
       "linear solver": {
         "preconditioner type": "AMG",
@@ -71,7 +70,8 @@
       "enable": true,
       "hyperbolic": {
         "pseudo time stepping": {
-          "max n steps": 5
+          "max n steps": 5,
+          "tolerance": 0.01
         }
       },
       "interface thickness parameter": {

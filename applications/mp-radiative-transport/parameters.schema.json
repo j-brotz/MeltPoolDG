@@ -478,13 +478,10 @@
           "default": 1.0
         },
         "starting position": {
-          "type": "array",
-          "items": {
-            "type": "number"
-          },
-          "minItems": 0,
+          "type": "string",
+          "pattern": "^\\s*[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?(?:\\s*,\\s*[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?)*\\s*$",
           "description": "Center coordinates of the laser beam starting position on the interface melt/gas.",
-          "default": []
+          "default": ""
         },
         "scan speed": {
           "type": "number",
@@ -492,31 +489,22 @@
           "default": 0.0
         },
         "scan direction": {
-          "type": "array",
-          "items": {
-            "type": "number"
-          },
-          "minItems": 0,
+          "type": "string",
+          "pattern": "^\\s*[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?(?:\\s*,\\s*[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?)*\\s*$",
           "description": "Direction of laser motion as a vector",
-          "default": []
+          "default": ""
         },
         "beam direction": {
-          "type": "array",
-          "items": {
-            "type": "number"
-          },
-          "minItems": 0,
+          "type": "string",
+          "pattern": "^\\s*[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?(?:\\s*,\\s*[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?)*\\s*$",
           "description": "Laser beam direction.",
-          "default": []
+          "default": ""
         },
         "beam rotation axis": {
-          "type": "array",
-          "items": {
-            "type": "number"
-          },
-          "minItems": 0,
+          "type": "string",
+          "pattern": "^\\s*[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?(?:\\s*,\\s*[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?)*\\s*$",
           "description": "Axis around which the initial laser beam direction will be rotated. Relevant only in 3D.",
-          "default": []
+          "default": ""
         },
         "beam rotation angle": {
           "type": "number",
@@ -638,15 +626,10 @@
           "default": 1.79769e+308
         },
         "output variables": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "minItems": 0,
+          "type": "string",
+          "pattern": "^\\s*[^,\\s]+(?:\\s*,\\s*[^,\\s]+)*\\s*$",
           "description": "Specify variables that you request to output.",
-          "default": [
-            "all"
-          ]
+          "default": "all"
         },
         "do user defined postprocessing": {
           "type": "boolean",

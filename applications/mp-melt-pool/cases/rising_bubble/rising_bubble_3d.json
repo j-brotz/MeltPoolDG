@@ -23,9 +23,6 @@
       "dynamic viscosity": 0.001
     }
   },
-  "Time stepping": {
-    "scheme": "bdf_2"
-  },
   "output": {
     "paraview": {
       "enable": true
@@ -85,6 +82,9 @@
           "lin pressure mass preconditioner": "ilu",
           "lin its before inner solvers": 50
         }
+      },
+      "Time stepping": {
+        "scheme": "bdf_2"
       },
       "Output options": {
         "output verbosity": 2,

@@ -30,7 +30,7 @@
     }
   },
   "laser": {
-    "starting position": 0.0003,
+    "starting position": "0.0003",
     "model": "interface_projection_sharp",
     "intensity profile": "Gauss",
     "power": 10,

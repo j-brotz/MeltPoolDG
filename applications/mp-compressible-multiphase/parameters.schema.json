@@ -304,13 +304,10 @@
               "default": false
             },
             "tvb constant": {
-              "type": "array",
-              "items": {
-                "type": "number"
-              },
-              "minItems": 0,
+              "type": "string",
+              "pattern": "^\\s*[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?(?:\\s*,\\s*[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?)*\\s*$",
               "description": "The TVB constant used in the TVB minmod limiter. The constant has the dimension of a second derivative.",
-              "default": []
+              "default": ""
             },
             "type": {
               "type": "string",
@@ -334,20 +331,10 @@
           "type": "object",
           "properties": {
             "compressible output types": {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "enum": [
-                  "conserved_variables",
-                  "primitive_variables",
-                  "material_quantities"
-                ]
-              },
-              "minItems": 0,
+              "type": "string",
+              "pattern": "^\\s*[^,\\s]+(?:\\s*,\\s*[^,\\s]+)*\\s*$",
               "description": "Type of the variables added to the output.",
-              "default": [
-                "conserved_variables"
-              ]
+              "default": "conserved_variables"
             },
             "enable": {
               "type": "boolean",
@@ -421,15 +408,10 @@
           "default": 1.79769e+308
         },
         "output variables": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "minItems": 0,
+          "type": "string",
+          "pattern": "^\\s*[^,\\s]+(?:\\s*,\\s*[^,\\s]+)*\\s*$",
           "description": "Specify variables that you request to output.",
-          "default": [
-            "all"
-          ]
+          "default": "all"
         },
         "do user defined postprocessing": {
           "type": "boolean",
