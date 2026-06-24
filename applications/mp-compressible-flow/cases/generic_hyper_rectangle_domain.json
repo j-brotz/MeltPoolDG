@@ -1,4 +1,5 @@
 {
+  "$schema": "../parameters.schema.json",
   "base": {
     "case name": "generic_hyper_rectangle_domain",
     "dimension": 2,

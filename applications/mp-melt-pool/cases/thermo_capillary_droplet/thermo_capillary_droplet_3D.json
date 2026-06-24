@@ -1,4 +1,5 @@
 {
+  "$schema": "../../parameters.schema.json",
   "base": {
     "case name": "thermo_capillary_droplet",
     "dimension": 3,

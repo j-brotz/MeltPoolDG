@@ -1,4 +1,5 @@
 {
+  "$schema": "../../parameters.schema.json",
   "base": {
     "case name": "stefans_problem1_with_flow_and_heat",
     "dimension": 2,
