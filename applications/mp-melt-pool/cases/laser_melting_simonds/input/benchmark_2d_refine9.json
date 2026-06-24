@@ -219,7 +219,7 @@
           "lin its before inner solvers": 50,
           "lin max iterations": 50,
           "lin pressure mass preconditioner": "ilu",
-          "lin relative tolerance": 1,
+          "lin relative tolerance": true,
           "lin tolerance": 0.001,
           "lin velocity preconditioner": "ilu scalar",
           "linearization scheme": "coupled implicit Newton"
@@ -231,8 +231,8 @@
       },
       "Output options": {
         "output verbosity": 3,
-        "output wall times": 0,
-        "output memory": 0
+        "output wall times": false,
+        "output memory": false
       },
       "Time stepping": {
         "scheme": "bdf_2"

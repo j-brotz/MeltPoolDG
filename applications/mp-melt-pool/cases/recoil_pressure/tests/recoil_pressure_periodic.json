@@ -120,7 +120,7 @@
       },
       "Output options": {
         "output verbosity": 0,
-        "output walltimes": 0
+        "output wall times": false
       },
       "Time stepping": {
         "scheme": "bdf_2"

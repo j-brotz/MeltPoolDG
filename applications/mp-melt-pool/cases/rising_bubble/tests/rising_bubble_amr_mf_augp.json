@@ -82,7 +82,7 @@
         "dimension": 2,
         "global refinements": 0,
         "velocity degree": 2,
-        "augmented Taylor-Hood elements": 1,
+        "augmented Taylor-Hood elements": true,
         "Solver": {
           "linearization scheme": "coupled implicit Newton",
           "NL max iterations": 10,
@@ -95,7 +95,7 @@
       },
       "Output options": {
         "output verbosity": 0,
-        "output wall times": 0
+        "output wall times": false
       }
     },
     "gravity": 0.98,
