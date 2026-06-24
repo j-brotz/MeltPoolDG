@@ -15,7 +15,7 @@
 
 #include <deal.II/numerics/vector_tools.h>
 
-#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/core/simulation_case_base.hpp>
 #include <meltpooldg/utilities/better_enum.hpp>
 
 #include <iostream>

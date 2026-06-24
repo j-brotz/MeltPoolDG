@@ -19,7 +19,7 @@
 #include <deal.II/numerics/vector_tools_evaluate.h>
 
 #include <meltpooldg/core/finite_element_data.hpp>
-#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/core/simulation_case_base.hpp>
 #include <meltpooldg/phase_change/evaporation_model_constant.hpp>
 
 #include <cmath>

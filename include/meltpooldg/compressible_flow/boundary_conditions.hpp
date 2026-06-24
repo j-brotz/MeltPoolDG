@@ -11,7 +11,7 @@
 #include <meltpooldg/compressible_flow/material_data.hpp>
 #include <meltpooldg/compressible_flow/operation_data.hpp>
 #include <meltpooldg/compressible_flow/state_views.hpp>
-#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/core/simulation_case_base.hpp>
 #include <meltpooldg/utilities/better_enum.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 

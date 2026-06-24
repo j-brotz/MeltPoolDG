@@ -4,7 +4,7 @@
 
 #include <meltpooldg/core/base_data.hpp>
 #include <meltpooldg/core/parameters_base.hpp>
-#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/core/simulation_case_base.hpp>
 #include <meltpooldg/level_set/curvature_data.hpp>
 #include <meltpooldg/level_set/normal_vector_data.hpp>
 #include <meltpooldg/level_set/reinitialization_data.hpp>

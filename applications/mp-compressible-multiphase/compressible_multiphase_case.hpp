@@ -17,7 +17,7 @@
 #include <meltpooldg/compressible_flow/phase_coupling_data.hpp>
 #include <meltpooldg/core/base_data.hpp>
 #include <meltpooldg/core/parameters_base.hpp>
-#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/core/simulation_case_base.hpp>
 #include <meltpooldg/flow/darcy_damping_data.hpp>
 #include <meltpooldg/phase_change/phase_change_data.hpp>
 #include <meltpooldg/post_processing/output_data.hpp>

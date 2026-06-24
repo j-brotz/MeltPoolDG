@@ -9,7 +9,7 @@
 
 #include <deal.II/grid/grid_generator.h>
 
-#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/core/simulation_case_base.hpp>
 #include <meltpooldg/post_processing/divergence_calc.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 

@@ -19,7 +19,7 @@
 #  include <meltpooldg/core/base_data.hpp>
 #  include <meltpooldg/core/material.hpp>
 #  include <meltpooldg/core/scratch_data.hpp>
-#  include <meltpooldg/core/simulation_base.hpp>
+#  include <meltpooldg/core/simulation_case_base.hpp>
 #  include <meltpooldg/flow/adaflo_wrapper_parameters.hpp>
 #  include <meltpooldg/flow/incompressible_flow_operation_base.hpp>
 #  include <meltpooldg/phase_change/evaporation_data.hpp>

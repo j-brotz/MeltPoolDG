@@ -7,7 +7,7 @@
 #include <meltpooldg/compressible_flow/operation_data.hpp>
 #include <meltpooldg/core/base_data.hpp>
 #include <meltpooldg/core/parameters_base.hpp>
-#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/core/simulation_case_base.hpp>
 #include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_data.hpp>
 #include <meltpooldg/particles/cohesive_forces.hpp>
 #include <meltpooldg/particles/contact_forces.hpp>

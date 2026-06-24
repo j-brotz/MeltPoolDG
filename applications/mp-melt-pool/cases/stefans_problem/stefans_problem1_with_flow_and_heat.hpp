@@ -15,7 +15,7 @@
 
 #include <deal.II/numerics/vector_tools.h>
 
-#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/core/simulation_case_base.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
 
 #include <boost/math/tools/roots.hpp>

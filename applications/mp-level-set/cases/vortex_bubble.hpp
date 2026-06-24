@@ -14,7 +14,7 @@
 #include <deal.II/numerics/error_estimator.h>
 #include <deal.II/numerics/vector_tools.h>
 
-#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/core/simulation_case_base.hpp>
 #include <meltpooldg/utilities/characteristic_functions.hpp>
 #include <meltpooldg/utilities/create_triangulation_with_marching_cube_algorithm.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>

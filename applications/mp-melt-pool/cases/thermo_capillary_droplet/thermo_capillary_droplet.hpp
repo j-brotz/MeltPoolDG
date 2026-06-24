@@ -30,7 +30,7 @@
 #include <deal.II/numerics/vector_tools_evaluate.h>
 
 #include <meltpooldg/core/finite_element_data.hpp>
-#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/core/simulation_case_base.hpp>
 #include <meltpooldg/flow/characteristic_numbers.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/utilities/characteristic_functions.hpp>

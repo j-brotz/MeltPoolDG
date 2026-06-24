@@ -11,7 +11,7 @@
 
 #include <meltpooldg/core/material.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
-#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/core/simulation_case_base.hpp>
 #include <meltpooldg/flow/darcy_damping_operation.hpp>
 #include <meltpooldg/flow/incompressible_flow_operation_base.hpp>
 #include <meltpooldg/flow/surface_tension_operation.hpp>
