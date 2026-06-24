@@ -1,6 +1,6 @@
-file(GLOB custom_benchmark_cmake_commands "cmake/*.cmake")
-foreach (command ${custom_benchmark_cmake_commands})
-    include(${command})
+file(GLOB CUSTOM_BENCHMARK_CMAKE_COMMANDS "cmake/*.cmake")
+foreach (BENCHMARK_COMMAND ${CUSTOM_BENCHMARK_CMAKE_COMMANDS})
+    include(${BENCHMARK_COMMAND})
 endforeach ()
 
 # ##############################################################################

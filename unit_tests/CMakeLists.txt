@@ -1,10 +1,10 @@
-set(TEST_LIBRARIES ${meltpooldg_lib})
-set(TEST_TARGET ${meltpooldg_lib})
+set(TEST_LIBRARIES ${MELTPOOLDG_LIB})
+set(TEST_TARGET ${MELTPOOLDG_LIB})
 deal_ii_pickup_tests()
 
-file(GLOB unit_test_cmake_commands "cmake/*.cmake")
-foreach(command ${unit_test_cmake_commands})
-    include(${command})
+file(GLOB UNIT_TEST_CMAKE_COMMANDS "cmake/*.cmake")
+foreach(CMAKE_COMMAND ${UNIT_TEST_CMAKE_COMMANDS})
+    include(${CMAKE_COMMAND})
 endforeach()
 
 # In order to run tests with MPI, we need to know the MPI executable and its semantics.

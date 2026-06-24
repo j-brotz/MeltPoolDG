@@ -16,143 +16,131 @@ project(MeltPoolDG)
 #
 # avoid in-source compilation
 set(DEFAULT_OUT_OF_SOURCE_FOLDER "build")
-if (${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
+if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
     message(
-            FATAL_ERROR
-            "In-source builds not allowed. Change to ${DEFAULT_OUT_OF_SOURCE_FOLDER} folder and run then cmake")
-endif ()
+        FATAL_ERROR
+        "In-source builds not allowed. Change to ${DEFAULT_OUT_OF_SOURCE_FOLDER} folder and run then cmake")
+endif()
 
-# ##############################################################################
+# ------------------------------------------------------------------------------
 # set default build type
-# ##############################################################################
-if (NOT CMAKE_BUILD_TYPE)
+# ------------------------------------------------------------------------------
+if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
     message("-- Setting to default CMAKE_BUILD_TYPE Debug")
-else ()
+else()
     message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
-endif ()
+endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# ##############################################################################
-# find deal.II
-# ##############################################################################
-
+# ------------------------------------------------------------------------------
+# find deal.II and check that it is properly configured
+# ------------------------------------------------------------------------------
 find_package(deal.II 9.6 QUIET
-        HINTS ${deal.II_DIR} ${DEAL_II_DIR} ../ ../../ $ENV{DEAL_II_DIR})
-if (NOT ${deal.II_FOUND})
+    HINTS ${deal.II_DIR} ${DEAL_II_DIR} ../ ../../ $ENV{DEAL_II_DIR})
+if(NOT ${deal.II_FOUND})
     message(
-            FATAL_ERROR
-            "\n"
-            "*** Could not locate deal.II. ***\n\n"
-            "You may want to either pass a flag -DDEAL_II_DIR=/path/to/deal.II to cmake\n"
-            "or set an environment variable \"DEAL_II_DIR\" that contains this path.")
-endif ()
+        FATAL_ERROR
+        "\n"
+        "*** Could not locate deal.II. ***\n\n"
+        "You may want to either pass a flag -DDEAL_II_DIR=/path/to/deal.II to cmake\n"
+        "or set an environment variable \"DEAL_II_DIR\" that contains this path.")
+endif()
 
 message("-- deal.II found: ${DEAL_II_DIR}")
 
-# ##############################################################################
-# find p4est
-# ##############################################################################
-if (NOT DEAL_II_WITH_P4EST)
+if(NOT DEAL_II_WITH_P4EST)
     message(
-            FATAL_ERROR
-            "\nThis library requires a deal.II installation built with support for p4est but it appears to be missing!\n"
+        FATAL_ERROR
+        "\nThis library requires a deal.II installation built with support for p4est but it appears to be missing!\n"
     )
-endif ()
+endif()
 
-# ##############################################################################
-# find trilinos
-# ##############################################################################
-if (NOT DEAL_II_WITH_TRILINOS)
+if(NOT DEAL_II_WITH_TRILINOS)
     message(
-            FATAL_ERROR
-            "\nThis library requires a deal.II installation built with support for Trilinos but it appears to be missing!\n"
+        FATAL_ERROR
+        "\nThis library requires a deal.II installation built with support for Trilinos but it appears to be missing!\n"
     )
-endif ()
-deal_ii_initialize_cached_variables()
+endif()
 
-
-# ##############################################################################
-# find adaflo
-# ##############################################################################
+# ------------------------------------------------------------------------------
+#  find adaflo
+# ------------------------------------------------------------------------------
 find_library(ADAFLO adaflo HINTS ${ADAFLO_LIB})
-if (ADAFLO)
+if(ADAFLO)
     add_compile_definitions(ADAFLO_SUPPORT)
     set(DEAL_II_WITH_ADAFLO_SUPPORT ON)
     set(MPDG_ENABLE_ADAFLO TRUE)
     message(STATUS "Adaflo found: ${ADAFLO}")
-else ()
+else()
     set(MPDG_ENABLE_ADAFLO FALSE)
     message(STATUS "Adaflo not found. Setting up project without adaflo support.")
-endif ()
+endif()
 
-# ##############################################################################
+# ------------------------------------------------------------------------------
 # build meltpooldg library
-# ##############################################################################
+# ------------------------------------------------------------------------------
+deal_ii_initialize_cached_variables()
+deal_ii_query_git_information(MELTPOOLDG)
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/meltpooldg/utilities/revision.hpp.in
+    ${CMAKE_CURRENT_BINARY_DIR}/include/meltpooldg/utilities/revision.hpp)
 
-# query git information
-DEAL_II_INITIALIZE_CACHED_VARIABLES()
-DEAL_II_QUERY_GIT_INFORMATION(MELTPOOLDG)
-CONFIGURE_FILE(
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/meltpooldg/utilities/revision.hpp.in
-        ${CMAKE_CURRENT_BINARY_DIR}/include/meltpooldg/utilities/revision.hpp)
-
-# Set the include directory and the name of the project
 include_directories(include ${CMAKE_CURRENT_BINARY_DIR}/include)
 
 file(GLOB_RECURSE sources
-        "${CMAKE_SOURCE_DIR}/source/**/*.cpp"
-        "${CMAKE_SOURCE_DIR}/simulations/*.cpp")
+    "${CMAKE_SOURCE_DIR}/source/**/*.cpp"
+    "${CMAKE_SOURCE_DIR}/simulations/*.cpp")
 
 
-set(meltpooldg_lib "meltpooldg")
+set(MELTPOOLDG_LIB "meltpooldg")
 
-add_library(${meltpooldg_lib} ${sources})
+add_library(${MELTPOOLDG_LIB} ${sources})
 
-if (ADAFLO)
-    target_compile_definitions(${meltpooldg_lib} PUBLIC MPDG_ENABLE_ADAFLO)
-    target_include_directories(${meltpooldg_lib} PUBLIC ${ADAFLO_INCLUDE})
-    target_link_libraries(${meltpooldg_lib} ${ADAFLO})
-endif ()
+if(ADAFLO)
+    target_compile_definitions(${MELTPOOLDG_LIB} PUBLIC MPDG_ENABLE_ADAFLO)
+    target_include_directories(${MELTPOOLDG_LIB} PUBLIC ${ADAFLO_INCLUDE})
+    target_link_libraries(${MELTPOOLDG_LIB} ${ADAFLO})
+endif()
 
-TARGET_COMPILE_DEFINITIONS(${meltpooldg_lib} PRIVATE SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+target_compile_definitions(${MELTPOOLDG_LIB} PRIVATE SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
-deal_ii_setup_target(${meltpooldg_lib})
+deal_ii_setup_target(${MELTPOOLDG_LIB})
 
-if (${DEAL_II_VERSION_MAJOR} GREATER_EQUAL 10)
+if(${DEAL_II_VERSION_MAJOR} GREATER_EQUAL 10)
     message("-- Enabling early deprecation via #define PUBLIC DEAL_II_DEPRECATED_EARLY=[[deprecated]]")
-    add_compile_definitions(${meltpooldg_lib} PUBLIC DEAL_II_DEPRECATED_EARLY=[[deprecated]])
-endif ()
+    add_compile_definitions(${MELTPOOLDG_LIB} PUBLIC DEAL_II_DEPRECATED_EARLY=[[deprecated]])
+endif()
 
-# ##############################################################################
+# ------------------------------------------------------------------------------
 # benchmarks
-# ##############################################################################
+# ------------------------------------------------------------------------------
 option(MPDG_ENABLE_BENCHMARKING "Configure benchmarks" OFF)
-if (MPDG_ENABLE_BENCHMARKING)
+if(MPDG_ENABLE_BENCHMARKING)
     message(STATUS "Benchmarks: enabled")
     # Deactivate internal google benchmark tests
     set(BENCHMARK_ENABLE_TESTING OFF)
     # Ensure that google benchmark debug assertions are disabled
     string(APPEND CMAKE_CXX_FLAGS_RELEASE " -DNDEBUG")
     FetchContent_Declare(
-            google_benchmark
-            GIT_REPOSITORY https://github.com/google/benchmark.git
-            GIT_TAG v1.9.3)
+        google_benchmark
+        GIT_REPOSITORY https://github.com/google/benchmark.git
+        GIT_TAG v1.9.3)
 
     FetchContent_MakeAvailable(google_benchmark)
     include_directories(${google_benchmark_SOURCE_DIR}/src)
     add_subdirectory(benchmarks)
-else ()
+else()
     message(STATUS "Benchmarks: disabled")
-endif ()
+endif()
 
-# ##############################################################################
+# ------------------------------------------------------------------------------
 # unit tests of the library
-# ##############################################################################
+# ------------------------------------------------------------------------------
 option(MPDG_ENABLE_TESTING "Configure tests" ON)
 
-if (MPDG_ENABLE_TESTING)
+if(MPDG_ENABLE_TESTING)
     message(STATUS "Tests: enabled")
 
     fetchcontent_declare(
@@ -167,12 +155,12 @@ if (MPDG_ENABLE_TESTING)
     set(_n_tests "0")
     enable_testing()
     add_subdirectory(unit_tests)
-else ()
+else()
     message(STATUS "Tests: disabled")
-endif ()
+endif()
 
 
-# ##############################################################################
-# Applications
-# ##############################################################################
+# ------------------------------------------------------------------------------
+# applications
+# ------------------------------------------------------------------------------
 add_subdirectory(applications)

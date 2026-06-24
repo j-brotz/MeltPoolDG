@@ -1,3 +1,3 @@
-SET(TEST_LIBRARIES ${meltpooldg_lib})
-SET(TEST_TARGET ${meltpooldg_lib})
-DEAL_II_PICKUP_TESTS(mp-compressible-multiphase_unit_tests)
+set(TEST_LIBRARIES ${MELTPOOLDG_LIB})
+set(TEST_TARGET ${MELTPOOLDG_LIB})
+deal_ii_pickup_tests(mp-compressible-multiphase_unit_tests)
