@@ -1,4 +1,5 @@
 {
+  "$schema": "../../../parameters.schema.json",
   "base": {
     "case name": "rising_bubble",
     "do print parameters": false,

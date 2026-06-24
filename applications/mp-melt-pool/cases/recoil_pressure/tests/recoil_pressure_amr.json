@@ -1,4 +1,5 @@
 {
+  "$schema": "../../../parameters.schema.json",
   "time stepping": {
     "end time": 3e-06,
     "start time": 0.0,

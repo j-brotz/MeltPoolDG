@@ -1,4 +1,5 @@
 {
+  "$schema": "../../parameters.schema.json",
   "base": {
     "case name": "vortex_bubble_DG",
     "dimension": 2,
