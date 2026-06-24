@@ -2087,22 +2087,14 @@
                   "default": 1
                 },
                 "anisotropic refinement": {
-                  "type": "string",
-                  "enum": [
-                    "0",
-                    "1"
-                  ],
+                  "type": "boolean",
                   "description": "defines whether the mesh should be refined anisotropically in normal direction to the interface, 0 means no anisotropy",
-                  "default": "0"
+                  "default": false
                 },
                 "simplex mesh": {
-                  "type": "string",
-                  "enum": [
-                    "0",
-                    "1"
-                  ],
+                  "type": "boolean",
                   "description": "defines whether a simplex mesh has been provided, 0 means mesh with only quadrilaterals (2D) and hexahedra (3D) has been provided",
-                  "default": "0"
+                  "default": false
                 },
                 "adaptive refinements": {
                   "type": "integer",
@@ -2115,13 +2107,9 @@
                   "default": 2
                 },
                 "augmented Taylor-Hood elements": {
-                  "type": "string",
-                  "enum": [
-                    "0",
-                    "1"
-                  ],
+                  "type": "boolean",
                   "description": "Option to choose the pressure space FE_Q_DG0(p_degree) instead of the standard space FE_Q(p_degree). This adds a constant discontinuous part to the pressure basis and gives element-wise divergence-free solutions. It produces solutions that are in general better but also a bit more expensive to compute.",
-                  "default": "0"
+                  "default": false
                 },
                 "viscosity": {
                   "type": "number",
@@ -2209,13 +2197,9 @@
                       "default": 0.001
                     },
                     "lin relative tolerance": {
-                      "type": "string",
-                      "enum": [
-                        "0",
-                        "1"
-                      ],
+                      "type": "boolean",
                       "description": "Sets whether the residual for the linear solver should be measured relative to the nonlinear residual (recommended option).",
-                      "default": "1"
+                      "default": true
                     },
                     "lin velocity preconditioner": {
                       "type": "string",
@@ -2272,22 +2256,14 @@
                   "default": 0
                 },
                 "output wall times": {
-                  "type": "string",
-                  "enum": [
-                    "0",
-                    "1"
-                  ],
+                  "type": "boolean",
                   "description": "Defines whether to output wall times. 0 means no output.",
-                  "default": "0"
+                  "default": false
                 },
                 "output memory": {
-                  "type": "string",
-                  "enum": [
-                    "0",
-                    "1"
-                  ],
+                  "type": "boolean",
                   "description": "Defines whether to output memory. 0 means no output.",
-                  "default": "0"
+                  "default": false
                 }
               },
               "additionalProperties": false
@@ -2341,13 +2317,9 @@
                   "default": 0.0
                 },
                 "pressure constraint": {
-                  "type": "string",
-                  "enum": [
-                    "0",
-                    "1"
-                  ],
+                  "type": "boolean",
                   "description": "Fixes value of pressure in one point to zero",
-                  "default": "1"
+                  "default": true
                 },
                 "concentration subdivisions": {
                   "type": "integer",
@@ -2360,49 +2332,29 @@
                   "default": 0
                 },
                 "grad pressure compatible": {
-                  "type": "string",
-                  "enum": [
-                    "0",
-                    "1"
-                  ],
+                  "type": "boolean",
                   "description": "if 1, the gradient in the surface tension force is interpolated from the pressure gradient",
-                  "default": "0"
+                  "default": false
                 },
                 "localize surface tension": {
-                  "type": "string",
-                  "enum": [
-                    "0",
-                    "1"
-                  ],
+                  "type": "boolean",
                   "description": "if 1, the surface tension is computed from a gradient that is localized around the interface (from a reconstructed distance function), otherwise it is computed from the tanh profile (i.e., nonzero everywhere)",
-                  "default": "1"
+                  "default": true
                 },
                 "approximate projections": {
-                  "type": "string",
-                  "enum": [
-                    "0",
-                    "1"
-                  ],
+                  "type": "boolean",
                   "description": "if 0, the normal and curvature in the level set method are computed by proper projection (full mass matrix and little diffusion), otherwise with diagonal mass matrix and time-dependent diffusion",
-                  "default": "0"
+                  "default": false
                 },
                 "Cahn-Hilliard do Newton": {
-                  "type": "string",
-                  "enum": [
-                    "0",
-                    "1"
-                  ],
+                  "type": "boolean",
                   "description": "Sets whether a Newton iteration should be done on the Cahn-Hilliard equation (if on that model). If 0 is selected, use a convexity splitting as proposed by Eyre.",
-                  "default": "1"
+                  "default": true
                 },
                 "full nonlinear iteration": {
-                  "type": "string",
-                  "enum": [
-                    "0",
-                    "1"
-                  ],
+                  "type": "boolean",
                   "description": "iterates between Navier-Stokes and concentration if enabled",
-                  "default": "0"
+                  "default": false
                 },
                 "number reinit steps": {
                   "type": "integer",
@@ -2415,13 +2367,9 @@
                   "default": 0
                 },
                 "convection stabilization": {
-                  "type": "string",
-                  "enum": [
-                    "0",
-                    "1"
-                  ],
+                  "type": "boolean",
                   "description": "add stabilization terms to advection equation if set to 1 (typically not necessary)",
-                  "default": "0"
+                  "default": false
                 }
               },
               "additionalProperties": false

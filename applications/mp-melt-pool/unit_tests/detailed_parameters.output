@@ -2503,20 +2503,20 @@
                 },
                 "anisotropic refinement":
                 {
-                    "value": "0",
-                    "default_value": "0",
+                    "value": "false",
+                    "default_value": "false",
                     "documentation": "defines whether the mesh should be refined anisotropically in normal direction to the interface, 0 means no anisotropy",
                     "pattern": "346",
-                    "pattern_description": "[Selection 0|1 ]",
+                    "pattern_description": "[Bool]",
                     "actions": "347"
                 },
                 "simplex mesh":
                 {
-                    "value": "0",
-                    "default_value": "0",
+                    "value": "false",
+                    "default_value": "false",
                     "documentation": "defines whether a simplex mesh has been provided, 0 means mesh with only quadrilaterals (2D) and hexahedra (3D) has been provided",
                     "pattern": "347",
-                    "pattern_description": "[Selection 0|1 ]",
+                    "pattern_description": "[Bool]",
                     "actions": "348"
                 },
                 "adaptive refinements":
@@ -2539,11 +2539,11 @@
                 },
                 "augmented Taylor-Hood elements":
                 {
-                    "value": "0",
-                    "default_value": "0",
+                    "value": "false",
+                    "default_value": "false",
                     "documentation": "Option to choose the pressure space FE_Q_DG0(p_degree) instead of the standard space FE_Q(p_degree). This adds a constant discontinuous part to the pressure basis and gives element-wise divergence-free solutions. It produces solutions that are in general better but also a bit more expensive to compute.",
                     "pattern": "350",
-                    "pattern_description": "[Selection 0|1 ]",
+                    "pattern_description": "[Bool]",
                     "actions": "351"
                 },
                 "viscosity":
@@ -2658,11 +2658,11 @@
                     },
                     "lin relative tolerance":
                     {
-                        "value": "1",
-                        "default_value": "1",
+                        "value": "true",
+                        "default_value": "true",
                         "documentation": "Sets whether the residual for the linear solver should be measured relative to the nonlinear residual (recommended option).",
                         "pattern": "363",
-                        "pattern_description": "[Selection 0|1 ]",
+                        "pattern_description": "[Bool]",
                         "actions": "364"
                     },
                     "lin velocity preconditioner":
@@ -2734,20 +2734,20 @@
                 },
                 "output wall times":
                 {
-                    "value": "0",
-                    "default_value": "0",
+                    "value": "false",
+                    "default_value": "false",
                     "documentation": "Defines whether to output wall times. 0 means no output.",
                     "pattern": "371",
-                    "pattern_description": "[Selection 0|1 ]",
+                    "pattern_description": "[Bool]",
                     "actions": "372"
                 },
                 "output memory":
                 {
-                    "value": "0",
-                    "default_value": "0",
+                    "value": "false",
+                    "default_value": "false",
                     "documentation": "Defines whether to output memory. 0 means no output.",
                     "pattern": "372",
-                    "pattern_description": "[Selection 0|1 ]",
+                    "pattern_description": "[Bool]",
                     "actions": "373"
                 }
             },
@@ -2836,11 +2836,11 @@
                 },
                 "pressure constraint":
                 {
-                    "value": "1",
-                    "default_value": "1",
+                    "value": "true",
+                    "default_value": "true",
                     "documentation": "Fixes value of pressure in one point to zero",
                     "pattern": "382",
-                    "pattern_description": "[Selection 0|1 ]",
+                    "pattern_description": "[Bool]",
                     "actions": "383"
                 },
                 "concentration subdivisions":
@@ -2863,47 +2863,47 @@
                 },
                 "grad pressure compatible":
                 {
-                    "value": "0",
-                    "default_value": "0",
+                    "value": "false",
+                    "default_value": "false",
                     "documentation": "if 1, the gradient in the surface tension force is interpolated from the pressure gradient",
                     "pattern": "385",
-                    "pattern_description": "[Selection 0|1 ]",
+                    "pattern_description": "[Bool]",
                     "actions": "386"
                 },
                 "localize surface tension":
                 {
-                    "value": "1",
-                    "default_value": "1",
+                    "value": "true",
+                    "default_value": "true",
                     "documentation": "if 1, the surface tension is computed from a gradient that is localized around the interface (from a reconstructed distance function), otherwise it is computed from the tanh profile (i.e., nonzero everywhere)",
                     "pattern": "386",
-                    "pattern_description": "[Selection 0|1 ]",
+                    "pattern_description": "[Bool]",
                     "actions": "387"
                 },
                 "approximate projections":
                 {
-                    "value": "0",
-                    "default_value": "0",
+                    "value": "false",
+                    "default_value": "false",
                     "documentation": "if 0, the normal and curvature in the level set method are computed by proper projection (full mass matrix and little diffusion), otherwise with diagonal mass matrix and time-dependent diffusion",
                     "pattern": "387",
-                    "pattern_description": "[Selection 0|1 ]",
+                    "pattern_description": "[Bool]",
                     "actions": "388"
                 },
                 "Cahn-Hilliard do Newton":
                 {
-                    "value": "1",
-                    "default_value": "1",
+                    "value": "true",
+                    "default_value": "true",
                     "documentation": "Sets whether a Newton iteration should be done on the Cahn-Hilliard equation (if on that model). If 0 is selected, use a convexity splitting as proposed by Eyre.",
                     "pattern": "388",
-                    "pattern_description": "[Selection 0|1 ]",
+                    "pattern_description": "[Bool]",
                     "actions": "389"
                 },
                 "full nonlinear iteration":
                 {
-                    "value": "0",
-                    "default_value": "0",
+                    "value": "false",
+                    "default_value": "false",
                     "documentation": "iterates between Navier-Stokes and concentration if enabled",
                     "pattern": "389",
-                    "pattern_description": "[Selection 0|1 ]",
+                    "pattern_description": "[Bool]",
                     "actions": "390"
                 },
                 "number reinit steps":
@@ -2926,11 +2926,11 @@
                 },
                 "convection stabilization":
                 {
-                    "value": "0",
-                    "default_value": "0",
+                    "value": "false",
+                    "default_value": "false",
                     "documentation": "add stabilization terms to advection equation if set to 1 (typically not necessary)",
                     "pattern": "392",
-                    "pattern_description": "[Selection 0|1 ]",
+                    "pattern_description": "[Bool]",
                     "actions": "393"
                 }
             },

@@ -64,7 +64,7 @@
       },
       "Output options": {
         "output verbosity": 3,
-        "output walltimes": 0
+        "output wall times": false
       },
       "Time stepping": {
         "scheme": "bdf_2"

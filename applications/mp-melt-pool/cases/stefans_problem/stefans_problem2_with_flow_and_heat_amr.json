@@ -123,7 +123,7 @@
       },
       "Output options": {
         "output verbosity": 1,
-        "output walltimes": 0
+        "output wall times": false
       }
     },
     "gravity": 0

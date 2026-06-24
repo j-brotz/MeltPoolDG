@@ -108,7 +108,7 @@
       },
       "Output options": {
         "output verbosity": 0,
-        "output walltimes": 0
+        "output wall times": false
       }
     },
     "gravity": 0

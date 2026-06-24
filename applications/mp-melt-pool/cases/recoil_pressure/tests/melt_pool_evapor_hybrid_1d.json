@@ -100,7 +100,7 @@
           "NL tolerance": 1e-10,
           "lin its before inner solvers": 50,
           "lin max iterations": 50,
-          "lin relative tolerance": 1,
+          "lin relative tolerance": true,
           "lin tolerance": 1e-05,
           "lin pressure preconditioner": "ilu scalar",
           "lin velocity preconditioner": "ilu",
@@ -115,7 +115,7 @@
       },
       "Output options": {
         "output verbosity": 0,
-        "output walltimes": 0
+        "output wall times": false
       },
       "Time stepping": {
         "scheme": "bdf_2"

@@ -107,7 +107,7 @@
           "NL tolerance": 1e-11,
           "lin its before inner solvers": 50,
           "lin max iterations": 50,
-          "lin relative tolerance": 1,
+          "lin relative tolerance": true,
           "lin tolerance": 1e-08,
           "lin velocity preconditioner": "ilu",
           "linearization scheme": "coupled implicit Newton"
@@ -121,7 +121,7 @@
       },
       "Output options": {
         "output verbosity": 0,
-        "output walltimes": 0
+        "output wall times": false
       },
       "Time stepping": {
         "scheme": "bdf_2"

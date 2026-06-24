@@ -67,7 +67,7 @@
     "adaflo": {
       "Output options": {
         "output verbosity": 0,
-        "output wall times": 0
+        "output wall times": false
       }
     }
   }
