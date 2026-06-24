@@ -10,7 +10,7 @@
     },
     "verbosity level": 1
   },
-  "simulation specific parameters": {
+  "case specific": {
     "center point": "0., 0.",
     "radius": 0.5,
     "level set type": "signed_distance",

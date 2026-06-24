@@ -268,47 +268,42 @@ namespace MeltPoolDG::Simulation::ReinitCircle
      * @param prm The parameter handler to which the parameters are added.
      */
     bool
-    add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
+    add_case_specific_parameters(dealii::ParameterHandler &prm) override
     {
-      prm.enter_subsection("simulation specific parameters");
-      {
-        prm.add_parameter(
-          "center point",
-          center_point,
-          "Center point of the hyperspherical level-set field. "
-          "Specify comma-separated values: the first for the x-coordinate, the second for the y-coordinate, "
-          "and the third for the z-coordinate.");
-        prm.add_parameter("radius",
-                          radius,
-                          "Radius of the hyperspherical zero level-set isosurface.",
-                          dealii::Patterns::Double(0., std::numeric_limits<number>::max()));
-        prm.add_parameter(
-          "level set type",
-          level_set_type,
-          "Level-set type description of initial condition function. "
-          "The options are \"tanh\", \"smoothed_heaviside\" and \"signed_distance\".",
-          dealii::Patterns::Selection("tanh|smoothed_heaviside|signed_distance"));
-        prm.add_parameter(
-          "apply initial jump at interface",
-          apply_initial_jump_at_interface,
-          "Should the initial level-set field contain a jump at the zero level-set isosurface?",
-          dealii::Patterns::Bool());
-        prm.add_parameter(
-          "distortion factor",
-          distortion_factor,
-          "Distortion factor for the initial level-set field. For the level-set types "
-          "\"tanh\" and \"smoothed_heaviside\" the interface thickness parameter is scaled by the "
-          "distortion factor. For the type \"signed_distance\" the signed-distance field is scaled by "
-          "the factor.",
-          dealii::Patterns::Double());
-        prm.add_parameter(
-          "epsilon",
-          eps,
-          "Interface thickness parameter. Relevant for the level-set types \"tanh\" and "
-          "\"smoothed_heaviside\".",
-          dealii::Patterns::Double(0., std::numeric_limits<number>::max()));
-      }
-      prm.leave_subsection();
+      prm.add_parameter(
+        "center point",
+        center_point,
+        "Center point of the hyperspherical level-set field. "
+        "Specify comma-separated values: the first for the x-coordinate, the second for the y-coordinate, "
+        "and the third for the z-coordinate.");
+      prm.add_parameter("radius",
+                        radius,
+                        "Radius of the hyperspherical zero level-set isosurface.",
+                        dealii::Patterns::Double(0., std::numeric_limits<number>::max()));
+      prm.add_parameter("level set type",
+                        level_set_type,
+                        "Level-set type description of initial condition function. "
+                        "The options are \"tanh\", \"smoothed_heaviside\" and \"signed_distance\".",
+                        dealii::Patterns::Selection("tanh|smoothed_heaviside|signed_distance"));
+      prm.add_parameter(
+        "apply initial jump at interface",
+        apply_initial_jump_at_interface,
+        "Should the initial level-set field contain a jump at the zero level-set isosurface?",
+        dealii::Patterns::Bool());
+      prm.add_parameter(
+        "distortion factor",
+        distortion_factor,
+        "Distortion factor for the initial level-set field. For the level-set types "
+        "\"tanh\" and \"smoothed_heaviside\" the interface thickness parameter is scaled by the "
+        "distortion factor. For the type \"signed_distance\" the signed-distance field is scaled by "
+        "the factor.",
+        dealii::Patterns::Double());
+      prm.add_parameter(
+        "epsilon",
+        eps,
+        "Interface thickness parameter. Relevant for the level-set types \"tanh\" and "
+        "\"smoothed_heaviside\".",
+        dealii::Patterns::Double(0., std::numeric_limits<number>::max()));
 
       return this->parameters.base.do_print_parameters;
     }

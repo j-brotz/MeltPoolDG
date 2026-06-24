@@ -25,7 +25,7 @@
     "absorptivity liquid": 0.5,
     "radius": 6e-05
   },
-  "simulation specific parameters": {
+  "case specific": {
     "domain x min": 0.0,
     "domain x max": 0.0006,
     "domain z min": -0.0002,

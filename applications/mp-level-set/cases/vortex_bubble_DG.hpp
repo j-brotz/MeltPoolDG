@@ -282,13 +282,9 @@ namespace MeltPoolDG::Simulation::VortexBubbleDG
     }
 
     bool
-    add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
+    add_case_specific_parameters(dealii::ParameterHandler &prm) override
     {
-      prm.enter_subsection("simulation specific");
-      {
-        prm.add_parameter("T", Tf, "Period of vortex flow.");
-      }
-      prm.leave_subsection();
+      prm.add_parameter("T", Tf, "Period of vortex flow.");
 
       return this->parameters.base.do_print_parameters;
     }

@@ -130,21 +130,15 @@ namespace MeltPoolDG::Simulation::EvaporatingShell
     {}
 
     bool
-    add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
+    add_case_specific_parameters(dealii::ParameterHandler &prm) override
     {
-      prm.enter_subsection("simulation specific");
-      {
-        prm.add_parameter("velocity",
-                          velocity,
-                          "Radial velocity on the interior edge of the shell.");
-        prm.add_parameter("inner radius", inner_radius, "inner radius");
-        prm.add_parameter("outer radius", outer_radius, "outer radius");
-        prm.add_parameter("shell type",
-                          shell_type,
-                          "Geometry type of the shell: quarter, half, full.");
-        prm.add_parameter("two phase", two_phase, "two phase");
-      }
-      prm.leave_subsection();
+      prm.add_parameter("velocity", velocity, "Radial velocity on the interior edge of the shell.");
+      prm.add_parameter("inner radius", inner_radius, "inner radius");
+      prm.add_parameter("outer radius", outer_radius, "outer radius");
+      prm.add_parameter("shell type",
+                        shell_type,
+                        "Geometry type of the shell: quarter, half, full.");
+      prm.add_parameter("two phase", two_phase, "two phase");
 
       return this->parameters.base.do_print_parameters;
     }

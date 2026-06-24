@@ -10,7 +10,7 @@
       "degree": 1
     }
   },
-  "simulation specific domain": {
+  "case specific": {
     "domain x max": 1e-05,
     "domain x min": -1e-05,
     "domain y max": 0.0001,

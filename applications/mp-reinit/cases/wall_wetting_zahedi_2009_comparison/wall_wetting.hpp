@@ -148,31 +148,27 @@ namespace MeltPoolDG::Simulation::WallWetting
      * @return Boolean indicating if parameters should be printed
      */
     bool
-    add_simulation_specific_parameters(dealii::ParameterHandler &prm) final
+    add_case_specific_parameters(dealii::ParameterHandler &prm) final
     {
-      prm.enter_subsection("simulation specific");
-      {
-        prm.add_parameter("contact angle",
-                          contact_angle_deg,
-                          "contact angle at the bottom wall",
-                          dealii::Patterns::Double(0, 180));
-        prm.add_parameter(
-          "gamma factor",
-          gamma_factor,
-          "factor multiplying epsilon_n in the computation of the normal vector filter parameter as defined by Zahedi et al. (2009)",
-          dealii::Patterns::Double());
-        prm.add_parameter(
-          "time-step factor",
-          time_step_factor,
-          "time-step scaling factor; it is used to conduct a time-step sensitivity analysis",
-          dealii::Patterns::Double());
-        prm.add_parameter(
-          "output contact angle evolution",
-          output_contact_angle_evolution,
-          "if set to 'true', it outputs the contact angle evolution in a .txt file in the output directory",
-          dealii::Patterns::Bool());
-      }
-      prm.leave_subsection();
+      prm.add_parameter("contact angle",
+                        contact_angle_deg,
+                        "contact angle at the bottom wall",
+                        dealii::Patterns::Double(0, 180));
+      prm.add_parameter(
+        "gamma factor",
+        gamma_factor,
+        "factor multiplying epsilon_n in the computation of the normal vector filter parameter as defined by Zahedi et al. (2009)",
+        dealii::Patterns::Double());
+      prm.add_parameter(
+        "time-step factor",
+        time_step_factor,
+        "time-step scaling factor; it is used to conduct a time-step sensitivity analysis",
+        dealii::Patterns::Double());
+      prm.add_parameter(
+        "output contact angle evolution",
+        output_contact_angle_evolution,
+        "if set to 'true', it outputs the contact angle evolution in a .txt file in the output directory",
+        dealii::Patterns::Bool());
       return this->parameters.base.do_print_parameters;
     }
 

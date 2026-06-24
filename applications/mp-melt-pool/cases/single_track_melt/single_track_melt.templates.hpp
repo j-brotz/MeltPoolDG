@@ -65,54 +65,50 @@ namespace MeltPoolDG::Simulation::SingleTrackMelt
 
   template <int dim, typename Number, typename CaseClass>
   bool
-  SimulationSingleTrackMelt<dim, Number, CaseClass>::add_simulation_specific_parameters(
+  SimulationSingleTrackMelt<dim, Number, CaseClass>::add_case_specific_parameters(
     ParameterHandler &prm)
   {
-    prm.enter_subsection("case specific");
+    prm.enter_subsection("mesh");
     {
-      prm.enter_subsection("mesh");
-      {
-        prm.add_parameter("gmsh file name", mesh_file_name, "Path to the gmsh .msh file.");
-        prm.add_parameter("additional refinement 1",
-                          n_additional_refinement_1,
-                          "Additional refinement of box 1.");
-        prm.add_parameter("additional refinement 2",
-                          n_additional_refinement_2,
-                          "Additional refinement of box 1.");
-        prm.add_parameter("local refinement 1 bottom left",
-                          local_refinement_1_bottom_left,
-                          "Bottom left point of locally refined region.");
-        prm.add_parameter("local refinement 1 top right",
-                          local_refinement_1_top_right,
-                          "Bottom left point of locally refined region.");
-        prm.add_parameter("local refinement 2 bottom left",
-                          local_refinement_2_bottom_left,
-                          "Bottom left point of locally refined region.");
-        prm.add_parameter("local refinement 2 top right",
-                          local_refinement_2_top_right,
-                          "Bottom left point of locally refined region.");
-      }
-      prm.leave_subsection();
+      prm.add_parameter("gmsh file name", mesh_file_name, "Path to the gmsh .msh file.");
+      prm.add_parameter("additional refinement 1",
+                        n_additional_refinement_1,
+                        "Additional refinement of box 1.");
+      prm.add_parameter("additional refinement 2",
+                        n_additional_refinement_2,
+                        "Additional refinement of box 1.");
+      prm.add_parameter("local refinement 1 bottom left",
+                        local_refinement_1_bottom_left,
+                        "Bottom left point of locally refined region.");
+      prm.add_parameter("local refinement 1 top right",
+                        local_refinement_1_top_right,
+                        "Bottom left point of locally refined region.");
+      prm.add_parameter("local refinement 2 bottom left",
+                        local_refinement_2_bottom_left,
+                        "Bottom left point of locally refined region.");
+      prm.add_parameter("local refinement 2 top right",
+                        local_refinement_2_top_right,
+                        "Bottom left point of locally refined region.");
+    }
+    prm.leave_subsection();
 
-      prm.enter_subsection("initial conditions");
-      {
-        prm.add_parameter("temperature", T_initial, "Initial temperature.");
+    prm.enter_subsection("initial conditions");
+    {
+      prm.add_parameter("temperature", T_initial, "Initial temperature.");
 
-        prm.add_parameter("interface y", y_interface, "Initial y-position of the interface.");
-      }
-      prm.leave_subsection();
+      prm.add_parameter("interface y", y_interface, "Initial y-position of the interface.");
+    }
+    prm.leave_subsection();
 
-      prm.enter_subsection("bc");
-      {
-        prm.add_parameter("inlet velocity", inlet_velocity, "Gas inlet velocity in z-direction.");
+    prm.enter_subsection("bc");
+    {
+      prm.add_parameter("inlet velocity", inlet_velocity, "Gas inlet velocity in z-direction.");
 
-        prm.add_parameter("inlet temperature",
-                          inlet_temperature,
-                          "Temperature at gas inlet and outlet.");
+      prm.add_parameter("inlet temperature",
+                        inlet_temperature,
+                        "Temperature at gas inlet and outlet.");
 
-        prm.add_parameter("outlet pressure", outlet_pressure, "Outlet pressure.");
-      }
-      prm.leave_subsection();
+      prm.add_parameter("outlet pressure", outlet_pressure, "Outlet pressure.");
     }
     prm.leave_subsection();
 

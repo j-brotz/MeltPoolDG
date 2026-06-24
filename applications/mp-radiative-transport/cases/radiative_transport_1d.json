@@ -26,7 +26,7 @@
       "preconditioner type": "ILU"
     }
   },
-  "simulation specific parameters": {
+  "case specific": {
     "power": 0.1
   },
   "output": {

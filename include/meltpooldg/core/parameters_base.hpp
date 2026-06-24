@@ -24,9 +24,10 @@ namespace MeltPoolDG
   void
   add_and_parse_parameters(const std::string                                     &parameter_file,
                            const std::function<void(dealii::ParameterHandler &)> &add_parameters,
-                           const bool enable_print   = false,
-                           const bool print_details  = false,
-                           const bool skip_undefined = true);
+                           const bool        &enable_print   = false,
+                           const bool         print_details  = false,
+                           const bool         skip_undefined = true,
+                           const std::string &subsection     = "");
 
   /**
    * @brief Abstract base class for managing parameter files.

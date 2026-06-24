@@ -132,21 +132,17 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
 
   template <int dim, typename number>
   bool
-  SimulationUnidirectionalHeatTransfer<dim, number>::add_simulation_specific_parameters(
+  SimulationUnidirectionalHeatTransfer<dim, number>::add_case_specific_parameters(
     dealii::ParameterHandler &prm)
   {
-    prm.enter_subsection("simulation specific");
-    {
-      prm.add_parameter(
-        "do solidification",
-        do_solidification,
-        "Set this parameter to true for the case to consider melting/solidification effects.");
-      prm.add_parameter("do two phase",
-                        do_two_phase,
-                        "Set this parameter to true for the case to consider two phases.");
-      prm.add_parameter("velocity", velocity, "Velocity.");
-    }
-    prm.leave_subsection();
+    prm.add_parameter(
+      "do solidification",
+      do_solidification,
+      "Set this parameter to true for the case to consider melting/solidification effects.");
+    prm.add_parameter("do two phase",
+                      do_two_phase,
+                      "Set this parameter to true for the case to consider two phases.");
+    prm.add_parameter("velocity", velocity, "Velocity.");
 
     return this->parameters.base.do_print_parameters;
   }

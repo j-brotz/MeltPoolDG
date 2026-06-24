@@ -11,7 +11,7 @@
       "type": "FE_Q_iso_Q1"
     }
   },
-  "simulation specific parameters": {
+  "case specific": {
     "domain x min": -5e-05,
     "domain x max": 5e-05,
     "domain y min": -2.5e-05,

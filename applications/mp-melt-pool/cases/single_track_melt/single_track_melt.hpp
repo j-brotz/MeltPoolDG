@@ -131,7 +131,7 @@ namespace MeltPoolDG::Simulation::SingleTrackMelt
      * @return Whether the parsed parameters should be printed.
      */
     bool
-    add_simulation_specific_parameters(ParameterHandler &prm) override;
+    add_case_specific_parameters(ParameterHandler &prm) override;
 
     /**
      * @brief Create or import the spatial discretization.

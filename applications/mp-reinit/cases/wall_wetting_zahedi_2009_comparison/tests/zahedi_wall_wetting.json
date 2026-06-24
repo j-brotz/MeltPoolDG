@@ -47,7 +47,7 @@
       "preconditioner type": "ILU"
     }
   },
-  "simulation specific": {
+  "case specific": {
     "contact angle": 45,
     "gamma factor": 2.5,
     "output contact angle evolution": false

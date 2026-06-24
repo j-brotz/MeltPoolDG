@@ -31,7 +31,7 @@
   "application specific": {
     "beam direction": "0.0,-1.0"
   },
-  "simulation specific parameters": {
+  "case specific": {
     "power": 0.1
   },
   "output": {

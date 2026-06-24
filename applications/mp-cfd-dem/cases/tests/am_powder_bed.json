@@ -15,7 +15,7 @@
     "write frequency": 1,
     "do user defined postprocessing": true
   },
-  "am simulation specific parameters": {
+  "case specific": {
     "ambient temperature": 273,
     "ambient density": 1.784,
     "domain size": "0.0008, 0.0003, 0.0004",

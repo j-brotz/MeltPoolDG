@@ -16,7 +16,7 @@
     "end time": 0.015,
     "max n steps": 5
   },
-  "simulation specific parameters": {
+  "case specific": {
     "domain x min": 0.0,
     "domain x max": 0.0006,
     "domain z min": 0.0,

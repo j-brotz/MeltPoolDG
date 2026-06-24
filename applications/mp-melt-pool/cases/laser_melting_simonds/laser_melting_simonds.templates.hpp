@@ -113,76 +113,72 @@ namespace MeltPoolDG::Simulation::LaserMeltingSimonds
 
   template <int dim, typename Number, typename CaseClass>
   bool
-  SimulationLaserMeltingSimonds<dim, Number, CaseClass>::add_simulation_specific_parameters(
+  SimulationLaserMeltingSimonds<dim, Number, CaseClass>::add_case_specific_parameters(
     dealii::ParameterHandler &prm)
   {
-    prm.enter_subsection("simulation specific");
+    prm.enter_subsection("domain");
     {
-      prm.enter_subsection("domain");
-      {
-        prm.add_parameter("width", width, "Width of the box. Only relevant for dim > 1.");
-        prm.add_parameter("height substrate", height_substrate, "Height of the metal substrate.");
-        prm.add_parameter("height gas", height_gas, "Height of the ambient gas.");
-        prm.add_parameter("delta h", delta_h, "Distance between interface and gas inflow domain.");
-      }
-      prm.leave_subsection();
+      prm.add_parameter("width", width, "Width of the box. Only relevant for dim > 1.");
+      prm.add_parameter("height substrate", height_substrate, "Height of the metal substrate.");
+      prm.add_parameter("height gas", height_gas, "Height of the ambient gas.");
+      prm.add_parameter("delta h", delta_h, "Distance between interface and gas inflow domain.");
+    }
+    prm.leave_subsection();
 
-      prm.enter_subsection("mesh");
-      {
-        prm.add_parameter("cell repetitions",
-                          cell_repetitions,
-                          "cell repetitions per dim applied before global refinement or amr");
-        prm.add_parameter("n local refinement",
-                          n_local_refinement,
-                          "number of (additional to the global) refinements for local region.");
-        prm.add_parameter("local refinement 1 bottom left",
-                          local_refinement_1_bottom_left,
-                          "Bottom left point of locally refined region.");
-        prm.add_parameter("local refinement 1 top right",
-                          local_refinement_1_top_right,
-                          "Top right point of locally refined region.");
-        prm.add_parameter("local refinement 2 bottom left",
-                          local_refinement_2_bottom_left,
-                          "Bottom left point of locally refined region.");
-        prm.add_parameter("local refinement 2 top right",
-                          local_refinement_2_top_right,
-                          "Top right point of locally refined region.");
-      }
-      prm.leave_subsection();
+    prm.enter_subsection("mesh");
+    {
+      prm.add_parameter("cell repetitions",
+                        cell_repetitions,
+                        "cell repetitions per dim applied before global refinement or amr");
+      prm.add_parameter("n local refinement",
+                        n_local_refinement,
+                        "number of (additional to the global) refinements for local region.");
+      prm.add_parameter("local refinement 1 bottom left",
+                        local_refinement_1_bottom_left,
+                        "Bottom left point of locally refined region.");
+      prm.add_parameter("local refinement 1 top right",
+                        local_refinement_1_top_right,
+                        "Top right point of locally refined region.");
+      prm.add_parameter("local refinement 2 bottom left",
+                        local_refinement_2_bottom_left,
+                        "Bottom left point of locally refined region.");
+      prm.add_parameter("local refinement 2 top right",
+                        local_refinement_2_top_right,
+                        "Top right point of locally refined region.");
+    }
+    prm.leave_subsection();
 
-      prm.enter_subsection("initial temperature");
-      {
-        prm.add_parameter("top", T_initial_top, "Set the initial temperature on the top boundary.");
-        prm.add_parameter("bottom",
-                          T_initial_bottom,
-                          "Set the initial temperature on the bottom boundary.");
-      }
-      prm.leave_subsection();
+    prm.enter_subsection("initial temperature");
+    {
+      prm.add_parameter("top", T_initial_top, "Set the initial temperature on the top boundary.");
+      prm.add_parameter("bottom",
+                        T_initial_bottom,
+                        "Set the initial temperature on the bottom boundary.");
+    }
+    prm.leave_subsection();
 
-      prm.enter_subsection("prescribed level set");
-      {
-        prm.add_parameter(
-          "eps prefactor",
-          eps_prefactor,
-          "Factor multiplied by the minimum mesh size "
-          "to compute the interface thickness parameter. Used for the prescribed level-set function "
-          "for the HeatTransferCase with a diffuse-interface operator");
-      }
-      prm.leave_subsection();
+    prm.enter_subsection("prescribed level set");
+    {
+      prm.add_parameter(
+        "eps prefactor",
+        eps_prefactor,
+        "Factor multiplied by the minimum mesh size "
+        "to compute the interface thickness parameter. Used for the prescribed level-set function "
+        "for the HeatTransferCase with a diffuse-interface operator");
+    }
+    prm.leave_subsection();
 
-      prm.enter_subsection("bc");
-      {
-        prm.add_parameter("inflow velocity",
-                          inflow_velocity,
-                          "Set the inflow velocity at the vertical domain boundary.");
-        prm.add_parameter("inflow temperature",
-                          inflow_temperature,
-                          "Set the inflow temperature at the vertical domain boundary.");
-        prm.add_parameter("outlet pressure",
-                          outlet_pressure,
-                          "Set the pressure at the vertical outlet boundary.");
-      }
-      prm.leave_subsection();
+    prm.enter_subsection("bc");
+    {
+      prm.add_parameter("inflow velocity",
+                        inflow_velocity,
+                        "Set the inflow velocity at the vertical domain boundary.");
+      prm.add_parameter("inflow temperature",
+                        inflow_temperature,
+                        "Set the inflow temperature at the vertical domain boundary.");
+      prm.add_parameter("outlet pressure",
+                        outlet_pressure,
+                        "Set the pressure at the vertical outlet boundary.");
     }
     prm.leave_subsection();
 

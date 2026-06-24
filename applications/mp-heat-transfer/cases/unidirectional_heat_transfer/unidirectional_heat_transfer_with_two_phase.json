@@ -31,7 +31,7 @@
       "temperature infinity": 300.0
     }
   },
-  "simulation specific": {
+  "case specific": {
     "do solidification": false,
     "do two phase": true,
     "velocity": 0.01

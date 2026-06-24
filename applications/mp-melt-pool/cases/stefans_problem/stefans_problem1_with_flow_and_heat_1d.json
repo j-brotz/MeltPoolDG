@@ -18,7 +18,7 @@
     "end time": 0.36,
     "time step size": 5e-05
   },
-  "simulation specific": {
+  "case specific": {
     "y max": 0.001,
     "y interface": 1e-06
   },

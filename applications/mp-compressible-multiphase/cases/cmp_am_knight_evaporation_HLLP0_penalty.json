@@ -21,7 +21,7 @@
       "enable": true
     }
   },
-  "simulation specific parameters": {
+  "case specific": {
     "left boundary condition": "no_slip_wall",
     "right boundary condition": "outflow_fixed_pressure",
     "initial conditions": {

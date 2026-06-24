@@ -6,7 +6,7 @@
     "global refinements": 4,
     "do print parameters": false
   },
-  "simulation specific parameters": {
+  "case specific": {
     "center point": "0., 0.5",
     "radius": 0.25,
     "level set type": "tanh",

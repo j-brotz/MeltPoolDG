@@ -46,7 +46,7 @@
     },
     "do solidification": false
   },
-  "simulation specific": {
+  "case specific": {
     "radius": 5e-05
   },
   "output": {

@@ -300,7 +300,7 @@ namespace MeltPoolDG::Simulation::LaserMeltingSimonds
      * @return Whether the parameter values should be printed.
      */
     bool
-    add_simulation_specific_parameters(dealii::ParameterHandler &prm) override;
+    add_case_specific_parameters(dealii::ParameterHandler &prm) override;
 
     /**
      * @brief Create the triangulation and initial spatial discretization.

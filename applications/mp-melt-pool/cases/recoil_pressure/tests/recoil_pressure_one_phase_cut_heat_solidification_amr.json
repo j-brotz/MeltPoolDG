@@ -10,7 +10,7 @@
     "do print parameters": false,
     "verbosity level": 1
   },
-  "simulation specific domain": {
+  "case specific": {
     "cell repetitions": "20,15",
     "domain x max": 0.0004,
     "domain x min": -0.0004,
