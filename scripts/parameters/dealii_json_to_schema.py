@@ -179,22 +179,20 @@ def schema_from_pattern_description(pattern_description: str) -> Dict[str, Any]:
         schema["type"] = "string"
 
     elif pattern_description.startswith("[List of <"):
-        schema["type"] = "array"
-
         inner_match = re.match(r"\[List of <(.*?)>", pattern_description)
-        if inner_match:
-            inner_pattern = inner_match.group(1).strip()
-            item_schema = schema_from_pattern_description(inner_pattern)
-            schema["items"] = item_schema if item_schema else {"type": "string"}
-        else:
-            schema["items"] = {"type": "string"}
+        inner_pattern = inner_match.group(1).strip() if inner_match else ""
 
-        m = re.search(r"length\s+(\d+)\.\.\.(\d+)\s+\(inclusive\)", pattern_description)
-        if m:
-            schema["minItems"] = int(m.group(1))
-            max_items = int(m.group(2))
-            if max_items < 10**9:
-                schema["maxItems"] = max_items
+        number = r"[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?"
+
+        if inner_pattern.startswith("[Double"):
+            schema["type"] = "string"
+            schema["pattern"] = rf"^\s*{number}(?:\s*,\s*{number})*\s*$"
+        elif inner_pattern.startswith("[Integer"):
+            schema["type"] = "string"
+            schema["pattern"] = r"^\s*[+-]?[0-9]+(?:\s*,\s*[+-]?[0-9]+)*\s*$"
+        else:
+            schema["type"] = "string"
+            schema["pattern"] = r"^\s*[^,\s]+(?:\s*,\s*[^,\s]+)*\s*$"
 
     else:
         schema["anyOf"] = [

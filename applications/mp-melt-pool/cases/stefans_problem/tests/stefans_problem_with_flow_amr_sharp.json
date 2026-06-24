@@ -39,7 +39,7 @@
   },
   "evaporation": {
     "analytical": {
-      "function": 0.001
+      "function": "0.001"
     },
     "evaporative dilation rate": {
       "model": "sharp",

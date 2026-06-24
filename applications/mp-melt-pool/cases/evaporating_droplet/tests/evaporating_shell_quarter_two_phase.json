@@ -31,7 +31,7 @@
   },
   "evaporation": {
     "analytical": {
-      "function": 0.01
+      "function": "0.01"
     },
     "formulation source term level set": "interface_velocity_local",
     "evaporative cooling": {

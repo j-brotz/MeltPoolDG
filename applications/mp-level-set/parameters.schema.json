@@ -1214,15 +1214,10 @@
           "default": 1.79769e+308
         },
         "output variables": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "minItems": 0,
+          "type": "string",
+          "pattern": "^\\s*[^,\\s]+(?:\\s*,\\s*[^,\\s]+)*\\s*$",
           "description": "Specify variables that you request to output.",
-          "default": [
-            "all"
-          ]
+          "default": "all"
         },
         "do user defined postprocessing": {
           "type": "boolean",
@@ -1380,13 +1375,10 @@
           "type": "object",
           "properties": {
             "Km": {
-              "type": "array",
-              "items": {
-                "type": "number"
-              },
-              "minItems": 0,
+              "type": "string",
+              "pattern": "^\\s*[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?(?:\\s*,\\s*[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?)*\\s*$",
               "description": "Fitting parameters for the evaporative mass flux function with pressure-aware boundary conditions.",
-              "default": []
+              "default": ""
             },
             "ambient gas pressure": {
               "type": "number",
@@ -1616,13 +1608,10 @@
               "type": "object",
               "properties": {
                 "Kp": {
-                  "type": "array",
-                  "items": {
-                    "type": "number"
-                  },
-                  "minItems": 0,
+                  "type": "string",
+                  "pattern": "^\\s*[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?(?:\\s*,\\s*[+-]?(?:[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?)*\\s*$",
                   "description": "Fitting parameters for the recoil pressure calculation with pressure-aware boundary conditions.",
-                  "default": []
+                  "default": ""
                 },
                 "ambient gas pressure": {
                   "type": "number",

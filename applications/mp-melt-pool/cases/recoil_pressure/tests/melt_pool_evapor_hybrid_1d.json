@@ -102,7 +102,7 @@
           "lin max iterations": 50,
           "lin relative tolerance": true,
           "lin tolerance": 1e-05,
-          "lin pressure preconditioner": "ilu scalar",
+          "lin pressure mass preconditioner": "ilu",
           "lin velocity preconditioner": "ilu",
           "linearization scheme": "coupled implicit Newton"
         },

@@ -44,7 +44,7 @@
   },
   "evaporation": {
     "analytical": {
-      "function": 0.0
+      "function": "0.0"
     },
     "evaporative mass flux model": "hardt_wondra",
     "hardt wondra": {

@@ -29,7 +29,7 @@
   },
   "evaporation": {
     "analytical": {
-      "function": 0.01
+      "function": "0.01"
     },
     "formulation source term level set": "rhs",
     "do level set pressure gradient interpolation": true,

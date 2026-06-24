@@ -83,8 +83,7 @@
     },
     "gravity": 0.98,
     "surface tension": {
-      "surface tension coefficient": 0.0245,
-      "do level set pressure gradient interpolation": true
+      "surface tension coefficient": 0.0245
     }
   }
 }
