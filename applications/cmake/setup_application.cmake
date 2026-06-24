@@ -7,54 +7,54 @@
 # - DESCRIPTION: A description of the application, used in the option description.
 # - DEPENDENCIES: A list of boolean CMake variables that must evaluate to TRUE.
 function(setup_application OUT_APP_ENABLED)
-    set(options "")
-    set(one_value_args CONFIGURE_OPTION_NAME APPLICATION_NAME DESCRIPTION)
-    set(multi_value_args DEPENDENCIES)
-    set(arg_prefix "ARG")
-    cmake_parse_arguments(PARSE_ARGV 0 "${arg_prefix}" "${options}" "${one_value_args}" "${multi_value_args}")
+    set(OPTIONS "")
+    set(ONE_VALUE_ARGS CONFIGURE_OPTION_NAME APPLICATION_NAME DESCRIPTION)
+    set(MULTI_VALUE_ARGS DEPENDENCIES)
+    set(ARG_PREFIX "ARG")
+    cmake_parse_arguments(PARSE_ARGV 0 "${ARG_PREFIX}" "${OPTIONS}" "${ONE_VALUE_ARGS}" "${MULTI_VALUE_ARGS}")
 
     # Check whether all dependencies are available
-    set(all_dependencies_found TRUE)
-    set(missing_dependencies "")
+    set(ALL_DEPENDENCIES_FOUND TRUE)
+    set(MISSING_DEPENDENCIES "")
 
-    foreach(dep IN LISTS ARG_DEPENDENCIES)
-        if(NOT DEFINED ${dep} OR NOT ${${dep}})
-            set(all_dependencies_found FALSE)
-            list(APPEND missing_dependencies ${dep})
+    foreach(DEP IN LISTS ARG_DEPENDENCIES)
+        if(NOT DEFINED ${DEP} OR NOT ${${DEP}})
+            set(ALL_DEPENDENCIES_FOUND FALSE)
+            list(APPEND MISSING_DEPENDENCIES ${DEP})
         endif()
     endforeach()
 
     # Detect whether the option was explicitly provided before calling this function
     if(DEFINED ${ARG_CONFIGURE_OPTION_NAME})
-        set(app_option_was_explicitly_set TRUE)
+        set(APP_OPTION_WAS_EXPLICITLY_SET TRUE)
     else()
-        set(app_option_was_explicitly_set FALSE)
+        set(APP_OPTION_WAS_EXPLICITLY_SET FALSE)
     endif()
 
     # If the option was not explicitly set, choose the default based on dependencies
-    if(NOT app_option_was_explicitly_set)
-        if(all_dependencies_found)
-            set(default_value ON)
+    if(NOT APP_OPTION_WAS_EXPLICITLY_SET)
+        if(ALL_DEPENDENCIES_FOUND)
+            set(DEFAULT_VALUE ON)
         else()
-            set(default_value OFF)
+            set(DEFAULT_VALUE OFF)
         endif()
-        option(${ARG_CONFIGURE_OPTION_NAME} "${ARG_DESCRIPTION}" ${default_value})
+        option(${ARG_CONFIGURE_OPTION_NAME} "${ARG_DESCRIPTION}" ${DEFAULT_VALUE})
     else()
         # Preserve the user-provided cache value
         option(${ARG_CONFIGURE_OPTION_NAME} "${ARG_DESCRIPTION}" "${${ARG_CONFIGURE_OPTION_NAME}}")
     endif()
 
     # If explicitly enabled, missing dependencies are a hard error
-    if(${ARG_CONFIGURE_OPTION_NAME} AND NOT all_dependencies_found)
-        if(app_option_was_explicitly_set)
+    if(${ARG_CONFIGURE_OPTION_NAME} AND NOT ALL_DEPENDENCIES_FOUND)
+        if(APP_OPTION_WAS_EXPLICITLY_SET)
             message(FATAL_ERROR
                 "Application '${ARG_APPLICATION_NAME}' was explicitly enabled "
                 "(${ARG_CONFIGURE_OPTION_NAME}=ON), but required dependencies are missing: "
-                "${missing_dependencies}")
+                "${MISSING_DEPENDENCIES}")
         else()
             message(STATUS
                 "Application: ${ARG_APPLICATION_NAME} disabled "
-                "(missing dependencies: ${missing_dependencies})")
+                "(missing dependencies: ${MISSING_DEPENDENCIES})")
             set(${OUT_APP_ENABLED} FALSE PARENT_SCOPE)
             return()
         endif()
@@ -91,19 +91,19 @@ function(setup_application OUT_APP_ENABLED)
     file(GLOB_RECURSE CASES_HEADERS "**/*.hpp")
 
     # Loop over each source file found in SOURCE_FILES
-    foreach(source_file ${SOURCE_FILES})
+    foreach(SOURCE_FILE ${SOURCE_FILES})
         # Extract the name of the executable from the current directory
-        get_filename_component(exec ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+        get_filename_component(EXEC ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 
         # Notify about the executable being created
-        message("-- Building executable: ${exec}")
+        message("-- Building executable: ${EXEC}")
 
         # Add an executable target with the current source file, all cases, and headers
-        add_executable(${exec} ${source_file} ${CASES} ${CASES_HEADERS})
+        add_executable(${EXEC} ${SOURCE_FILE} ${CASES} ${CASES_HEADERS})
 
-        deal_ii_setup_target(${exec})
+        deal_ii_setup_target(${EXEC})
 
-        # Link additional libraries (meltpooldg_lib is assumed to be defined elsewhere)
-        target_link_libraries(${exec} ${meltpooldg_lib})
-    endforeach(source_file ${SOURCE_FILES})
+        # Link additional libraries (MELTPOOLDG_LIB is assumed to be defined elsewhere)
+        target_link_libraries(${EXEC} ${MELTPOOLDG_LIB})
+    endforeach(SOURCE_FILE ${SOURCE_FILES})
 endfunction()

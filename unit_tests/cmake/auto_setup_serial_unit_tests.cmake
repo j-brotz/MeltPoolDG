@@ -10,31 +10,31 @@
 #       test_2.cpp
 #   )
 function(mpdg_setup_serial_unit_tests)
-    set(options "")
-    set(one_value_args "")
-    set(multi_value_args TEST_SOURCE_FILES)
-    set(arg_prefix "ARG")
-    cmake_parse_arguments(PARSE_ARGV 0 "${arg_prefix}" "${options}" "${one_value_args}" "${multi_value_args}")
+    set(OPTIONS "")
+    set(ONE_VALUE_ARGS "")
+    set(MULTI_VALUE_ARGS TEST_SOURCE_FILES)
+    set(ARG_PREFIX "ARG")
+    cmake_parse_arguments(PARSE_ARGV 0 "${ARG_PREFIX}" "${OPTIONS}" "${ONE_VALUE_ARGS}" "${MULTI_VALUE_ARGS}")
 
     # Check if file list is not empty assuming that the user might not want to call this function with an empty list
     if(NOT ARG_TEST_SOURCE_FILES)
         message(WARNING "An empty list of test source files was provided to mpdg_setup_serial_unit_tests. This call will therefore not create any tests and is obsolete.")
     endif()
 
-    foreach(test_src ${ARG_TEST_SOURCE_FILES})
-        get_filename_component(test_name ${test_src} NAME)
-        string(REPLACE ".cpp" "" test_target ${test_name})
+    foreach(TEST_SRC ${ARG_TEST_SOURCE_FILES})
+        get_filename_component(TEST_NAME ${TEST_SRC} NAME)
+        string(REPLACE ".cpp" "" TEST_TARGET ${TEST_NAME})
 
-        add_executable(${test_target} ${test_src})
-        target_link_libraries(${test_target} GTest::gtest_main GTest::gmock)
-        deal_ii_setup_target(${test_target})
-        target_link_libraries(${test_target} ${meltpooldg_lib})
+        add_executable(${TEST_TARGET} ${TEST_SRC})
+        target_link_libraries(${TEST_TARGET} GTest::gtest_main GTest::gmock)
+        deal_ii_setup_target(${TEST_TARGET})
+        target_link_libraries(${TEST_TARGET} ${MELTPOOLDG_LIB})
 
         add_test(
-            NAME ${test_target}
-            COMMAND ${test_target} --gtest_output=xml:unittest_reports/${test_target}_report.xml
+            NAME ${TEST_TARGET}
+            COMMAND ${TEST_TARGET} --gtest_output=xml:unittest_reports/${TEST_TARGET}_report.xml
         )
 
-        set_property(TEST ${test_target} PROPERTY LABELS UnitTest Serial)
+        set_property(TEST ${TEST_TARGET} PROPERTY LABELS UnitTest Serial)
     endforeach()
 endfunction()

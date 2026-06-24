@@ -10,11 +10,11 @@
 #       test_2.cpp
 #   )
 function(mpdg_setup_mpi_unit_tests)
-    set(options "")
-    set(one_value_args N_MPI_PROCESSES)
-    set(multi_value_args TEST_SOURCE_FILES)
-    set(arg_prefix "ARG")
-    cmake_parse_arguments(PARSE_ARGV 0 "${arg_prefix}" "${options}" "${one_value_args}" "${multi_value_args}")
+    set(OPTIONS "")
+    set(ONE_VALUE_ARGS N_MPI_PROCESSES)
+    set(MULTI_VALUE_ARGS TEST_SOURCE_FILES)
+    set(ARG_PREFIX "ARG")
+    cmake_parse_arguments(PARSE_ARGV 0 "${ARG_PREFIX}" "${OPTIONS}" "${ONE_VALUE_ARGS}" "${MULTI_VALUE_ARGS}")
 
     # Check validity of number of MPI processes
     if(NOT ARG_N_MPI_PROCESSES MATCHES "^[1-9][0-9]*$")
@@ -26,33 +26,33 @@ function(mpdg_setup_mpi_unit_tests)
         message(WARNING "An empty list of test source files was provided to mpdg_setup_mpi_unit_tests. This call will therefore not create any tests and is obsolete.")
     endif()
 
-    foreach(test_src ${ARG_TEST_SOURCE_FILES})
-        get_filename_component(test_name ${test_src} NAME)
-        string(REPLACE ".cpp" "" test_target ${test_name})
-        add_executable(${test_target} ${CMAKE_SOURCE_DIR}/unit_tests/test_utils/gtest_mpi_main.cpp ${test_src})
+    foreach(TEST_SRC ${ARG_TEST_SOURCE_FILES})
+        get_filename_component(TEST_NAME ${TEST_SRC} NAME)
+        string(REPLACE ".cpp" "" TEST_TARGET ${TEST_NAME})
+        add_executable(${TEST_TARGET} ${CMAKE_SOURCE_DIR}/unit_tests/test_utils/gtest_mpi_main.cpp ${TEST_SRC})
 
-        target_link_libraries(${test_target} GTest::gtest GTest::gmock)
-        deal_ii_setup_target(${test_target})
-        target_link_libraries(${test_target} ${meltpooldg_lib})
+        target_link_libraries(${TEST_TARGET} GTest::gtest GTest::gmock)
+        deal_ii_setup_target(${TEST_TARGET})
+        target_link_libraries(${TEST_TARGET} ${MELTPOOLDG_LIB})
 
-        set(mpi_arguments
+        set(MPI_ARGUMENTS
             ${MPIEXEC_NUMPROC_FLAG}
             1
-            $<TARGET_FILE:${test_target}>
-            --gtest_output=xml:unittest_reports/${test_target}_report.xml)
+            $<TARGET_FILE:${TEST_TARGET}>
+            --gtest_output=xml:unittest_reports/${TEST_TARGET}_report.xml)
 
         if(ARG_N_MPI_PROCESSES GREATER 1)
-            math(EXPR _n_remaining_processes "${ARG_N_MPI_PROCESSES} - 1")
-            list(APPEND mpi_arguments ":" ${MPIEXEC_NUMPROC_FLAG} ${_n_remaining_processes} $<TARGET_FILE:${test_target}>)
+            math(EXPR _N_REMAINING_PROCESSES "${ARG_N_MPI_PROCESSES} - 1")
+            list(APPEND MPI_ARGUMENTS ":" ${MPIEXEC_NUMPROC_FLAG} ${_N_REMAINING_PROCESSES} $<TARGET_FILE:${TEST_TARGET}>)
         endif()
 
         # We (at least for now) do not use gtest_discover_tests here because it was not designed for MPI
         add_test(
-            NAME ${test_target}
-            COMMAND ${MPIEXEC_EXECUTABLE} ${mpi_arguments}
+            NAME ${TEST_TARGET}
+            COMMAND ${MPIEXEC_EXECUTABLE} ${MPI_ARGUMENTS}
         )
 
-        set_property(TEST ${test_target} PROPERTY LABELS UnitTest MPI)
-        set_property(TEST ${test_target} PROPERTY PROCESSORS ${ARG_N_MPI_PROCESSES})
+        set_property(TEST ${TEST_TARGET} PROPERTY LABELS UnitTest MPI)
+        set_property(TEST ${TEST_TARGET} PROPERTY PROCESSORS ${ARG_N_MPI_PROCESSES})
     endforeach()
 endfunction()
