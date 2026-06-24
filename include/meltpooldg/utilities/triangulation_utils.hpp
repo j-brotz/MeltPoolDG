@@ -6,8 +6,10 @@
 
 #include <deal.II/grid/cell_id.h>
 #include <deal.II/grid/tria.h>
+#include <deal.II/grid/tria_accessor.h>
 
 #include <map>
+#include <set>
 #include <utility>
 #include <vector>
 
@@ -24,6 +26,93 @@ namespace MeltPoolDG
   template <int dim, int spacedim = dim>
   TriangulationType
   get_triangulation_type(const dealii::Triangulation<dim, spacedim> &tria);
+
+  /**
+   * A class which caches the adjacent cells for each cell on a given level of a triangulation.
+   * Adjacency is defined as vertex-sharing, i.e., two cells are considered adjacent if they share
+   * at least one vertex. The cache is built for a specific level of the triangulation and can be
+   * queried for the adjacent cells of any cell on that level, assuming the cell is locally
+   * available (i.e., it is either locally owned, ghost, or artificial).
+   *
+   * @note The class caches iterators to cells, which are only valid as long as the triangulation is
+   * not modified. If the triangulation is modified (e.g., by refining or coarsening), the cache
+   * must be rebuilt by calling the build_cache() function again.
+   */
+  template <int dim>
+  class LevelAdjacentCellsCache
+  {
+    using tria_iterator = dealii::TriaIterator<dealii::CellAccessor<dim>>;
+
+  public:
+    /**
+     * Build the adjacency cache for the given level of the triangulation.
+     *
+     * @param tria The triangulation for which to build the cache.
+     * @param level The level for which to build the cache.
+     */
+    void
+    build_cache(const dealii::Triangulation<dim> &tria, const unsigned int level);
+
+    /**
+     * Get the adjacent cells of a given cell on the specified level.
+     *
+     * @param cell The cell for which to get the adjacent cells.
+     *
+     * @note The returned set of adjacent cells does not include the cell itself.
+     * @note If an adjacent cell is not available on the same level, the parent cell of the
+     * hypothesized adjacent cell on the specified level is returned instead.
+     */
+    const std::set<dealii::TriaIterator<dealii::CellAccessor<dim>>> &
+    get_adjacent_cells(const tria_iterator &cell) const;
+
+    /**
+     * Get the total number of cells on the specified level across all MPI ranks.
+     */
+    unsigned int
+    n_global_cells_on_level() const;
+
+  private:
+    /// The total number of cells on the specified level across all MPI ranks.
+    unsigned int n_global_level_cells = 0;
+
+    /// A map that assigns to each cell on the specified level the set of its adjacent cells. Note,
+    /// that this does not include the cell itself.
+    std::map<tria_iterator, std::set<tria_iterator>> adjacent_cells_cache;
+
+    /// A boolean indicating whether the adjacency cache has been built, i.e., whether the
+    /// build_cache() function has been called.
+    bool is_cache_built = false;
+
+    /// The level for which the adjacency cache has been built.
+    unsigned int cache_level = 0;
+
+    /**
+     * Assert that the adjacency cache has been built before accessing it. If the cache has not been
+     * built, an exception is thrown. This is checked by the is_cache_built boolean variable.
+     */
+    void
+    assert_cache_built() const;
+
+    /**
+     * Build the adjacency cache for the given level of the triangulation. This function populates
+     * the adjacency cache with the adjacent cells for each cell on the specified level.
+     *
+     * @param tria The triangulation for which to build the cache.
+     * @param level The level for which to build the cache.
+     */
+    void
+    cache_adjacent_cells(const dealii::Triangulation<dim> &tria, const unsigned int level);
+
+    /**
+     * Compute the total number of cells on the specified level across all MPI ranks.
+     *
+     * @param tria The triangulation for which to compute the cell count.
+     * @param level The level for which to compute the cell count.
+     */
+    void
+    compute_global_cell_count(const dealii::Triangulation<dim> &tria, const unsigned int level);
+  };
+
 
   /**
    * @brief Computes and stores the MPI communication pattern for a given level of a distributed
@@ -171,15 +260,17 @@ namespace MeltPoolDG
      *
      * @param cell_id Cell id of the partition-level cell whose adjacent relevant cells should be
      * determined.
-     *
      * @param owned_active_cell_ancestors Cell ids of the partition-level cells containing locally
      * owned active descendant cells.
+     * @param adjacent_cells_cache The cache of adjacent cells for the partition-level cells to
+     * allow for efficient lookup of adjacent cells.
      *
      * @return Cell ids of the adjacent relevant cells.
      */
     std::vector<dealii::CellId>
-    adjacent_relevant_cells(const dealii::CellId              &cell_id,
-                            const std::vector<dealii::CellId> &owned_active_cell_ancestors) const;
+    adjacent_relevant_cells(const dealii::CellId               &cell_id,
+                            const std::vector<dealii::CellId>  &owned_active_cell_ancestors,
+                            const LevelAdjacentCellsCache<dim> &adjacent_cells_cache) const;
 
     /**
      * For each MPI rank, determine the relevant rank local cells adjacent to the cells requested by
@@ -230,6 +321,10 @@ namespace MeltPoolDG
     void
     build_communication_pattern();
 
+    /**
+     * Assert that the communication pattern has been built before accessing it. If the pattern has
+     * not been built, an exception is thrown.
+     */
     void
     assert_pattern_built() const;
 
