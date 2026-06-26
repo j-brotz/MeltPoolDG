@@ -124,7 +124,7 @@ namespace MeltPoolDG::CompressibleFlow
      * the right-hand side.
      *
      * @param time_step_size Size of the current time step.
-     * @param cells Container holding an iterator to the cells associated with the provided points.
+     * @param cell_batch_id The ID of the cell batch for which to compute the external force.
      * @param points Coordinates of the points at which the external force is evaluated.
      * @param w Conserved variables at the corresponding points.
      *
@@ -132,10 +132,10 @@ namespace MeltPoolDG::CompressibleFlow
      * equations.
      */
     virtual ConservedVariablesType<dim, number, n_species>
-    value(number                                                              time_step_size,
-          const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells,
-          const dealii::Point<dim, dealii::VectorizedArray<number>>          &points,
-          const ConservedVariablesType<dim, number, n_species>               &w) = 0;
+    value(number                                                     time_step_size,
+          unsigned int                                               cell_batch_id,
+          const dealii::Point<dim, dealii::VectorizedArray<number>> &points,
+          const ConservedVariablesType<dim, number, n_species>      &w) = 0;
   };
 
 
@@ -151,8 +151,7 @@ namespace MeltPoolDG::CompressibleFlow
      * added to the right-hand side.
      *
      * @param time_step_size Size of the current time step.
-     * @param cells Container holding an iterator to the cells associated with the provided points.
-     * If required this can also include an iterator with invalid state.
+     * @param cell_batch_id The ID of the cell batch for which to compute the external force.
      * @param points Coordinates of the points at which the external force is evaluated.
      * @param w Conserved variables at the corresponding points.
      * @param delta_w Increment in conserved variables at the corresponding points.
@@ -161,11 +160,11 @@ namespace MeltPoolDG::CompressibleFlow
      * equations.
      */
     virtual ConservedVariablesType<dim, number, n_species>
-    value(number                                                              time_step_size,
-          const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells,
-          const dealii::Point<dim, dealii::VectorizedArray<number>>          &points,
-          const ConservedVariablesType<dim, number, n_species>               &w,
-          const ConservedVariablesType<dim, number, n_species>               &delta_w) = 0;
+    value(number                                                     time_step_size,
+          unsigned int                                               cell_batch_id,
+          const dealii::Point<dim, dealii::VectorizedArray<number>> &points,
+          const ConservedVariablesType<dim, number, n_species>      &w,
+          const ConservedVariablesType<dim, number, n_species>      &delta_w) = 0;
   };
 
   /********************************************************************************************

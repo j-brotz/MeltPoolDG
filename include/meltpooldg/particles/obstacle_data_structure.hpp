@@ -20,6 +20,7 @@
 
 #include <boost/container/small_vector.hpp>
 
+#include <functional>
 #include <ranges>
 #include <vector>
 
@@ -208,6 +209,25 @@ namespace MeltPoolDG
   struct CellListParticleHandler
   {
   public:
+    /**
+     * The type of event that can trigger a notification to subscribers of the obstacle data
+     * structure.
+     */
+    enum class NotifyEvent
+    {
+      /// Initialization of the observer. This event is triggered as soon as the observer is
+      /// registered with the obstacle data structure.
+      ObserverInitialization,
+
+      /// Triggered when the properties of ghost particles are updated. This event is typically
+      /// triggered after a call to update_ghost_particle_properties().
+      UpdateGhostParticleProperties,
+
+      /// Triggered when the particles are sorted into subdomains and cells. This event is triggered
+      /// after a call to sort_particles_into_subdomains_and_cells().
+      SortParticlesIntoSubdomainsAndCells
+    };
+
     /**
      * Constructor. Initializes the internal particle handler and property pool for managing
      * obstacles.
@@ -492,6 +512,17 @@ namespace MeltPoolDG
     MPI_Comm
     get_mpi_communicator() const;
 
+    /**
+     * Subscribes a callback function to be notified whenever the obstacle data structure is
+     * updated.
+     *
+     * @param callback A callable that takes a reference to the obstacle data structure and the
+     * event type that triggered the update. The callable will be invoked whenever the obstacle data
+     * structure is updated, allowing the subscriber to react accordingly.
+     */
+    void
+    subscribe(std::function<void(CellListParticleHandler &, const NotifyEvent)> callback);
+
   private:
     /// Handler managing the locally owned obstacles in the domain.
     dealii::Particles::ParticleHandler<dim> obstacle_handler;
@@ -502,10 +533,16 @@ namespace MeltPoolDG
     /// MPI communicator used for synchronizing obstacle data across all ranks.
     MPI_Comm mpi_communicator = MPI_COMM_WORLD;
 
-    // Cache mapping particle ids to their corresponding particle iterators in the property pool.
-    // This is used to efficiently compress particle properties
+    /// Cache mapping particle ids to their corresponding particle iterators in the property pool.
+    /// This is used to efficiently compress particle properties
     std::unordered_map<dealii::types::particle_index, dealii::Particles::ParticleIterator<dim>>
       particle_id_to_iterator_cache;
+
+    /// A list of callables that are notified whenever the obstacle data structure is updated. This
+    /// allows other components of the simulation to react to changes in the obstacle data
+    /// structure, such as updating ghost particle properties or re-sorting particles into
+    /// subdomains and cells.
+    boost::signals2::signal<void(CellListParticleHandler &, const NotifyEvent &)> notify_signal;
 
     struct
     {
@@ -635,6 +672,14 @@ namespace MeltPoolDG
      */
     number
     compute_max_particle_radius() const;
+
+    /**
+     * Notifies all subscribers of an update to the obstacle data structure.
+     *
+     * @param event The type of event that triggered the update.
+     */
+    void
+    notify(const NotifyEvent &event);
   };
 
   template <int dim, typename number, typename ObstacleType>

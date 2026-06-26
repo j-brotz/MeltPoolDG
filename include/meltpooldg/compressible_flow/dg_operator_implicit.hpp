@@ -130,13 +130,12 @@ namespace MeltPoolDG::CompressibleFlow
      * distributions are added to this integrator.
      * @param phi Cell integrator for the primary variables.
      * @param q_index Quadrature point index.
+     * @param cell_batch_id ID of the current cell batch.
      */
     void
-    local_cell_jacobian_kernel(
-      FECellIntegrator<dim, dim + 2, number>                      &delta_phi,
-      const FECellIntegrator<dim, dim + 2, number>                &phi,
-      unsigned int                                                 q_index,
-      std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> cell_iterators) const;
+    local_cell_jacobian_kernel(FECellIntegrator<dim, dim + 2, number>       &delta_phi,
+                               const FECellIntegrator<dim, dim + 2, number> &phi,
+                               unsigned int                                  q_index) const;
 
     /**
      * @brief Local face operations at the given quadrature point for computing the Jacobian.

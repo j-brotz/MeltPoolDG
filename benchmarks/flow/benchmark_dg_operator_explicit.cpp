@@ -211,6 +211,9 @@ namespace
       dealii::AffineConstraints<number>                 affine_constraints;
       ScratchData<dim, dim, number>                     scratch_data;
 
+      unsigned int flow_dof_idx  = 0;
+      unsigned int flow_quad_idx = 0;
+
       std::unique_ptr<CompressibleFlow::OperationScratchData<dim, number>> flow_scratch_data;
 
       std::unique_ptr<CompressibleFlow::DGOperatorExplicit<dim, number, n_species>> flow_operator;
@@ -415,10 +418,21 @@ namespace
 
     // Set up the Brinkman penalization force and add it to the flow operator as an external force.
     BrinkmanPenalizationData<number> brinkman_data;
-    brinkman_data.permeability    = 1e-9;
+    brinkman_data.permeability = 1e-9;
+
+    auto cell_batch_particle_cache = std::make_shared<
+      MatrixFreeCellBatchParticleCache<dim, number, SphericalParticle<dim, number>>>(
+      MatrixFreeContext<dim, number>{.mf       = this->data->scratch_data.get_matrix_free(),
+                                     .dof_idx  = this->data->flow_dof_idx,
+                                     .quad_idx = this->data->flow_quad_idx});
+
+    obstacle_field.subscribe_to_data_structure(std::bind_front(
+      &MatrixFreeCellBatchParticleCache<dim, number, SphericalParticle<dim, number>>::update,
+      cell_batch_particle_cache));
+
     auto fsi_fluid_force_residual = std::make_shared<
       BrinkmanPenalizationResidualContribution<dim, number, SphericalParticle<dim, number>>>(
-      obstacle_field, brinkman_data);
+      brinkman_data, cell_batch_particle_cache);
     this->data->flow_operator->add_external_force(fsi_fluid_force_residual, nullptr);
 
     // Run the benchmark loop, applying the operator with the Brinkman penalization forces included.

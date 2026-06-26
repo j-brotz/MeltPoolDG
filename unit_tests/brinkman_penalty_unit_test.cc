@@ -58,8 +58,15 @@ add_penalty_vector(const MatrixFreeContext<dim, number>                     &mat
 {
   using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
+  auto cell_batch_particle_cache =
+    std::make_shared<MatrixFreeCellBatchParticleCache<dim, number, SphericalParticle<dim, number>>>(
+      matrix_free);
+  obstacle_field.subscribe_to_data_structure(std::bind_front(
+    &MatrixFreeCellBatchParticleCache<dim, number, SphericalParticle<dim, number>>::update,
+    cell_batch_particle_cache));
+
   BrinkmanPenalizationResidualContribution<dim, number, ObstacleType> brinkman_contribution(
-    obstacle_field, data);
+    data, cell_batch_particle_cache);
 
   std::function<void(const dealii::MatrixFree<dim, number> &,
                      VectorType &,
@@ -84,7 +91,7 @@ add_penalty_vector(const MatrixFreeContext<dim, number>                     &mat
           for (const unsigned int q : phi.quadrature_point_indices())
             {
               auto penalty = brinkman_contribution.value(time_step_size,
-                                                         cell_iterators,
+                                                         cell,
                                                          phi.quadrature_point(q),
                                                          phi.get_value(q));
               phi.submit_value(penalty, q);

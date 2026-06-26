@@ -229,6 +229,16 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::n_global_particles() const
   return obstacle_data_structure.n_global_particles();
 }
 
+template <int dim, typename number, typename ObstacleType>
+void
+MeltPoolDG::ObstacleField<dim, number, ObstacleType>::subscribe_to_data_structure(
+  std::function<void(
+    CellListParticleHandler<dim, number, ObstacleType> &,
+    const typename CellListParticleHandler<dim, number, ObstacleType>::NotifyEvent &)> callback)
+{
+  obstacle_data_structure.subscribe(callback);
+}
+
 
 template class MeltPoolDG::ObstacleField<1, double, MeltPoolDG::SphericalParticle<1, double>>;
 template class MeltPoolDG::ObstacleField<2, double, MeltPoolDG::SphericalParticle<2, double>>;

@@ -128,27 +128,23 @@ MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::add_load_to_obstac
 template <int dim, typename number, typename ObstacleType>
 MeltPoolDG::BrinkmanPenalizationResidualContribution<dim, number, ObstacleType>::
   BrinkmanPenalizationResidualContribution(
-    ObstacleField<dim, number, ObstacleType> &obstacle_handler,
-    const BrinkmanPenalizationData<number>   &brinkman_penalization_data)
+    const BrinkmanPenalizationData<number> &brinkman_penalization_data,
+    const std::shared_ptr<MatrixFreeCellBatchParticleCache<dim, number, ObstacleType>> &cell_cache)
   : brinkman_penalization_data(brinkman_penalization_data)
-  , cell_obstacle_cache(obstacle_handler)
-{}
+  , cell_cache(cell_cache)
+{
+  AssertThrow(cell_cache != nullptr, dealii::ExcMessage("Cell cache must not be null."));
+}
 
 template <int dim, typename number, typename ObstacleType>
 auto
 MeltPoolDG::BrinkmanPenalizationResidualContribution<dim, number, ObstacleType>::value(
   const number,
-  const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cell_iterators,
-  const dealii::Point<dim, dealii::VectorizedArray<number>>          &q_point,
-  const ConservedVariablesType                                       &w_q) -> ConservedVariablesType
+  const unsigned int                                         cell_batch_id,
+  const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
+  const ConservedVariablesType                              &w_q) -> ConservedVariablesType
 {
   using VectorizedArrayType = dealii::VectorizedArray<number>;
-
-  boost::container::small_vector<DEMParticleAccessor<dim, number>, 10> relevant_particles;
-  for (const auto &cell : cell_iterators)
-    {
-      cell_obstacle_cache.obstacle_handler.get_obstacles_in_cell(cell, relevant_particles);
-    }
 
   dealii::Tensor<1, dim, VectorizedArrayType> fluid_momentum;
   for (int d = 0; d < dim; ++d)
@@ -156,7 +152,8 @@ MeltPoolDG::BrinkmanPenalizationResidualContribution<dim, number, ObstacleType>:
 
   dealii::Tensor<1, dim, VectorizedArrayType> momentum_penalty;
   VectorizedArrayType                         energy_penalty = 0.;
-  for (DEMParticleAccessor<dim, number> &particle : relevant_particles)
+  for (DEMParticleAccessor<dim, number> &particle :
+       cell_cache->obstacles_in_cell_batch(cell_batch_id))
     {
       const dealii::Tensor<1, dim, VectorizedArrayType> local_obstacle_velocity =
         local_particle_velocity<dim, number, VectorizedArrayType>(particle, q_point);
@@ -179,30 +176,26 @@ MeltPoolDG::BrinkmanPenalizationResidualContribution<dim, number, ObstacleType>:
 template <int dim, typename number, typename ObstacleType>
 MeltPoolDG::BrinkmanPenalizationJacobianContribution<dim, number, ObstacleType>::
   BrinkmanPenalizationJacobianContribution(
-    ObstacleField<dim, number, ObstacleType> &obstacle_handler,
-    const BrinkmanPenalizationData<number>   &brinkman_penalization_data)
+    const BrinkmanPenalizationData<number> &brinkman_penalization_data,
+    const std::shared_ptr<MatrixFreeCellBatchParticleCache<dim, number, ObstacleType>> &cell_cache)
   : brinkman_penalization_data(brinkman_penalization_data)
-  , cell_obstacle_cache(obstacle_handler)
-{}
+  , cell_cache(cell_cache)
+{
+  AssertThrow(cell_cache != nullptr, dealii::ExcMessage("Cell cache must not be null."));
+}
 
 template <int dim, typename number, typename ObstacleType>
 auto
 MeltPoolDG::BrinkmanPenalizationJacobianContribution<dim, number, ObstacleType>::value(
   const number,
-  const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cell_iterators,
-  const dealii::Point<dim, dealii::VectorizedArray<number>>          &q_point,
-  const ConservedVariablesType                                       &w_q,
-  const ConservedVariablesType &delta_w_q) -> ConservedVariablesType
+  const unsigned int                                         cell_batch_id,
+  const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
+  const ConservedVariablesType                              &w_q,
+  const ConservedVariablesType                              &delta_w_q) -> ConservedVariablesType
 {
   using VectorizedArrayType = dealii::VectorizedArray<number>;
 
-  boost::container::small_vector<DEMParticleAccessor<dim, number>, 10> relevant_particles;
-  for (const auto &cell : cell_iterators)
-    {
-      cell_obstacle_cache.obstacle_handler.get_obstacles_in_cell(cell, relevant_particles);
-    }
-
-  if (relevant_particles.empty())
+  if (cell_cache->obstacles_in_cell_batch(cell_batch_id).empty())
     return ConservedVariablesType();
 
   dealii::Tensor<1, dim, VectorizedArrayType> fluid_momentum;
@@ -215,7 +208,8 @@ MeltPoolDG::BrinkmanPenalizationJacobianContribution<dim, number, ObstacleType>:
 
   VectorizedArrayType                         energy_penalty_differential_change(0.);
   dealii::Tensor<1, dim, VectorizedArrayType> momentum_penalty_differential_change;
-  for (const DEMParticleAccessor<dim, number> &particle : relevant_particles)
+  for (const DEMParticleAccessor<dim, number> &particle :
+       cell_cache->obstacles_in_cell_batch(cell_batch_id))
     {
       const dealii::Tensor<1, dim, VectorizedArrayType> local_obstacle_velocity =
         local_particle_velocity<dim, number, VectorizedArrayType>(particle, q_point);

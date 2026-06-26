@@ -3,7 +3,7 @@
 #include <deal.II/base/parameter_handler.h>
 
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization_data.hpp>
-#include <meltpooldg/utilities/better_enum.hpp>
+#include <meltpooldg/utilities/enum.hpp>
 
 namespace MeltPoolDG
 {
