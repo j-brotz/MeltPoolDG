@@ -7,7 +7,7 @@
     "case name": "generic_hyper_rectangle_domain",
     "dimension": 2,
     "do print parameters": false,
-    "global refinements": 1,
+    "global refinements": 2,
     "verbosity level": 1
   },
   "case setup": {
@@ -36,7 +36,7 @@
     },
     "domain": {
       "size": "80e-6, 40e-6",
-      "base grid resolution": "12, 6"
+      "base grid resolution": "6, 3"
     }
   },
   "time stepping": {
@@ -109,8 +109,8 @@
   },
   "adaptive meshing": {
     "do amr": true,
-    "max grid refinement level": 2,
-    "min grid refinement level": 0,
+    "max grid refinement level": 3,
+    "min grid refinement level": 1,
     "every n step": 1
   }
 }

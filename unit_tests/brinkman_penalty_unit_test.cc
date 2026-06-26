@@ -53,7 +53,7 @@ add_penalty_vector(const MatrixFreeContext<dim, number>                     &mat
                    const dealii::LinearAlgebra::distributed::Vector<number> &flow_solution,
                    dealii::LinearAlgebra::distributed::Vector<number>       &dst,
                    const BrinkmanPenalizationData<number>                   &data,
-                   const ObstacleField<dim, number, ObstacleType>           &obstacle_field,
+                   ObstacleField<dim, number, ObstacleType>                 &obstacle_field,
                    const number                                              time_step_size)
 {
   using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
@@ -233,8 +233,10 @@ public:
   initialize()
   {
     // setup triangulation
-    this->triangulation =
-      std::make_unique<dealii::parallel::distributed::Triangulation<dim>>(MPI_COMM_WORLD);
+    this->triangulation = std::make_unique<dealii::parallel::distributed::Triangulation<dim>>(
+      MPI_COMM_WORLD,
+      dealii::Triangulation<dim>::MeshSmoothing::none,
+      dealii::parallel::distributed::Triangulation<dim>::Settings::construct_multigrid_hierarchy);
 
     std::vector<unsigned int>  repetitions;
     dealii::Point<dim, number> p1;
@@ -254,6 +256,7 @@ public:
 
     dealii::GridGenerator::subdivided_hyper_rectangle(
       *this->triangulation, repetitions, p1, p2, true);
+    triangulation->refine_global(2);
 
     // setup mapping
     constexpr unsigned mapping_fe_degree = 1;

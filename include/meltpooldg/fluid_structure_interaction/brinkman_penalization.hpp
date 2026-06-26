@@ -33,10 +33,10 @@ namespace MeltPoolDG
      * @param matrix_free MatrixFree object and corresponding relevant indices.
      * @param data Object for caching relevant data for the penalty term computation.
      */
-    BrinkmanObstacleForce(const ObstacleField<dim, number, ObstacleType> &obstacle_handler,
-                          const VectorType                               &solution,
-                          const MatrixFreeContext<dim, number>           &matrix_free,
-                          const BrinkmanPenalizationData<number>         &data);
+    BrinkmanObstacleForce(ObstacleField<dim, number, ObstacleType> &obstacle_handler,
+                          const VectorType                         &solution,
+                          const MatrixFreeContext<dim, number>     &matrix_free,
+                          const BrinkmanPenalizationData<number>   &data);
 
     /**
      * Compute the force from the fluid on all obstacles in the given obstacle field @param obstacle_field.
@@ -97,8 +97,8 @@ namespace MeltPoolDG
      * @param brinkman_penalization_data Data required for computing the Brinkman penalization term.
      */
     BrinkmanPenalizationResidualContribution(
-      const ObstacleField<dim, number, ObstacleType> &obstacle_handler,
-      const BrinkmanPenalizationData<number>         &brinkman_penalization_data);
+      ObstacleField<dim, number, ObstacleType> &obstacle_handler,
+      const BrinkmanPenalizationData<number>   &brinkman_penalization_data);
 
     /**
      * This function evaluates the Brinkman penalty term at a set of vectorized points, typically
@@ -161,8 +161,8 @@ namespace MeltPoolDG
      * @param brinkman_penalization_data Data required for computing the Brinkman penalization term.
      */
     BrinkmanPenalizationJacobianContribution(
-      const ObstacleField<dim, number, ObstacleType> &obstacle_handler,
-      const BrinkmanPenalizationData<number>         &brinkman_penalization_data);
+      ObstacleField<dim, number, ObstacleType> &obstacle_handler,
+      const BrinkmanPenalizationData<number>   &brinkman_penalization_data);
 
     /**
      * This function evaluates the Jacobian of the Brinkman penalty term at a set of vectorized

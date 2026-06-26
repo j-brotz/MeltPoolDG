@@ -64,7 +64,7 @@ namespace MeltPoolDG
           tangential_gaps[particle.id()];
 
 
-        for (auto &other : obstacle_field.global_particle_range())
+        for (auto &other : obstacle_field.find_particles_in_neighborhood(particle, 0.0))
           {
             if (particle.id() == other.id())
               continue;

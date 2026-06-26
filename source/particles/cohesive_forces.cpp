@@ -23,7 +23,9 @@ namespace MeltPoolDG
   {
     for (DEMParticleAccessor<dim, number> &particle : obstacle_field.locally_owned_particle_range())
       {
-        for (DEMParticleAccessor<dim, number> &other : obstacle_field.global_particle_range())
+        // TODO: Flexible value
+        for (DEMParticleAccessor<dim, number> &other :
+             obstacle_field.find_particles_in_neighborhood(particle, 0.1))
           {
             if (particle.id() == other.id())
               continue;

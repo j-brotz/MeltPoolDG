@@ -81,9 +81,12 @@ namespace
                  double                         mass,
                  double                         moment_of_inertia)
     {
+      static dealii::types::particle_index id_counter = 0;
       locations.push_back(location);
       storage.emplace_back(ObstacleType::n_obstacle_properties, 0.0);
-      MeltPoolDG::DEMParticleAccessor<dim, double> particle(locations.back(), storage.back());
+      MeltPoolDG::DEMParticleAccessor<dim, double> particle(locations.back(),
+                                                            storage.back(),
+                                                            id_counter++);
       for (int d = 0; d < dim; ++d)
         {
           particle.linear_velocity(d)      = velocity[d];
