@@ -23,7 +23,11 @@ namespace MeltPoolDG
   {
     for (DEMParticleAccessor<dim, number> &particle : obstacle_field.locally_owned_particle_range())
       {
-        for (DEMParticleAccessor<dim, number> &other : obstacle_field.global_particle_range())
+        // TODO: The value passed as relative tolerance for the find particles in neighborhood
+        // function should be a parameter of the cohesive force data structure. For now, we use a
+        // hardcoded value of 0.1.
+        for (DEMParticleAccessor<dim, number> &other :
+             obstacle_field.find_particles_in_neighborhood(particle, 0.1))
           {
             if (particle.id() == other.id())
               continue;

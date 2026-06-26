@@ -106,43 +106,56 @@ namespace MeltPoolDG
     }
 
     /**
-     * @brief Identifies obstacles that partially or fully occupy a given cell, and stores their
-     * properties in the destination property pool.
+     * Identify obstacles that likely at least partially occupy the specified cell. Note, that the
+     * returned particles are not guaranteed to be located within the cell, but they are guaranteed
+     * to include all particles that are located within the cell.
      *
-     * This function inspects the specified cell and collects the properties of any obstacles
-     * located within it. These properties are stored in the provided destination property pool.
-     *
-     * @param dst Destination property pool where the properties of the identified obstacles will be
-     * stored.
-     * @param cell The cell to be investigated.
+     * @param cell The cell of interest. The iterator must point to a cell within the triangulation
+     * that was used to initialize this object.
+     * @param particles Destination container where the properties of the identified obstacles will
+     * be added. If the container already contains particles, the function will append new particles
+     * to it, ensuring that no duplicates are added.
      *
      * @return Vector containing the handles of the newly registered obstacles in @p dst.
      */
-    std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
-    get_obstacles_in_cell(dealii::Particles::PropertyPool<dim> &dst,
-                          const dealii::CellAccessor<dim>      &cell) const;
+    template <typename ObstacleContainer>
+    void
+    get_obstacles_in_cell(const dealii::TriaIterator<dealii::CellAccessor<dim>> &cell,
+                          ObstacleContainer                                     &particles);
 
     /**
-     * @brief Identify obstacles that partially or fully occupy any cell in a given cell batch, and
-     * store their properties in the destination property pool.
+     * This functions returns a vector of particles that are located within the influence area of
+     * a given particle. The neighborhood radius is defined as:
      *
-     * This function scans the specified cell batch and collects the properties of any obstacles
-     * present in those cells. The properties are stored in the given destination property pool.
+     *   r_neighborhood = particle.radius() * (1 + relative_tolerance)
      *
-     * @param dst Destination property pool where the properties of the identified obstacles will be
-     * stored.
-     * @param matrix_free MatrixFree object associated with the current cell batch.
-     * @param cell_batch_id Index of the cell batch to be examined.
-     * @param n_lanes Number of vectorization lanes in the cell batch, i.e., the number of cells
-     * present in the cell batch.
+     * This captures two categories of neighbors:
+     *  - Contact neighbors: particles whose surfaces overlap or touch.
+     *  - Influence neighbors: particles close enough to exert non-contact interactions (e.g. van
+     *    der Waals or lubrication forces).
      *
-     * @return Vector containing the handles of the newly registered obstacles in @p dst.
+     * @param particle The particle around which the neighborhood is constructed.
+     * @param relative_tolerance A non-negative scaling factor applied to the particle's radius to
+     * define the neighborhood extent. A value of 0 restricts the search to overlapping (contact)
+     * particles only.
+     *
+     * @return All particles within the influence neighborhood of @p particle, excluding @p particle
+     * itself.
      */
-    std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
-    get_obstacles_in_cell(
-      dealii::Particles::PropertyPool<dim>                               &dst,
-      const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells) const;
+    boost::container::small_vector<DEMParticleAccessor<dim, number>, 3 * dim>
+    find_particles_in_neighborhood(const DEMParticleAccessor<dim, number> &particle,
+                                   const number                            relative_tolerance);
 
+    /**
+     * This function compresses the forces and torques of the ghost particles by sending them to the
+     * owning rank of the particles and summing them up there.
+     *
+     * @note After a call to this function, the compressed value is exclusively available on the
+     * owning rank of the particle. The force and torque values on the ghost particles are not
+     * updated and should be considered invalid.
+     */
+    void
+    compress();
 
     /**
      * Computes the sum of all particle forces and prints the corresponding norm to the console.
@@ -252,13 +265,12 @@ namespace MeltPoolDG
     locally_owned_particle_range() const;
 
     /**
-     * Returns a range over all global obstacle particles for iterating over all particles in the
-     * global particle data structure.
+     * Returns a range over all ghost obstacle particles on the current MPI process.
      *
-     * @return An iterable subrange representing all global particles.
+     * @return An iterable subrange representing all ghost particles.
      */
     std::ranges::subrange<ParticleIterator<dim, number>>
-    global_particle_range();
+    ghost_particle_range() const;
 
     /**
      * Returns a subrange for iterating over particles for which the particle center location is
@@ -269,14 +281,6 @@ namespace MeltPoolDG
      */
     typename std::ranges::subrange<ParticleIterator<dim, number>>
     particles_in_cell(typename dealii::Triangulation<dim>::active_cell_iterator cell) const;
-
-    /**
-     * Returns a reference to the global property pool containing all global obstacle properties.
-     *
-     * @return A reference to the global property pool.
-     */
-    dealii::Particles::PropertyPool<dim> &
-    get_global_property_pool();
 
     /**
      * Return the number of global particles, i.e., the total number of particles across all MPI
@@ -293,12 +297,21 @@ namespace MeltPoolDG
     std::vector<ObstacleLoad<dim, number, ObstacleType>> loads;
 
     /// Obstacle search utility for locating relevant obstacles within a given cell or batch.
-    /// TODO: Extend to support nearest-neighbor searches and other spatial queries.
-    ObstacleCompleteDomainSearch<dim, number, ObstacleType> obstacle_data_structure;
+    CellListParticleHandler<dim, number, ObstacleType> obstacle_data_structure;
 
     /// MPI communicator used for parallel operations on the obstacle field.
     MPI_Comm mpi_communicator;
   };
+
+  template <int dim, typename number, typename ObstacleType>
+  template <typename ObstacleContainer>
+  void
+  ObstacleField<dim, number, ObstacleType>::get_obstacles_in_cell(
+    const dealii::TriaIterator<dealii::CellAccessor<dim>> &cell,
+    ObstacleContainer                                     &particles)
+  {
+    obstacle_data_structure.get_obstacles_in_cell(cell, particles);
+  }
 
   template <int dim, typename number, typename ObstacleType>
   template <class Archive>

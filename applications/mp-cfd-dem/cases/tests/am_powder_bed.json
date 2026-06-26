@@ -4,7 +4,8 @@
     "case name": "am_powder_bed",
     "dimension": 3,
     "do print parameters": false,
-    "verbosity level": 1
+    "verbosity level": 1,
+    "global refinements": 2
   },
   "time stepping": {
     "start time": 0.0,
@@ -19,7 +20,7 @@
     "ambient temperature": 273,
     "ambient density": 1.784,
     "domain size": "0.0008, 0.0003, 0.0004",
-    "domain discretization": "20, 10, 10",
+    "domain discretization": "6, 3, 3",
     "jet hole diameter": 8e-05,
     "jet hole center": "0.0001, 0.0001, 0.0",
     "jet peak velocity": 10,

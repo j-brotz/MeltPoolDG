@@ -2,6 +2,8 @@
 
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/point.h>
+#include <deal.II/base/tensor.h>
+#include <deal.II/base/types.h>
 
 #include <meltpooldg/core/exceptions.hpp>
 #include <meltpooldg/particles/particle.hpp>
@@ -99,6 +101,52 @@ namespace MeltPoolDG
         accessor.get_property(SphericalParticle<dim, number>::radius));
   }
 
+  template <int dim, typename number, typename VectorizedArrayType>
+  dealii::Tensor<1, dim, VectorizedArrayType>
+  vector_to_center_of_gravity(const DEMParticleAccessor<dim, number>        &particle,
+                              const dealii::Point<dim, VectorizedArrayType> &location)
+  {
+    dealii::Point<dim, VectorizedArrayType> particle_center;
+
+    for (int i = 0; i < dim; ++i)
+      particle_center[i] = VectorizedArrayType(particle.get_location()[i]);
+
+    return particle_center - location;
+  }
+
+  template <int dim, typename number, typename VectorizedArrayType>
+  dealii::Tensor<1, dim, VectorizedArrayType>
+  local_particle_velocity(const DEMParticleAccessor<dim, number>        &particle,
+                          const dealii::Point<dim, VectorizedArrayType> &location)
+  {
+    Assert(dim == 2 or dim == 3, dealii::ExcMessage("Invalid dimension!"));
+
+    dealii::Point<dim, VectorizedArrayType> vectorized_particle_location;
+    for (auto i = 0; i < dim; ++i)
+      vectorized_particle_location[i] = VectorizedArrayType(particle.get_location()[i]);
+
+    dealii::Tensor<1, dim, VectorizedArrayType> distance_to_center =
+      location - vectorized_particle_location;
+
+    dealii::Tensor<1, dim, VectorizedArrayType> velocity;
+    for (unsigned int i = 0; i < dim; ++i)
+      velocity[i] = VectorizedArrayType(particle.linear_velocity(i));
+
+    dealii::Tensor<1, dim, VectorizedArrayType> angular_velocity;
+    for (unsigned int i = 0; i < axial_dim<dim>; ++i)
+      angular_velocity[i] = VectorizedArrayType(particle.angular_velocity(i));
+
+    if constexpr (dim == 2)
+      {
+        return dealii::cross_product_2d(angular_velocity[0] * distance_to_center) + velocity;
+      }
+    if constexpr (dim == 3)
+      {
+        return velocity + dealii::cross_product_3d(angular_velocity, distance_to_center);
+      }
+    AssertThrow(false, dealii::ExcInternalError());
+  }
+
   /**
    * Reads particle initial conditions (position, density, radius) from a CSV file and computes the
    * derived properties (volume, mass, moment of inertia) of each resulting spherical particle.
@@ -192,7 +240,11 @@ namespace MeltPoolDG
       // particle properties
       std::vector<number> particle_properties(SphericalParticle<dim, number>::n_obstacle_properties,
                                               0.0);
-      DEMParticleAccessor<dim, number> accessor(particle_location, particle_properties);
+
+      DEMParticleAccessor<dim, number> accessor(
+        particle_location,
+        particle_properties,
+        dealii::numbers::invalid_unsigned_int /* dummy particle id */);
 
       compute_and_set_spherical_particle_properties(accessor,
                                                     parsed_values[PropertyCSVColumns::radius],

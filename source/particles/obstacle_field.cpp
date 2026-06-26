@@ -30,7 +30,6 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
   auto [obstacle_locations, obstacle_properties] =
     read_particle_state_input_file<dim, number>(data.obstacle_state_input_file, mpi_communicator);
   insert_obstacles(triangulation, obstacle_locations, obstacle_properties);
-  obstacle_data_structure.reinit();
 }
 
 template <int dim, typename number, typename ObstacleType>
@@ -45,7 +44,6 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
   , mpi_communicator(triangulation.get_mpi_communicator())
 {
   insert_obstacles(triangulation, obstacle_locations, obstacle_properties);
-  obstacle_data_structure.reinit();
 }
 
 template <int dim, typename number, typename ObstacleType>
@@ -53,28 +51,10 @@ void
 MeltPoolDG::ObstacleField<dim, number, ObstacleType>::advance_time(const number time_step)
 {
   compute_loads_on_obstacles();
-
   symplectic_euler_advance_time_step<dim, number, ObstacleType>(time_step,
                                                                 locally_owned_particle_range());
-}
 
-
-template <int dim, typename number, typename ObstacleType>
-std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
-MeltPoolDG::ObstacleField<dim, number, ObstacleType>::get_obstacles_in_cell(
-  dealii::Particles::PropertyPool<dim> &dst,
-  const dealii::CellAccessor<dim>      &cell) const
-{
-  return obstacle_data_structure.get_obstacles_in_cell(dst, cell);
-}
-
-template <int dim, typename number, typename ObstacleType>
-std::vector<typename dealii::Particles::PropertyPool<dim>::Handle>
-MeltPoolDG::ObstacleField<dim, number, ObstacleType>::get_obstacles_in_cell(
-  dealii::Particles::PropertyPool<dim>                               &dst,
-  const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cells) const
-{
-  return obstacle_data_structure.get_obstacles_in_cell(dst, cells);
+  obstacle_data_structure.auto_update_particle_cache();
 }
 
 template <int dim, typename number, typename ObstacleType>
@@ -127,13 +107,16 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::compute_loads_on_obstacles
       obstacle.set_force(dealii::Tensor<1, dim, number>());
       obstacle.set_torque(dealii::Tensor<1, ObstacleType::size_angular_velocity, number>());
     }
-
-  // Update global particle property pool in case any of the loads needs an up-to-date version.
-  obstacle_data_structure.broadcast_global_particles();
-
+  for (DEMParticleAccessor<dim, number> &obstacle : obstacle_data_structure.ghost_particle_range())
+    {
+      obstacle.set_force(dealii::Tensor<1, dim, number>());
+      obstacle.set_torque(dealii::Tensor<1, ObstacleType::size_angular_velocity, number>());
+    }
   // Accumulate all forces acting on the particles
   for (const auto &load_type : loads)
     load_type.add_load_to_obstacles(*this);
+
+  obstacle_data_structure.compress();
 }
 
 template <int dim, typename number, typename ObstacleType>
@@ -197,6 +180,24 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::insert_obstacles(
            "The number of particle locations must match the number of particle properties."));
 
   obstacle_data_structure.insert_global_particles(obstacle_locations, obstacle_properties);
+  obstacle_data_structure.initialize();
+}
+
+template <int dim, typename number, typename ObstacleType>
+boost::container::small_vector<MeltPoolDG::DEMParticleAccessor<dim, number>, 3 * dim>
+MeltPoolDG::ObstacleField<dim, number, ObstacleType>::find_particles_in_neighborhood(
+  const DEMParticleAccessor<dim, number> &particle,
+  const number                            relative_tolerance)
+{
+  return obstacle_data_structure.find_particles_in_neighborhood(particle, relative_tolerance);
+}
+
+
+template <int dim, typename number, typename ObstacleType>
+void
+MeltPoolDG::ObstacleField<dim, number, ObstacleType>::compress()
+{
+  obstacle_data_structure.compress();
 }
 
 template <int dim, typename number, typename ObstacleType>
@@ -206,16 +207,11 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::locally_owned_particle_ran
   return obstacle_data_structure.locally_owned_particle_range();
 }
 
-
 template <int dim, typename number, typename ObstacleType>
 std::ranges::subrange<MeltPoolDG::ParticleIterator<dim, number>>
-MeltPoolDG::ObstacleField<dim, number, ObstacleType>::global_particle_range()
+MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ghost_particle_range() const
 {
-  return std::ranges::subrange<ParticleIterator<dim, number>>(
-    ParticleIterator<dim, number>(obstacle_data_structure.get_global_particle_properties(), 0),
-    ParticleIterator<dim, number>(
-      obstacle_data_structure.get_global_particle_properties(),
-      obstacle_data_structure.get_global_particle_properties().n_registered_slots()));
+  return obstacle_data_structure.ghost_particle_range();
 }
 
 template <int dim, typename number, typename ObstacleType>
@@ -224,13 +220,6 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::particles_in_cell(
   typename dealii::Triangulation<dim>::active_cell_iterator cell) const
 {
   return obstacle_data_structure.particles_in_cell(cell);
-}
-
-template <int dim, typename number, typename ObstacleType>
-dealii::Particles::PropertyPool<dim> &
-MeltPoolDG::ObstacleField<dim, number, ObstacleType>::get_global_property_pool()
-{
-  return obstacle_data_structure.get_global_particle_properties();
 }
 
 template <int dim, typename number, typename ObstacleType>

@@ -8,6 +8,7 @@
 #include <deal.II/fe/mapping.h>
 
 #include <deal.II/grid/grid_generator.h>
+#include <deal.II/grid/tria.h>
 
 #include <meltpooldg/particles/obstacle_field.hpp>
 #include <meltpooldg/particles/obstacle_forces.hpp>
@@ -201,27 +202,30 @@ public:
   void
   setup_triangulation_and_mapping()
   {
-    this->triangulation =
-      std::make_unique<dealii::parallel::distributed::Triangulation<dim>>(MPI_COMM_WORLD);
+    this->triangulation = std::make_unique<dealii::parallel::distributed::Triangulation<dim>>(
+      MPI_COMM_WORLD,
+      dealii::Triangulation<dim>::MeshSmoothing::none,
+      dealii::parallel::distributed::Triangulation<dim>::Settings::construct_multigrid_hierarchy);
 
     std::vector<unsigned int>  repetitions;
     dealii::Point<dim, number> p1;
     dealii::Point<dim, number> p2;
     if constexpr (dim == 2)
       {
-        repetitions = {6, 16};
+        repetitions = {1, 2};
         p1          = dealii::Point<2, number>(0, 0);
-        p2          = dealii::Point<2, number>(3, 8);
+        p2          = dealii::Point<2, number>(4, 8);
       }
     else if constexpr (dim == 3)
       {
-        repetitions = {6, 6, 16};
+        repetitions = {1, 1, 2};
         p1          = dealii::Point<3, number>(0, 0, 0);
-        p2          = dealii::Point<3, number>(3, 3, 8);
+        p2          = dealii::Point<3, number>(4, 4, 8);
       }
 
     dealii::GridGenerator::subdivided_hyper_rectangle(
       *this->triangulation, repetitions, p1, p2, true);
+    triangulation->refine_global(5);
 
     constexpr unsigned mapping_fe_degree = 1;
     mapping = std::make_unique<dealii::MappingQGeneric<dim>>(mapping_fe_degree);
@@ -269,27 +273,31 @@ public:
     };
 
 
-    std::vector<dealii::Point<dim>> particle_locations;
-    particle_locations.reserve(2);
-    if constexpr (dim == 2)
-      {
-        particle_locations.emplace_back(0.7, 7.);
-        particle_locations.emplace_back(1.53, 7.);
-      }
-    else if constexpr (dim == 3)
-      {
-        particle_locations.emplace_back(0.7, 0.8, 7.);
-        particle_locations.emplace_back(1.43, 1.3, 6.);
-      }
-    else
-      {
-        AssertThrow(false, dealii::ExcInternalError());
-      }
-
+    std::vector<dealii::Point<dim>>  particle_locations;
     std::vector<std::vector<number>> particle_properties;
-    particle_properties.reserve(2);
-    particle_properties.emplace_back(make_particle_property(-0.2, 0.5, 1));
-    particle_properties.emplace_back(make_particle_property(0.0, 0.3, 1.72));
+
+    if (dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0)
+      {
+        particle_locations.reserve(2);
+        if constexpr (dim == 2)
+          {
+            particle_locations.emplace_back(0.7, 7.);
+            particle_locations.emplace_back(1.53, 7.);
+          }
+        else if constexpr (dim == 3)
+          {
+            particle_locations.emplace_back(0.7, 0.8, 7.);
+            particle_locations.emplace_back(1.43, 1.3, 6.);
+          }
+        else
+          {
+            AssertThrow(false, dealii::ExcInternalError());
+          }
+
+        particle_properties.reserve(2);
+        particle_properties.emplace_back(make_particle_property(-0.2, 0.5, 1));
+        particle_properties.emplace_back(make_particle_property(0.0, 0.3, 1.72));
+      }
 
     obstacle_field = std::make_unique<ObstacleField<dim, number, ObstacleType>>(
       obstacle_data, *triangulation, *mapping, particle_locations, particle_properties);
