@@ -5,6 +5,8 @@
 
 #include <deal.II/particles/particle_accessor.h>
 
+#include "meltpooldg/particles/particle_accessor.hpp"
+
 #include <memory>
 #include <utility>
 
@@ -108,13 +110,12 @@ namespace MeltPoolDG
     void
     add_load_to_obstacles(ObstacleField<dim, number, ObstacleType> &obstacle_field) const
     {
-      for (dealii::Particles::ParticleAccessor<dim> obstacle :
-           obstacle_field.get_particle_handler())
+      for (DEMParticleAccessor<dim, number> obstacle :
+           obstacle_field.locally_owned_particle_range())
         {
           dealii::Tensor<1, dim, number> force;
-          force[dim - 1] = -gravitational_constant *
-                           ObstacleType::get_property(obstacle, ObstacleType::Properties::mass);
-          ObstacleType::accumulate_force(force, obstacle);
+          force[dim - 1] = -gravitational_constant * obstacle.mass();
+          obstacle.add_force(force);
         }
     }
 

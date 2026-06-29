@@ -8,13 +8,13 @@
 
 #include <deal.II/particles/particle_handler.h>
 
+#include "meltpooldg/particles/particle_accessor.hpp"
 #include <meltpooldg/particles/obstacle_field.hpp>
 #include <meltpooldg/particles/particle.hpp>
 #include <meltpooldg/particles/particle_tools.hpp>
 #include <meltpooldg/utilities/amr_regions.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 
-#include <functional>
 #include <vector>
 
 
@@ -24,8 +24,7 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
   const dealii::Triangulation<dim> &triangulation,
   const dealii::Mapping<dim>       &mapping)
   : data(data)
-  , obstacle_handler(triangulation, mapping, ObstacleType::n_obstacle_properties)
-  , obstacle_data_structure(obstacle_handler)
+  , obstacle_data_structure(triangulation, mapping)
   , mpi_communicator(triangulation.get_mpi_communicator())
 {
   auto [obstacle_locations, obstacle_properties] =
@@ -42,8 +41,7 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
   const std::vector<dealii::Point<dim, number>> &obstacle_locations,
   const std::vector<std::vector<number>>        &obstacle_properties)
   : data(data)
-  , obstacle_handler(triangulation, mapping, ObstacleType::n_obstacle_properties)
-  , obstacle_data_structure(obstacle_handler)
+  , obstacle_data_structure(triangulation, mapping)
   , mpi_communicator(triangulation.get_mpi_communicator())
 {
   insert_obstacles(triangulation, obstacle_locations, obstacle_properties);
@@ -58,22 +56,6 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::advance_time(const number 
 
   symplectic_euler_advance_time_step<dim, number, ObstacleType>(time_step,
                                                                 locally_owned_particle_range());
-
-  // Temporary workaround: prevent particles from moving below ground level. We check whether the
-  // particle’s vertical coordinate (y in 2D, z in 3D) is less than its radius, i.e., meaning part
-  // of the particle would lie below the ground. If so, we clamp the particle to ground contact by
-  // setting its center height equal to its radius and zeroing its vertical velocity.
-  for (auto &particle : obstacle_handler)
-    if (particle.get_location()[dim - 1] -
-          ObstacleType::get_property(particle, ObstacleType::Properties::radius) <
-        0)
-      {
-        particle.get_location()[dim - 1] =
-          ObstacleType::get_property(particle, ObstacleType::Properties::radius);
-        auto velocity     = ObstacleType::template get_velocity<number>(particle);
-        velocity[dim - 1] = 0;
-        ObstacleType::set_velocity(particle, velocity);
-      }
 }
 
 
@@ -99,7 +81,7 @@ template <int dim, typename number, typename ObstacleType>
 void
 MeltPoolDG::ObstacleField<dim, number, ObstacleType>::prepare_for_serialization()
 {
-  obstacle_handler.prepare_for_serialization();
+  obstacle_data_structure.prepare_for_serialization();
 }
 
 template <int dim, typename number, typename ObstacleType>
@@ -110,19 +92,20 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::get_refinement_regions() c
     return std::vector<AMR::AMRRegion<dim, number>>();
 
   std::vector<AMR::SphericalShellAMRRegion<dim, number>> local_ref_regions;
-  local_ref_regions.reserve(obstacle_handler.n_locally_owned_particles());
-  for (const auto &obstacle : obstacle_handler)
+  local_ref_regions.reserve(obstacle_data_structure.n_locally_owned_particles());
+  for (const DEMParticleAccessor<dim, number> &obstacle :
+       obstacle_data_structure.locally_owned_particle_range())
     local_ref_regions.emplace_back(obstacle.get_location(),
                                    data.amr.inner_fractional_distance_to_surface *
-                                     ObstacleType::get_characteristic_length(obstacle),
+                                     obstacle.radius(),
                                    data.amr.outer_fractional_distance_to_surface *
-                                     ObstacleType::get_characteristic_length(obstacle));
+                                     obstacle.radius());
 
   std::vector<std::vector<AMR::SphericalShellAMRRegion<dim, number>>> global_ref_regions =
     dealii::Utilities::MPI::all_gather(mpi_communicator, local_ref_regions);
 
   std::vector<AMR::AMRRegion<dim, number>> final_amr_regions;
-  final_amr_regions.reserve(obstacle_handler.n_global_particles());
+  final_amr_regions.reserve(obstacle_data_structure.n_global_particles());
   for (unsigned i = 0; i < global_ref_regions.size(); ++i)
     for (unsigned j = 0; j < global_ref_regions[i].size(); ++j)
       final_amr_regions.emplace_back(std::move(global_ref_regions[i][j]));
@@ -138,11 +121,11 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::compute_loads_on_obstacles
     return;
 
   // Reset current particle forces and torques
-  for (dealii::Particles::ParticleAccessor<dim> obstacle : obstacle_handler)
+  for (DEMParticleAccessor<dim, number> &obstacle :
+       obstacle_data_structure.locally_owned_particle_range())
     {
-      ObstacleType::set_force(dealii::Tensor<1, dim, number>(), obstacle);
-      ObstacleType::set_torque(dealii::Tensor<1, ObstacleType::size_angular_velocity, number>(),
-                               obstacle);
+      obstacle.set_force(dealii::Tensor<1, dim, number>());
+      obstacle.set_torque(dealii::Tensor<1, ObstacleType::size_angular_velocity, number>());
     }
 
   // Update global particle property pool in case any of the loads needs an up-to-date version.
@@ -159,8 +142,10 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::print_accumulated_obstacle
   const dealii::ConditionalOStream pout) const
 {
   dealii::Tensor<1, dim, number> accumulated_force;
-  for (dealii::Particles::ParticleAccessor<dim> obstacle : obstacle_handler)
-    accumulated_force += ObstacleType::get_force(obstacle);
+  for (DEMParticleAccessor<dim, number> &obstacle :
+       obstacle_data_structure.locally_owned_particle_range())
+    for (unsigned int d = 0; d < dim; ++d)
+      accumulated_force[d] += obstacle.force(d);
 
   accumulated_force = dealii::Utilities::MPI::sum(accumulated_force, mpi_communicator);
 
@@ -175,13 +160,35 @@ void
 MeltPoolDG::ObstacleField<dim, number, ObstacleType>::deserialize()
 {
   // Assumes that triangulation.load() has already been called!
-  obstacle_handler.deserialize();
+  obstacle_data_structure.deserialize();
+}
+
+template <int dim, typename number, typename ObstacleType>
+void
+MeltPoolDG::ObstacleField<dim, number, ObstacleType>::prepare_for_coarsening_and_refinement()
+{
+  obstacle_data_structure.prepare_for_coarsening_and_refinement();
+}
+
+template <int dim, typename number, typename ObstacleType>
+void
+MeltPoolDG::ObstacleField<dim, number, ObstacleType>::unpack_after_coarsening_and_refinement()
+{
+  obstacle_data_structure.unpack_after_coarsening_and_refinement();
+}
+
+template <int dim, typename number, typename ObstacleType>
+void
+MeltPoolDG::ObstacleField<dim, number, ObstacleType>::register_particle_output(
+  Postprocessor<dim, number> &postprocessor) const
+{
+  obstacle_data_structure.register_particle_output(postprocessor);
 }
 
 template <int dim, typename number, typename ObstacleType>
 void
 MeltPoolDG::ObstacleField<dim, number, ObstacleType>::insert_obstacles(
-  const dealii::Triangulation<dim>              &triangulation,
+  const dealii::Triangulation<dim> &,
   const std::vector<dealii::Point<dim, number>> &obstacle_locations,
   const std::vector<std::vector<number>>        &obstacle_properties)
 {
@@ -189,31 +196,14 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::insert_obstacles(
          dealii::ExcMessage(
            "The number of particle locations must match the number of particle properties."));
 
-  std::vector<dealii::BoundingBox<dim>> local_bounding_box =
-    dealii::GridTools::compute_mesh_predicate_bounding_box(
-      triangulation, dealii::IteratorFilters::LocallyOwnedCell());
-  std::vector<std::vector<dealii::BoundingBox<dim>>> global_bounding_box =
-    dealii::Utilities::MPI::all_gather(mpi_communicator, local_bounding_box);
-
-  obstacle_handler.insert_global_particles(
-    dealii::Utilities::MPI::this_mpi_process(mpi_communicator) == 0 ?
-      obstacle_locations :
-      std::vector<dealii::Point<dim, number>>{},
-    global_bounding_box,
-    dealii::Utilities::MPI::this_mpi_process(mpi_communicator) == 0 ?
-      obstacle_properties :
-      std::vector<std::vector<number>>{});
-
-  obstacle_data_structure.reinit();
+  obstacle_data_structure.insert_global_particles(obstacle_locations, obstacle_properties);
 }
 
 template <int dim, typename number, typename ObstacleType>
 std::ranges::subrange<MeltPoolDG::ParticleIterator<dim, number>>
-MeltPoolDG::ObstacleField<dim, number, ObstacleType>::locally_owned_particle_range()
+MeltPoolDG::ObstacleField<dim, number, ObstacleType>::locally_owned_particle_range() const
 {
-  return std::ranges::subrange<ParticleIterator<dim, number>>(
-    ParticleIterator<dim, number>(obstacle_handler.begin()),
-    ParticleIterator<dim, number>(obstacle_handler.end()));
+  return obstacle_data_structure.locally_owned_particle_range();
 }
 
 
@@ -227,6 +217,29 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::global_particle_range()
       obstacle_data_structure.get_global_particle_properties(),
       obstacle_data_structure.get_global_particle_properties().n_registered_slots()));
 }
+
+template <int dim, typename number, typename ObstacleType>
+std::ranges::subrange<MeltPoolDG::ParticleIterator<dim, number>>
+MeltPoolDG::ObstacleField<dim, number, ObstacleType>::particles_in_cell(
+  typename dealii::Triangulation<dim>::active_cell_iterator cell) const
+{
+  return obstacle_data_structure.particles_in_cell(cell);
+}
+
+template <int dim, typename number, typename ObstacleType>
+dealii::Particles::PropertyPool<dim> &
+MeltPoolDG::ObstacleField<dim, number, ObstacleType>::get_global_property_pool()
+{
+  return obstacle_data_structure.get_global_particle_properties();
+}
+
+template <int dim, typename number, typename ObstacleType>
+unsigned int
+MeltPoolDG::ObstacleField<dim, number, ObstacleType>::n_global_particles() const
+{
+  return obstacle_data_structure.n_global_particles();
+}
+
 
 template class MeltPoolDG::ObstacleField<1, double, MeltPoolDG::SphericalParticle<1, double>>;
 template class MeltPoolDG::ObstacleField<2, double, MeltPoolDG::SphericalParticle<2, double>>;

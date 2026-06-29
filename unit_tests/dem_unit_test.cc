@@ -51,22 +51,17 @@ public:
   void
   add_load_to_obstacles(ObstacleField<dim, number, ObstacleType> &obstacle_field) const
   {
-    for (dealii::Particles::ParticleAccessor<dim> obstacle : obstacle_field.get_particle_handler())
+    for (DEMParticleAccessor<dim, number> obstacle : obstacle_field.locally_owned_particle_range())
       {
         if constexpr (dim == 2)
           {
-            ObstacleType::accumulate_torque(
-              dealii::Tensor<1, ObstacleType::size_angular_velocity, number>(
-                {torque_acceleration_factor *
-                 ObstacleType::template get_velocity<number>(obstacle).norm()}),
-              obstacle);
+            obstacle.add_torque(dealii::Tensor<1, axial_dim<dim>, number>(
+              {torque_acceleration_factor * obstacle.linear_velocity().norm()}));
           }
         else if constexpr (dim == 3)
           {
-            ObstacleType::accumulate_torque(
-              dealii::Tensor<1, ObstacleType::size_angular_velocity, number>(
-                torque_acceleration_factor * ObstacleType::template get_velocity<number>(obstacle)),
-              obstacle);
+            obstacle.add_torque(dealii::Tensor<1, axial_dim<dim>, number>(
+              {torque_acceleration_factor * obstacle.linear_velocity().norm()}));
           }
       }
   }
@@ -113,29 +108,23 @@ public:
   void
   add_load_to_obstacles(ObstacleField<dim, number, ObstacleType> &obstacle_field) const
   {
-    for (dealii::Particles::ParticleAccessor<dim> obstacle : obstacle_field.get_particle_handler())
+    for (DEMParticleAccessor<dim, number> obstacle : obstacle_field.locally_owned_particle_range())
       {
-        if (ObstacleType::template get_velocity<number>(obstacle).norm() == 0)
+        if (obstacle.linear_velocity().norm() == 0)
           return;
 
-        const number re = fluid_density / dynamic_viscosity *
-                          ObstacleType::template get_velocity<number>(obstacle).norm() * 2. *
-                          ObstacleType::get_property(obstacle, ObstacleType::Properties::radius);
+        const number re = fluid_density / dynamic_viscosity * obstacle.linear_velocity().norm() *
+                          2. * obstacle.radius();
         const number drag_coefficient = 24. / re + 3.6 / std::pow(re, 0.313);
         const number a_proj =
-          dim == 2 ?
-            2 * ObstacleType::get_property(obstacle, ObstacleType::Properties::radius) :
-            M_PI *
-              std::pow(ObstacleType::get_property(obstacle, ObstacleType::Properties::radius), 2);
+          dim == 2 ? 2 * obstacle.radius() : M_PI * std::pow(obstacle.radius(), 2);
 
-        const number abs_force =
-          0.5 * drag_coefficient * fluid_density *
-          ObstacleType::template get_velocity<number>(obstacle).norm_square() * a_proj;
+        const number abs_force = 0.5 * drag_coefficient * fluid_density *
+                                 obstacle.linear_velocity().norm_square() * a_proj;
 
         dealii::Tensor<1, dim, number> force =
-          -abs_force / ObstacleType::template get_velocity<number>(obstacle).norm() *
-          ObstacleType::template get_velocity<number>(obstacle);
-        ObstacleType::accumulate_force(force, obstacle);
+          -abs_force / obstacle.linear_velocity().norm() * obstacle.linear_velocity();
+        obstacle.add_force(force);
       }
   }
 
@@ -174,11 +163,11 @@ public:
     std::vector<number> locations;
     std::vector<number> velocities;
     std::vector<number> angular_velocities;
-    for (const auto &particle : obstacle_field->get_particle_handler())
+    for (const auto &particle : obstacle_field->locally_owned_particle_range())
       {
         locations.push_back(particle.get_location()[dim - 1]);
-        velocities.push_back(ObstacleType::template get_velocity<number>(particle)[dim - 1]);
-        angular_velocities.push_back(ObstacleType::get_angular_velocity(particle).norm());
+        velocities.push_back(particle.linear_velocity(dim - 1));
+        angular_velocities.push_back(particle.angular_velocity().norm());
       }
 
     // Step 2: Gather all data on root (printing) process

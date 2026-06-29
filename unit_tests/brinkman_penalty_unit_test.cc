@@ -182,10 +182,10 @@ public:
     constexpr unsigned                                                          root = 0;
     std::vector<dealii::Tensor<1, dim, number>>                                 forces;
     std::vector<dealii::Tensor<1, ObstacleType::size_angular_velocity, number>> torques;
-    for (const auto &particle : obstacle_field->get_particle_handler())
+    for (const auto &particle : obstacle_field->locally_owned_particle_range())
       {
-        forces.push_back(ObstacleType::get_force(particle));
-        torques.push_back(ObstacleType::get_torque(particle));
+        forces.push_back(particle.force());
+        torques.push_back(particle.torque());
       }
 
     // Step 2: Gather all data on root (printing) process

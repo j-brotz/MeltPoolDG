@@ -18,6 +18,7 @@
 #include <meltpooldg/particles/obstacle_forces.hpp>
 #include <meltpooldg/particles/particle_accessor.hpp>
 #include <meltpooldg/particles/particle_iterator.hpp>
+#include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/utilities/amr_regions.hpp>
 
 #include <ranges>
@@ -199,26 +200,31 @@ namespace MeltPoolDG
     get_refinement_regions() const;
 
     /**
-     * @brief Return a reference to the underlying particle handler of this object.
-     *
-     * @return The used particle handler of the current object.
+     * Prepares the obstacle data structure for coarsening and refinement of the underlying
+     * triangulation. This call is necessary to ensure that the obstacle data structure remains
+     * consistent with the mesh after coarsening and refinement operations.
      */
-    dealii::Particles::ParticleHandler<dim> &
-    get_particle_handler()
-    {
-      return obstacle_handler;
-    }
+    void
+    prepare_for_coarsening_and_refinement();
 
     /**
-     * @brief Return a constant reference to the underlying obstacle data structure of this object.
+     * Unpacks the obstacle data structure after coarsening and refinement operations. This call is
+     * necessary to ensure that the obstacle data structure remains consistent with the mesh after
+     * coarsening and refinement operations.
      *
-     * @return The used obstacle data structure of the current object.
+     * @note It is required that prepare_for_coarsening_and_refinement() has been called before the
+     * triangulation was coarsened and refined.
      */
-    const ObstacleCompleteDomainSearch<dim, number, ObstacleType> &
-    get_obstacle_data_structure() const
-    {
-      return obstacle_data_structure;
-    }
+    void
+    unpack_after_coarsening_and_refinement();
+
+    /**
+     * Registers the obstacle handler for particle output.
+     *
+     * @param postprocessor The postprocessor to which the particles are registered for output.
+     */
+    void
+    register_particle_output(Postprocessor<dim, number> &postprocessor) const;
 
     /**
      * @brief Insert obstacles into the particle handler based on provided locations and properties.
@@ -243,7 +249,7 @@ namespace MeltPoolDG
      * @return An iterable subrange representing the local particles.
      */
     std::ranges::subrange<ParticleIterator<dim, number>>
-    locally_owned_particle_range();
+    locally_owned_particle_range() const;
 
     /**
      * Returns a range over all global obstacle particles for iterating over all particles in the
@@ -254,15 +260,37 @@ namespace MeltPoolDG
     std::ranges::subrange<ParticleIterator<dim, number>>
     global_particle_range();
 
+    /**
+     * Returns a subrange for iterating over particles for which the particle center location is
+     * contained in the specified active cell.
+     *
+     * @param cell The active cell for which to retrieve particles.
+     * @return An iterable subrange representing the particles in the cell.
+     */
+    typename std::ranges::subrange<ParticleIterator<dim, number>>
+    particles_in_cell(typename dealii::Triangulation<dim>::active_cell_iterator cell) const;
+
+    /**
+     * Returns a reference to the global property pool containing all global obstacle properties.
+     *
+     * @return A reference to the global property pool.
+     */
+    dealii::Particles::PropertyPool<dim> &
+    get_global_property_pool();
+
+    /**
+     * Return the number of global particles, i.e., the total number of particles across all MPI
+     * ranks.
+     */
+    unsigned int
+    n_global_particles() const;
+
   private:
     /// Struct holding configuration data for obstacles.
     const ObstacleData<number> &data;
 
     /// Vector of load objects representing all loads acting on the obstacles.
     std::vector<ObstacleLoad<dim, number, ObstacleType>> loads;
-
-    /// Handler responsible for managing obstacle particles within the computational domain.
-    dealii::Particles::ParticleHandler<dim> obstacle_handler;
 
     /// Obstacle search utility for locating relevant obstacles within a given cell or batch.
     /// TODO: Extend to support nearest-neighbor searches and other spatial queries.
@@ -277,6 +305,6 @@ namespace MeltPoolDG
   void
   ObstacleField<dim, number, ObstacleType>::serialize(Archive &ar, const unsigned int version)
   {
-    obstacle_handler.serialize(ar, version);
+    obstacle_data_structure.serialize(ar, version);
   }
 } // namespace MeltPoolDG

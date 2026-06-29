@@ -322,9 +322,7 @@ namespace MeltPoolDG
     const auto [property_names, property_component_interpretations] =
       SphericalParticle<dim, number>::get_property_names_and_component_interpretation();
 
-    post_processor->register_obstacle_output(&obstacle_field->get_particle_handler(),
-                                             property_names,
-                                             property_component_interpretations);
+    obstacle_field->register_particle_output(*post_processor);
 
     // initialize restart monitor
     restart_monitor =
@@ -405,7 +403,7 @@ namespace MeltPoolDG
       [&](std::vector<VectorType *> &in) { in.push_back(&comp_flow_operation->get_solution()); };
 
     std::function<void()> pre = [&] {
-      obstacle_field->get_particle_handler().prepare_for_coarsening_and_refinement();
+      obstacle_field->prepare_for_coarsening_and_refinement();
 
       // print mesh refinement info to console
       Journal::print_decoration_line(scratch_data->get_pcout(1));
@@ -419,7 +417,7 @@ namespace MeltPoolDG
     };
 
     std::function<void()> post = [&] {
-      obstacle_field->get_particle_handler().unpack_after_coarsening_and_refinement();
+      obstacle_field->unpack_after_coarsening_and_refinement();
       print_triangulation_info(scratch_data->get_pcout(1),
                                "Flow grid after refinement ",
                                *this->simulation_case->triangulation,

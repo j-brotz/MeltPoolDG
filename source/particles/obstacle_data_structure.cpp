@@ -3,8 +3,9 @@
 
 template <int dim, typename number, typename ObstacleType>
 MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::ObstacleCompleteDomainSearch(
-  const dealii::Particles::ParticleHandler<dim> &obstacle_handler)
-  : obstacle_handler(obstacle_handler)
+  const dealii::Triangulation<dim> &triangulation,
+  const dealii::Mapping<dim>       &mapping)
+  : obstacle_handler(triangulation, mapping, ObstacleType::n_obstacle_properties)
   , properties_global_obstacles(ObstacleType::n_obstacle_properties)
 {}
 
@@ -145,6 +146,130 @@ MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::deregister_
   // all particles before releasing the associated resources.
   for (unsigned int i = 0; i < properties_global_obstacles.n_registered_slots(); ++i)
     properties_global_obstacles.deregister_particle(i);
+}
+
+template <int dim, typename number, typename ObstacleType>
+void
+MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::insert_global_particles(
+  const std::vector<dealii::Point<dim, number>> &obstacle_locations,
+  const std::vector<std::vector<number>>        &obstacle_properties)
+{
+  Assert(obstacle_locations.size() == obstacle_properties.size(),
+         dealii::ExcMessage(
+           "The number of obstacle locations and obstacle properties must be the same."));
+
+  std::vector<dealii::BoundingBox<dim>> local_bounding_box =
+    dealii::GridTools::compute_mesh_predicate_bounding_box(
+      obstacle_handler.get_triangulation(), dealii::IteratorFilters::LocallyOwnedCell());
+  std::vector<std::vector<dealii::BoundingBox<dim>>> global_bounding_box =
+    dealii::Utilities::MPI::all_gather(mpi_communicator, local_bounding_box);
+
+  obstacle_handler.insert_global_particles(
+    dealii::Utilities::MPI::this_mpi_process(mpi_communicator) == 0 ?
+      obstacle_locations :
+      std::vector<dealii::Point<dim, number>>{},
+    global_bounding_box,
+    dealii::Utilities::MPI::this_mpi_process(mpi_communicator) == 0 ?
+      obstacle_properties :
+      std::vector<std::vector<number>>{});
+
+  reinit();
+}
+
+template <int dim, typename number, typename ObstacleType>
+void
+MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::deserialize()
+{
+  obstacle_handler.deserialize();
+}
+
+template <int dim, typename number, typename ObstacleType>
+void
+MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::prepare_for_serialization()
+{
+  obstacle_handler.prepare_for_serialization();
+}
+
+template <int dim, typename number, typename ObstacleType>
+void
+MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::
+  prepare_for_coarsening_and_refinement()
+{
+  obstacle_handler.prepare_for_coarsening_and_refinement();
+}
+
+template <int dim, typename number, typename ObstacleType>
+void
+MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::
+  unpack_after_coarsening_and_refinement()
+{
+  obstacle_handler.unpack_after_coarsening_and_refinement();
+  obstacle_handler.sort_particles_into_subdomains_and_cells();
+}
+
+template <int dim, typename number, typename ObstacleType>
+void
+MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::register_particle_output(
+  Postprocessor<dim, number> &postprocessor) const
+{
+  const auto [property_names, property_component_interpretations] =
+    ObstacleType::get_property_names_and_component_interpretation();
+
+  postprocessor.register_obstacle_output(&obstacle_handler,
+                                         property_names,
+                                         property_component_interpretations);
+}
+
+template <int dim, typename number, typename ObstacleType>
+unsigned int
+MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::n_global_particles() const
+{
+  return obstacle_handler.n_global_particles();
+}
+
+template <int dim, typename number, typename ObstacleType>
+unsigned int
+MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::n_locally_owned_particles()
+  const
+{
+  return obstacle_handler.n_locally_owned_particles();
+}
+
+template <int dim, typename number, typename ObstacleType>
+typename std::ranges::subrange<MeltPoolDG::ParticleIterator<dim, number>>
+MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::locally_owned_particle_range()
+  const
+{
+  return std::ranges::subrange<ParticleIterator<dim, number>>(
+    ParticleIterator<dim, number>(obstacle_handler.begin()),
+    ParticleIterator<dim, number>(obstacle_handler.end()));
+}
+
+template <int dim, typename number, typename ObstacleType>
+typename std::ranges::subrange<MeltPoolDG::ParticleIterator<dim, number>>
+MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::particles_in_cell(
+  typename dealii::Triangulation<dim>::active_cell_iterator cell) const
+{
+  return std::ranges::subrange<ParticleIterator<dim, number>>(
+    ParticleIterator<dim, number>(obstacle_handler.particles_in_cell(cell).begin()),
+    ParticleIterator<dim, number>(obstacle_handler.particles_in_cell(cell).end()));
+}
+
+
+template <int dim, typename number, typename ObstacleType>
+dealii::Particles::PropertyPool<dim> &
+MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::
+  get_global_particle_properties()
+{
+  return properties_global_obstacles;
+}
+
+template <int dim, typename number, typename ObstacleType>
+const dealii::Particles::PropertyPool<dim> &
+MeltPoolDG::ObstacleCompleteDomainSearch<dim, number, ObstacleType>::
+  get_global_particle_properties() const
+{
+  return properties_global_obstacles;
 }
 
 template struct MeltPoolDG::
