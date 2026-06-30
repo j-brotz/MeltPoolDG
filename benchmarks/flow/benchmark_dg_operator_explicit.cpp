@@ -415,10 +415,17 @@ namespace
 
     // Set up the Brinkman penalization force and add it to the flow operator as an external force.
     BrinkmanPenalizationData<number> brinkman_data;
-    brinkman_data.permeability    = 1e-9;
+    brinkman_data.permeability = 1e-9;
+
+    auto cell_batch_particle_cache = std::make_shared<
+      MatrixFreeCellBatchParticleCache<dim, number, SphericalParticle<dim, number>>>(
+      MatrixFreeContext<dim, number>{.mf       = this->data->scratch_data.get_matrix_free(),
+                                     .dof_idx  = 0,
+                                     .quad_idx = 0});
+
     auto fsi_fluid_force_residual = std::make_shared<
       BrinkmanPenalizationResidualContribution<dim, number, SphericalParticle<dim, number>>>(
-      obstacle_field, brinkman_data);
+      brinkman_data, cell_batch_particle_cache);
     this->data->flow_operator->add_external_force(fsi_fluid_force_residual, nullptr);
 
     // Run the benchmark loop, applying the operator with the Brinkman penalization forces included.

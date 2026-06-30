@@ -290,6 +290,15 @@ namespace MeltPoolDG
     unsigned int
     n_global_particles() const;
 
+    void
+    subscribe_to_data_structure(
+      std::function<void(
+        CellListParticleHandler<dim, number, ObstacleType> &,
+        const typename CellListParticleHandler<dim, number, ObstacleType>::NotifyEvent &)> callback)
+    {
+      obstacle_data_structure.subscribe(callback);
+    }
+
   private:
     /// Struct holding configuration data for obstacles.
     const ObstacleData<number> &data;

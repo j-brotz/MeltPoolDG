@@ -20,6 +20,7 @@
 
 #include <boost/container/small_vector.hpp>
 
+#include <functional>
 #include <ranges>
 #include <vector>
 
@@ -109,6 +110,13 @@ namespace MeltPoolDG
   struct CellListParticleHandler
   {
   public:
+    enum class NotifyEvent
+    {
+      ObserverInitialization,
+      UpdateGhostParticleProperties,
+      SortParticlesIntoSubdomainsAndCells
+    };
+
     /**
      * Constructor. Initializes the internal particle handler and property pool for managing
      * obstacles.
@@ -391,6 +399,13 @@ namespace MeltPoolDG
     MPI_Comm
     get_mpi_communicator() const;
 
+    void
+    subscribe(std::function<void(CellListParticleHandler &, const NotifyEvent)> callback)
+    {
+      notify_signal.connect(callback);
+      callback(*this, NotifyEvent::ObserverInitialization);
+    }
+
   private:
     /// Handler managing the locally owned obstacles in the domain.
     dealii::Particles::ParticleHandler<dim> obstacle_handler;
@@ -401,10 +416,16 @@ namespace MeltPoolDG
     /// MPI communicator used for synchronizing obstacle data across all ranks.
     MPI_Comm mpi_communicator = MPI_COMM_WORLD;
 
-    // Cache mapping particle ids to their corresponding particle iterators in the property pool.
-    // This is used to efficiently compress particle properties
+    /// Cache mapping particle ids to their corresponding particle iterators in the property pool.
+    /// This is used to efficiently compress particle properties
     std::unordered_map<dealii::types::particle_index, dealii::Particles::ParticleIterator<dim>>
       particle_id_to_iterator_cache;
+
+    /// A list of callables that are notified whenever the obstacle data structure is updated. This
+    /// allows other components of the simulation to react to changes in the obstacle data
+    /// structure, such as updating ghost particle properties or re-sorting particles into
+    /// subdomains and cells.
+    boost::signals2::signal<void(CellListParticleHandler &, const NotifyEvent &)> notify_signal;
 
     struct
     {
@@ -534,6 +555,12 @@ namespace MeltPoolDG
      */
     number
     compute_max_particle_radius() const;
+
+    void
+    notify(const NotifyEvent &event)
+    {
+      notify_signal(*this, event);
+    }
   };
 
   template <int dim, typename number, typename ObstacleType>

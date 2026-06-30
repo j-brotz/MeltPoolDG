@@ -13,13 +13,13 @@
 #include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization_data.hpp>
 #include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_util.hpp>
+#include <meltpooldg/particles/cell_batch_particle_cache.hpp>
 #include <meltpooldg/particles/obstacle_field.hpp>
 #include <meltpooldg/utilities/matrix_free_util.hpp>
 
 
 namespace MeltPoolDG
 {
-
   template <int dim, typename number, typename ObstacleType>
   struct BrinkmanObstacleForce
   {
@@ -28,15 +28,13 @@ namespace MeltPoolDG
     /**
      * Constructor. Stores all relevant data internally.
      *
-     * @param obstacle_handler Reference to the obstacle handler managing obstacles in the domain.
      * @param solution Reference to the solution of the flow field.
      * @param matrix_free MatrixFree object and corresponding relevant indices.
      * @param data Object for caching relevant data for the penalty term computation.
      */
-    BrinkmanObstacleForce(ObstacleField<dim, number, ObstacleType> &obstacle_handler,
-                          const VectorType                         &solution,
-                          const MatrixFreeContext<dim, number>     &matrix_free,
-                          const BrinkmanPenalizationData<number>   &data);
+    BrinkmanObstacleForce(const VectorType                       &solution,
+                          const MatrixFreeContext<dim, number>   &matrix_free,
+                          const BrinkmanPenalizationData<number> &data);
 
     /**
      * Compute the force from the fluid on all obstacles in the given obstacle field @param obstacle_field.
@@ -52,8 +50,8 @@ namespace MeltPoolDG
     /// Brinkman penalization data
     const BrinkmanPenalizationData<number> brinkman_penalization_data;
 
-    /// Cached cell data for computing Brinkman penalty term.
-    mutable CellObstacleCache<dim, number, ObstacleType> cell_obstacle_cache;
+    /// Cache for storing the particles relevant to each cell batch in the matrix-free context.
+    const std::shared_ptr<MatrixFreeCellBatchParticleCache<dim, number, ObstacleType>> cell_cache;
 
     /// Matrix free object and corresponding relevant indices used by the compressible flow solver.
     const MatrixFreeContext<dim, number> matrix_free;
@@ -97,8 +95,9 @@ namespace MeltPoolDG
      * @param brinkman_penalization_data Data required for computing the Brinkman penalization term.
      */
     BrinkmanPenalizationResidualContribution(
-      ObstacleField<dim, number, ObstacleType> &obstacle_handler,
-      const BrinkmanPenalizationData<number>   &brinkman_penalization_data);
+      const BrinkmanPenalizationData<number> &brinkman_penalization_data,
+      const std::shared_ptr<MatrixFreeCellBatchParticleCache<dim, number, ObstacleType>>
+        &cell_cache);
 
     /**
      * This function evaluates the Brinkman penalty term at a set of vectorized points, typically
@@ -107,24 +106,23 @@ namespace MeltPoolDG
      * automatically if the cell set differs from that used in the previous call.
      *
      * @param time_step_size Current time step size.
-     * @param cell_iterators Container holding an iterator to the cells associated with the provided
-     * points.
+     * @param cell_batch_id ID of the cell batch for which to compute the residual contribution.
      * @param q_point Coordinates at which the penalty term is to be evaluated.
      * @param w_q Conserved variables evaluated at the given coordinates.
      * @return The computed Brinkman penalty term at the specified points.
      */
     ConservedVariablesType
-    value(number                                                              time_step_size,
-          const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cell_iterators,
-          const dealii::Point<dim, dealii::VectorizedArray<number>>          &q_point,
-          const ConservedVariablesType                                       &w_q) override;
+    value(number                                                     time_step_size,
+          const unsigned int                                         cell_batch_id,
+          const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
+          const ConservedVariablesType                              &w_q) override;
 
   private:
     /// Brinkman penalization data
     const BrinkmanPenalizationData<number> brinkman_penalization_data;
 
-    /// Cached cell data for computing Brinkman penalty term.
-    mutable CellObstacleCache<dim, number, ObstacleType> cell_obstacle_cache;
+    /// Cache for storing the particles relevant to each cell batch in the matrix-free context.
+    const std::shared_ptr<MatrixFreeCellBatchParticleCache<dim, number, ObstacleType>> cell_cache;
   };
 
 
@@ -161,8 +159,9 @@ namespace MeltPoolDG
      * @param brinkman_penalization_data Data required for computing the Brinkman penalization term.
      */
     BrinkmanPenalizationJacobianContribution(
-      ObstacleField<dim, number, ObstacleType> &obstacle_handler,
-      const BrinkmanPenalizationData<number>   &brinkman_penalization_data);
+      const BrinkmanPenalizationData<number> &brinkman_penalization_data,
+      const std::shared_ptr<MatrixFreeCellBatchParticleCache<dim, number, ObstacleType>>
+        &cell_cache);
 
     /**
      * This function evaluates the Jacobian of the Brinkman penalty term at a set of vectorized
@@ -171,25 +170,24 @@ namespace MeltPoolDG
      * is updated automatically if the cell set differs from that used in the previous call.
      *
      * @param time_step_size Current time step size.
-     * @param cell_iterators Container holding an iterator to the cells associated with the provided
-     * points.
+     * @param cell_batch_id ID of the cell batch for which to compute the Jacobian contribution.
      * @param q_point Coordinates at which the penalty term is to be evaluated.
      * @param w_q Conserved variables evaluated at the given coordinates.
      * @param delta_w_q Change in conserved variables at the given coordinates.
      * @return The computed Brinkman penalty term at the specified points.
      */
     ConservedVariablesType
-    value(number                                                              time_step_size,
-          const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cell_iterators,
-          const dealii::Point<dim, dealii::VectorizedArray<number>>          &q_point,
-          const ConservedVariablesType                                       &w_q,
-          const ConservedVariablesType                                       &delta_w_q) override;
+    value(number                                                     time_step_size,
+          unsigned int                                               cell_batch_id,
+          const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
+          const ConservedVariablesType                              &w_q,
+          const ConservedVariablesType                              &delta_w_q) override;
 
   private:
     /// Brinkman penalization data
     const BrinkmanPenalizationData<number> brinkman_penalization_data;
 
     /// Cached cell data for computing Brinkman penalty term.
-    mutable CellObstacleCache<dim, number, ObstacleType> cell_obstacle_cache;
+    const std::shared_ptr<MatrixFreeCellBatchParticleCache<dim, number, ObstacleType>> cell_cache;
   };
 } // namespace MeltPoolDG

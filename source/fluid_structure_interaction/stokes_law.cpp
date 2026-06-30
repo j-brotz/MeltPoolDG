@@ -86,10 +86,13 @@ template <int dim, typename number, typename ObstacleType>
 auto
 MeltPoolDG::StokesLawFluidForce<dim, number, ObstacleType>::value(
   const number,
-  const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cell_iterators,
+  const unsigned int cell_batch_id,
   const dealii::Point<dim, dealii::VectorizedArray<number>> &,
   const ConservedVariablesType &) -> ConservedVariablesType
 {
+  std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> cell_iterators =
+    cells_in_cell_batch(matrix_free.mf, cell_batch_id);
+
   dealii::Tensor<1, dim, dealii::VectorizedArray<number>> cell_penalty_force;
   for (unsigned int i = 0; i < cell_iterators.size(); ++i)
     {
