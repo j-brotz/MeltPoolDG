@@ -51,6 +51,6 @@ and [Code of Conduct](https://github.com/MeltPoolDG/MeltPoolDG-dev/blob/main/COD
 
 If you need help with MeltPoolDG, feel free to ask questions, either via a discussion on GitHub or write directly to magdalena.schreter@tum.de.
 
-## License 
+## License
 
  TODO -- see the [LICENSE](https://github.com/MeltPoolDG/MeltPoolDG-dev/blob/main/LICENSE) file.

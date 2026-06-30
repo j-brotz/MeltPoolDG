@@ -1,0 +1,46 @@
+name: Pre-commit
+
+on:
+  pull_request:
+    branches: [master]
+
+  push:
+    branches: [master]
+
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  build:
+    runs-on: self-hosted
+
+    container:
+      image: ubuntu:24.04
+      options: --user root
+
+    env:
+      HOME: /root
+
+    steps:
+      - name: Install system dependencies
+        run: |
+          apt-get update
+          apt-get install -y git curl ca-certificates
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Mark workspace as safe Git directory
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Set up pixi
+        uses: prefix-dev/setup-pixi@v0.8.8
+        with:
+          pixi-version: latest
+          cache: false
+
+      - name: Run pre-commit hooks
+        working-directory: ${{ github.workspace }}
+        run: |
+          pixi run pre-commit run --all-files --show-diff-on-failure
