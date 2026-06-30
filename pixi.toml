@@ -6,6 +6,7 @@ platforms = ["linux-64"]
 
 [dependencies]
 python = ">=3.10"
+git = "*"
 autopep8 = "*"
 pre-commit = "*"
 clang-format = "=16"
