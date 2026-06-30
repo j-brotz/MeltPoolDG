@@ -22,6 +22,9 @@ jobs:
       with:
         pixi-version: latest
         cache: false
+    
+    - name: Mark workspace as safe Git directory
+      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
     - name: Run pre-commit hooks
       working-directory: ${{ github.workspace }}
