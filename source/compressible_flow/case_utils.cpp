@@ -261,8 +261,17 @@ namespace MeltPoolDG::CompressibleFlow
     };
 
     if constexpr (dim == 1)
-      triangulation =
-        std::make_shared<dealii::parallel::shared::Triangulation<dim>>(mpi_communicator);
+      {
+        // Using periodic boundary conditions while allowing artificial cells on the parallel shared
+        // triangulation triggers an assert when reinitializing the matrix-free object. Therefore,
+        // as a temporary workaround, we disable artificial cells when periodic boundaries are
+        // enabled.
+        bool allow_artificial_cells = !periodic_boundaries[0];
+        triangulation = std::make_shared<dealii::parallel::shared::Triangulation<dim>>(
+          mpi_communicator,
+          dealii::Triangulation<dim>::MeshSmoothing::none,
+          allow_artificial_cells);
+      }
     else
       triangulation =
         std::make_shared<dealii::parallel::distributed::Triangulation<dim>>(mpi_communicator);
