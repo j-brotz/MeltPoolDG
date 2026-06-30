@@ -19,10 +19,12 @@ jobs:
           pip install pre-commit
 
       - name: Run create-json-schema hook
+        working-directory: ${{ github.workspace }}
         run: |
           pre-commit run create-json-schema --all-files
 
       - name: Check for uncommitted changes
+        working-directory: ${{ github.workspace }}
         run: |
           if ! git diff --quiet; then
             echo "❌ JSON schema is not up-to-date. Please run the hook locally and commit the changes."
