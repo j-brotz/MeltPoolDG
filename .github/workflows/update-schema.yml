@@ -6,8 +6,8 @@ on:
     branches: [ main, master ]
 
 jobs:
-  precommit:
-    runs-on: ubuntu-latest
+  precommit: 
+    runs-on: self-hosted
 
     steps:
       - name: Checkout repository
