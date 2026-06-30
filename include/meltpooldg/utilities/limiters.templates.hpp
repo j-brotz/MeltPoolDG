@@ -351,5 +351,7 @@ MeltPoolDG::Utilities::apply_minmod_type_limiter(
         }
     };
 
+  dst.zero_out_ghost_values();
   mf_context.mf.cell_loop(limit_loop, dst, src, true);
+  dst.update_ghost_values();
 }
