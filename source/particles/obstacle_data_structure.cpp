@@ -473,7 +473,10 @@ CellListParticleHandler<dim, number, ObstacleType>::sort_particles_into_subdomai
               "the vector that stores the locally owned particles for each cell. The index of the cell is " +
               std::to_string(find_particle_cache_cell(cell)->global_level_cell_index()) +
               ", while the size of the vector is " +
-              std::to_string(cell_particle_cache.locally_owned_particles.size()) + "."));
+              std::to_string(cell_particle_cache.locally_owned_particles.size()) +
+              ", which is the global number of cells on the level " +
+              std::to_string(find_particle_cache_cell(cell)->level()) +
+              " used for caching particles."));
 
           cell_particle_cache
             .locally_owned_particles[find_particle_cache_cell(cell)->global_level_cell_index()]
