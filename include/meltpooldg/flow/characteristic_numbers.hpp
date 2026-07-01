@@ -90,6 +90,6 @@ namespace MeltPoolDG::Flow
 
   private:
     /// Material parameter struct which provides all relevant physical properties
-    const MaterialParameterValues<number, number> &material;
+    const MaterialParameterValues<number, number> material;
   };
 } // namespace MeltPoolDG::Flow
