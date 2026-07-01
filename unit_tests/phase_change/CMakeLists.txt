@@ -1,5 +1,5 @@
-set(TEST_LIBRARIES ${meltpooldg_lib})
-set(TEST_TARGET ${meltpooldg_lib})
+set(TEST_LIBRARIES ${MELTPOOLDG_LIB})
+set(TEST_TARGET ${MELTPOOLDG_LIB})
 deal_ii_pickup_tests()
 
 mpdg_setup_serial_unit_tests(
