@@ -3,7 +3,7 @@
 <br clear="left"/>
 <br clear="left"/>
 
-[![Indent](https://github.com/MeltPoolDG/MeltPoolDG-dev/actions/workflows/indentation.yml/badge.svg)](https://github.com/MeltPoolDG/MeltPoolDG-dev/actions/workflows/indentation.yml)
+[![Indent](https://github.com/MeltPoolDG/MeltPoolDG-dev/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/MeltPoolDG/MeltPoolDG-dev/actions/workflows/indentation.yml)
 [![GitHub CI](https://github.com/MeltPoolDG/MeltPoolDG-dev/actions/workflows/nightly_tests.yml/badge.svg)](https://github.com/MeltPoolDG/MeltPoolDG-dev/actions/workflows/nightly_tests.yml)
 [![Nightly Install](https://github.com/MeltPoolDG/MeltPoolDG-dev/actions/workflows/nightly_install.yml/badge.svg)](https://github.com/MeltPoolDG/MeltPoolDG-dev/actions/workflows/nightly_install.yml)
 [![Documentation](https://github.com/MeltPoolDG/MeltPoolDG-dev/actions/workflows/deploy.yml/badge.svg)](https://github.com/MeltPoolDG/MeltPoolDG-dev/actions/workflows/deploy.yml)
