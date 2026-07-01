@@ -34,7 +34,7 @@ https://meltpooldg.github.io/MeltPoolDG/
 
 📚 **Developer (Doxygen) documentation**
 
-https://meltpooldg.github.io/MeltPoolDG/doxygen
+[https://meltpooldg.github.io/MeltPoolDG/doxygen](https://meltpooldg.github.io/MeltPoolDG/doxygen/html/index.html)
 
 ## Installation
 
