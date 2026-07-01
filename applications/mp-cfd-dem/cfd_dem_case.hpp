@@ -165,6 +165,10 @@ namespace MeltPoolDG
                       errors_squared[2] += error * error;
                       break;
                     }
+                    case dim + 2: {
+                      // species case, currently do nothing
+                      break;
+                    }
                     default: {
                       Assert(component > 0 and component < dim + 1, dealii::ExcInternalError());
                       const number error =

@@ -615,22 +615,23 @@ namespace MeltPoolDG
              "The function only supports searching for particles in cells on the same level as the "
              "level on which particles are cached."));
 
-    const auto push_back_particles_from_cell = [&](const auto &current_cell) {
-      for (dealii::Particles::ParticleIterator<dim> &particle :
-           cell_particle_cache.locally_owned_particles[current_cell->global_level_cell_index()])
-        {
-          Assert(particle.state() == dealii::IteratorState::valid, dealii::ExcInternalError());
-          particles.emplace_back(*particle);
-        }
+    const auto push_back_particles_from_cell =
+      [&](const dealii::TriaIterator<dealii::CellAccessor<dim>> &current_cell) {
+        for (dealii::Particles::ParticleIterator<dim> &particle :
+             cell_particle_cache.locally_owned_particles[current_cell->index()])
+          {
+            Assert(particle.state() == dealii::IteratorState::valid, dealii::ExcInternalError());
+            particles.emplace_back(*particle);
+          }
 
-      for (const typename dealii::Particles::PropertyPool<dim>::Handle particle_handle :
-           cell_particle_cache.ghost_particles[current_cell->global_level_cell_index()])
-        {
-          Assert(particle_handle < ghost_particles_property_pool.n_registered_slots(),
-                 dealii::ExcInternalError());
-          particles.emplace_back(ghost_particles_property_pool, particle_handle);
-        }
-    };
+        for (const typename dealii::Particles::PropertyPool<dim>::Handle particle_handle :
+             cell_particle_cache.ghost_particles[current_cell->index()])
+          {
+            Assert(particle_handle < ghost_particles_property_pool.n_registered_slots(),
+                   dealii::ExcInternalError());
+            particles.emplace_back(ghost_particles_property_pool, particle_handle);
+          }
+      };
 
     // Adjacent cells
     for (const dealii::TriaIterator<dealii::CellAccessor<dim>> &current_cell :

@@ -132,11 +132,13 @@ namespace MeltPoolDG::CompressibleFlow
     else if (component < this->n_components)
       return density->value(loc, 0) * mass_fractions->value(loc, component - dim - 2);
     else
-      AssertThrow(false,
-                  dealii::ExcMessage("Invalid component for conservative variable function: " +
-                                     std::to_string(component) +
-                                     ". Only components from within the range [0, " +
-                                     std::to_string(this->n_components) + ") are valid."));
+      {
+        AssertThrow(false,
+                    dealii::ExcMessage("Invalid component for conservative variable function: " +
+                                       std::to_string(component) +
+                                       ". Only components from within the range [0, " +
+                                       std::to_string(this->n_components) + ") are valid."));
+      }
   }
 
   template <int dim, typename number>
