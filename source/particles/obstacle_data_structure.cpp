@@ -465,9 +465,15 @@ CellListParticleHandler<dim, number, ObstacleType>::sort_particles_into_subdomai
         {
           dealii::TriaIterator<dealii::CellAccessor<dim>> cell = particle->get_surrounding_cell();
 
-          Assert(static_cast<unsigned int>(find_particle_cache_cell(cell)->index()) <
-                   cell_particle_cache.locally_owned_particles.size(),
-                 dealii::ExcInternalError());
+          Assert(
+            static_cast<unsigned int>(find_particle_cache_cell(cell)->index()) <
+              cell_particle_cache.locally_owned_particles.size(),
+            dealii::ExcMessage(
+              "The index of the cell in which the particle is located is larger than the size of "
+              "the vector that stores the locally owned particles for each cell. The index of the cell is " +
+              std::to_string(find_particle_cache_cell(cell)->index()) +
+              ", while the size of the vector is " +
+              std::to_string(cell_particle_cache.locally_owned_particles.size()) + "."));
 
           cell_particle_cache.locally_owned_particles[find_particle_cache_cell(cell)->index()]
             .emplace_back(particle);
