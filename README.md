@@ -10,6 +10,8 @@
 
 **MeltPoolDG** is an open-source, research-driven simulation software for **high-fidelity metal additive manufacturing**. It predicts the coupled **powder–melt–gas dynamics** occurring in processes such as **laser powder bed fusion (LPBF)** and **binder jetting**, aiming for the detailed simulations of melting, solidification, evaporation, recoil pressure, capillary effects, powder transport, and multiphase thermo-fluid–structure-contact interactions.
 
+MeltPoolDG is developed as part of the [Professorship of Simulation for Additive Manufacturing (SAM)](https://www.epc.ed.tum.de/sam/home/) at the Technical University of Munich (TUM), with a focus on application-oriented, cutting edge simulation methods for metal additive manufacturing.
+
 ### Key Features
 
 * High-fidelity multiphase thermo-fluid simulations for metal additive manufacturing
