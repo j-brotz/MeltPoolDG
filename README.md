@@ -42,9 +42,6 @@ Installation instructions are available at
 
 https://meltpooldg.github.io/MeltPoolDG/installation.html
 
-Configuration scripts can be found in
-[`scripts/config`](https://github.com/MeltPoolDG/MeltPoolDG-dev/tree/master/scripts/config).
-
 ## Contributing
 
 If you're interested in contributing to MeltPoolDG, we welcome your collaboration.
