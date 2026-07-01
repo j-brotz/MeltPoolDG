@@ -1,0 +1,7 @@
+- incompressible two-phase flow with diffuse-interface description (CG-FEM)
+- Diffuse- (CG-FEM) or sharp-interface (CutFEM) heat transfer
+- Level-set based interface capturing
+- Evaporation with unreolved or resolved vapor flow
+- Temperature-dependent surface tension
+- Solidification modeling
+- Laser heat source

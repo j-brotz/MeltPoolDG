@@ -1,0 +1,8 @@
+- transient heat transfer
+- adiabatic, Dirichlet, radiation and free convection boundary conditions
+- CG-FEM discretization
+- diffuse-interface and CutFEM-based two-phase operators based on a prescribed interface description
+- optional: prescribed velocity fields
+- optional: laser heat source modeling
+- optional: solidification
+- optional: evaporative cooling

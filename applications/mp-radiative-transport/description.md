@@ -1,0 +1,6 @@
+- radiative transport equation
+- two-phase domains with prescribed interface geometries
+- intensity field computation
+- diffuse surface heat source computation
+- laser energy deposition modeling
+- CG-FEM discretization

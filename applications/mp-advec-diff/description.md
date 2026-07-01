@@ -1,0 +1,4 @@
+- transient scalar advection-diffusion transport
+- prescribed velocity fields
+- CG-FEM (using SUPG stabilization)
+- DG-FEM discretization

@@ -1,0 +1,5 @@
+- level-set reinitialization
+- homogeneous Neumann, Dirichlet, and wetting boundary conditions
+- signed-distance/tanh-based level-set fields
+- Hyperbolic, elliptic, and geometric reinitialization methods
+- CG-FEM and DG-FEM discretizations
