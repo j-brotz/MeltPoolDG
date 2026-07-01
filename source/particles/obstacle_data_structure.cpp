@@ -455,7 +455,7 @@ CellListParticleHandler<dim, number, ObstacleType>::sort_particles_into_subdomai
   // Cache the locally owned particles for each cell on the level used for caching particles.
   cell_particle_cache.locally_owned_particles.clear();
   cell_particle_cache.locally_owned_particles.resize(
-    obstacle_handler.get_triangulation().n_cells(cell_particle_cache.cell_level));
+    triangulation_level_cache.adjacent_cells.n_global_cells_on_level());
 
   for (dealii::Particles::ParticleIterator<dim> particle = obstacle_handler.begin();
        particle != obstacle_handler.end();
@@ -662,7 +662,7 @@ CellListParticleHandler<dim, number, ObstacleType>::sort_particles_into_subdomai
     dealii::Utilities::MPI::n_mpi_processes(mpi_communicator));
   cell_particle_cache.ghost_particles.clear();
   cell_particle_cache.ghost_particles.resize(
-    obstacle_handler.get_triangulation().n_cells(cell_particle_cache.cell_level));
+    triangulation_level_cache.adjacent_cells.n_global_cells_on_level());
   for (unsigned int i = 0; i < recv_futures.size(); ++i)
     {
       auto &future = recv_futures[i];
