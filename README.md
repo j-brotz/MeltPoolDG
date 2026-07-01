@@ -53,4 +53,4 @@ If you need help with MeltPoolDG, feel free to ask questions, either via a discu
 
 ## License
 
- TODO -- see the [LICENSE](https://github.com/MeltPoolDG/MeltPoolDG-dev/blob/main/LICENSE) file.
+see the [LICENSE](https://github.com/MeltPoolDG/MeltPoolDG-dev/blob/main/LICENSE.md) file.
