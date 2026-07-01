@@ -24,7 +24,7 @@ MeltPoolDG is developed as part of the [Professorship of Simulation for Additive
 * Designed for application-oriented research and large-scale HPC simulations
 
 > **Acknowledgement**
-> MeltPoolDG builds upon the outstanding scientific computing ecosystem provided by **deal.II** and its third-party libraries. This project would not exist without the dedication of the deal.II developers and contributors.
+> MeltPoolDG builds upon the outstanding scientific computing ecosystem provided by [**deal.II**](dealii.org) and its third-party libraries. This project would not exist without the dedication of the deal.II developers and contributors.
 
 ## Documentation
 
