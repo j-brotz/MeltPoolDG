@@ -16,7 +16,7 @@
 
 #include <deal.II/numerics/data_out.h>
 
-#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/core/simulation_case_base.hpp>
 #include <meltpooldg/phase_change/evaporation_data.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/utilities/amr.hpp>

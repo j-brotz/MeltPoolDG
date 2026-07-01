@@ -25,7 +25,7 @@
       "residual tolerance": 1e-07
     }
   },
-  "simulation specific": {
+  "case specific": {
     "do solidification": true,
     "do two phase": false,
     "velocity": 0.005

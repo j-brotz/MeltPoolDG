@@ -8,7 +8,7 @@
       "degree": 1
     }
   },
-  "simulation specific parameters": {
+  "case specific": {
     "droplet shape": "circle"
   },
   "time stepping": {

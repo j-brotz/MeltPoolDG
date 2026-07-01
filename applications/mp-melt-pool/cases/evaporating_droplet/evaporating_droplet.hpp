@@ -9,7 +9,7 @@
 
 #include <deal.II/grid/grid_generator.h>
 
-#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/core/simulation_case_base.hpp>
 #include <meltpooldg/post_processing/divergence_calc.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 
@@ -63,23 +63,19 @@ namespace MeltPoolDG::Simulation::EvaporatingDroplet
     }
 
     bool
-    add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
+    add_case_specific_parameters(dealii::ParameterHandler &prm) override
     {
-      prm.enter_subsection("simulation specific");
-      {
-        prm.add_parameter("droplet radius", droplet_radius, "Set the radius of the droplet.");
-        prm.add_parameter("domain length",
-                          domain_length,
-                          "Set the characteristic length of the domain.");
-        prm.add_parameter("domain type", domain_type, "Set the type of the domain.");
-        prm.add_parameter("bc pressure",
-                          bc_pressure,
-                          "Set the normal stress component on the outflow boundary.");
-        prm.add_parameter("droplet phi",
-                          droplet_phi,
-                          "Set the level set value inside the droplet, either -1 or 1.");
-      }
-      prm.leave_subsection();
+      prm.add_parameter("droplet radius", droplet_radius, "Set the radius of the droplet.");
+      prm.add_parameter("domain length",
+                        domain_length,
+                        "Set the characteristic length of the domain.");
+      prm.add_parameter("domain type", domain_type, "Set the type of the domain.");
+      prm.add_parameter("bc pressure",
+                        bc_pressure,
+                        "Set the normal stress component on the outflow boundary.");
+      prm.add_parameter("droplet phi",
+                        droplet_phi,
+                        "Set the level set value inside the droplet, either -1 or 1.");
 
       return this->parameters.base.do_print_parameters;
     }

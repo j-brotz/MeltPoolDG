@@ -77,25 +77,21 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
 
   template <int dim, typename number, typename CaseClass>
   bool
-  SimulationMeltFrontPropagation<dim, number, CaseClass>::add_simulation_specific_parameters(
+  SimulationMeltFrontPropagation<dim, number, CaseClass>::add_case_specific_parameters(
     dealii::ParameterHandler &prm)
   {
-    prm.enter_subsection("simulation specific parameters");
-    {
-      prm.add_parameter("domain x min", x_min, "minimum x coordinate of simulation domain");
-      prm.add_parameter("domain x max", x_max, "maximum x coordinate of simulation domain");
+    prm.add_parameter("domain x min", x_min, "minimum x coordinate of simulation domain");
+    prm.add_parameter("domain x max", x_max, "maximum x coordinate of simulation domain");
 
-      prm.add_parameter("domain z min", z_min, "minimum z coordinate of simulation domain");
-      prm.add_parameter("domain z max", z_max, "maximum z coordinate of simulation domain");
-      if constexpr (dim == 3)
-        {
-          prm.add_parameter("domain y min", y_min, "minimum y coordinate of simulation domain");
-          prm.add_parameter("domain y max", y_max, "maximum y coordinate of simulation domain");
-        }
-      prm.add_parameter("initial temperature", T_0);
-      prm.add_parameter("do two phase", do_two_phase);
-    }
-    prm.leave_subsection();
+    prm.add_parameter("domain z min", z_min, "minimum z coordinate of simulation domain");
+    prm.add_parameter("domain z max", z_max, "maximum z coordinate of simulation domain");
+    if constexpr (dim == 3)
+      {
+        prm.add_parameter("domain y min", y_min, "minimum y coordinate of simulation domain");
+        prm.add_parameter("domain y max", y_max, "maximum y coordinate of simulation domain");
+      }
+    prm.add_parameter("initial temperature", T_0);
+    prm.add_parameter("do two phase", do_two_phase);
 
     return this->parameters.base.do_print_parameters;
   }

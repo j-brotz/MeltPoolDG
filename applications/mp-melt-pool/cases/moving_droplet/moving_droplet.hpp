@@ -6,7 +6,7 @@
 
 #include <deal.II/grid/grid_generator.h>
 
-#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/core/simulation_case_base.hpp>
 #include <meltpooldg/utilities/characteristic_functions.hpp>
 
 #include <cmath>
@@ -96,15 +96,11 @@ namespace MeltPoolDG::Simulation::MovingDroplet
     }
 
     bool
-    add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
+    add_case_specific_parameters(dealii::ParameterHandler &prm) override
     {
-      prm.enter_subsection("simulation specific");
-      {
-        prm.add_parameter("side length", side_length, "Side length of the quadratic domain.");
-        prm.add_parameter("radius", radius, "Droplet radius.");
-        prm.add_parameter("velocity", velocity, "Initial droplet velocity.");
-      }
-      prm.leave_subsection();
+      prm.add_parameter("side length", side_length, "Side length of the quadratic domain.");
+      prm.add_parameter("radius", radius, "Droplet radius.");
+      prm.add_parameter("velocity", velocity, "Initial droplet velocity.");
       return this->parameters.base.do_print_parameters;
     }
 

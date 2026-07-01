@@ -10,7 +10,7 @@
       "degree": 1
     }
   },
-  "simulation specific parameters": {
+  "case specific": {
     "domain x min": -0.0001,
     "domain x max": 0.0001,
     "domain y min": -5e-05,

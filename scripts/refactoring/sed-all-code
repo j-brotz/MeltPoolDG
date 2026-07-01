@@ -1,3 +1,5 @@
 #!/bin/bash
+set -e
 
-find . -type f \( -name "*.hpp" -o -name "*.cpp" -o -name "*.cc" \) -exec sed -i $1 {} +
+find . -type f \( -name "*.hpp" -o -name "*.cpp" -o -name "*.cc" \) \
+    -exec sed -i -e "$1" {} +

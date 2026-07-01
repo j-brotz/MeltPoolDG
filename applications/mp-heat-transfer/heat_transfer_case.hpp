@@ -5,7 +5,7 @@
 #include <meltpooldg/core/base_data.hpp>
 #include <meltpooldg/core/material_data.hpp>
 #include <meltpooldg/core/parameters_base.hpp>
-#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/core/simulation_case_base.hpp>
 #include <meltpooldg/heat/heat_data.hpp>
 #include <meltpooldg/heat/laser_data.hpp>
 #include <meltpooldg/phase_change/evaporation_data.hpp>

@@ -22,7 +22,7 @@
       "dynamic viscosity": 0.001
     }
   },
-  "simulation specific": {
+  "case specific": {
     "velocity": 0.001
   },
   "application specific": {

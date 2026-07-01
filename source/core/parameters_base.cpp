@@ -6,12 +6,20 @@ namespace MeltPoolDG
   void
   add_and_parse_parameters(const std::string                                     &parameter_file,
                            const std::function<void(dealii::ParameterHandler &)> &add_parameters,
-                           const bool                                             enable_print,
+                           const bool                                            &enable_print,
                            const bool                                             print_details,
-                           const bool                                             skip_undefined)
+                           const bool                                             skip_undefined,
+                           const std::string                                     &subsection)
   {
     dealii::ParameterHandler prm;
+
+    if (!subsection.empty())
+      prm.enter_subsection(subsection);
+
     add_parameters(prm);
+
+    if (!subsection.empty())
+      prm.leave_subsection();
 
     std::ifstream file;
     file.open(parameter_file);

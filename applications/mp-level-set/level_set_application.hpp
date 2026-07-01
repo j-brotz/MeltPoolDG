@@ -2,7 +2,7 @@
 #include <deal.II/lac/generic_linear_algebra.h>
 
 #include <meltpooldg/core/scratch_data.hpp>
-#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/core/simulation_case_base.hpp>
 #include <meltpooldg/level_set/level_set_DG_operation.hpp>
 #include <meltpooldg/level_set/level_set_operation.hpp>
 #include <meltpooldg/phase_change/evaporation_operation.hpp>

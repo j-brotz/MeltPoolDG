@@ -8,7 +8,7 @@
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/grid_tools_geometry.h>
 
-#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/core/simulation_case_base.hpp>
 #include <meltpooldg/utilities/characteristic_functions.hpp>
 
 #include <cmath>
@@ -64,17 +64,13 @@ namespace MeltPoolDG::Simulation::OscillatingDroplet
     }
 
     bool
-    add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
+    add_case_specific_parameters(dealii::ParameterHandler &prm) override
     {
-      prm.enter_subsection("simulation specific parameters");
-      {
-        prm.add_parameter("side length", side_length, "Side length of the quadratic domain.");
-        prm.add_parameter("reference radius", reference_radius, "Reference radius.");
-        prm.add_parameter("elliptical deviation",
-                          elliptical_deviation,
-                          "Deviation of the elliptical semiaxes from the reference radius.");
-      }
-      prm.leave_subsection();
+      prm.add_parameter("side length", side_length, "Side length of the quadratic domain.");
+      prm.add_parameter("reference radius", reference_radius, "Reference radius.");
+      prm.add_parameter("elliptical deviation",
+                        elliptical_deviation,
+                        "Deviation of the elliptical semiaxes from the reference radius.");
 
       return this->parameters.base.do_print_parameters;
     }

@@ -3,7 +3,7 @@
 #include <meltpooldg/compressible_flow/multiphase_level_set_advection.hpp>
 #include <meltpooldg/compressible_flow/multiphase_operation.hpp>
 #include <meltpooldg/compressible_flow/operation_type_erasure.hpp>
-#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/core/simulation_case_base.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/time_integration/time_iterator.hpp>
 #include <meltpooldg/utilities/profiling_monitor.hpp>

@@ -4,7 +4,7 @@
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/base/point.h>
 
-#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/core/simulation_case_base.hpp>
 #include <meltpooldg/utilities/enum.hpp>
 
 #include <memory>
@@ -36,7 +36,7 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
     SimulationRadTrans(std::string parameter_file, const MPI_Comm mpi_communicator);
 
     bool
-    add_simulation_specific_parameters(dealii::ParameterHandler &prm) override;
+    add_case_specific_parameters(dealii::ParameterHandler &prm) override;
 
     void
     create_spatial_discretization() override;

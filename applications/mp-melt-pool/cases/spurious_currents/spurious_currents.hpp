@@ -10,7 +10,7 @@
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/manifold_lib.h>
 
-#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/core/simulation_case_base.hpp>
 #include <meltpooldg/utilities/functions.hpp>
 
 #include <iostream>
@@ -32,21 +32,17 @@ namespace MeltPoolDG::Simulation::SpuriousCurrents
     {}
 
     bool
-    add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
+    add_case_specific_parameters(dealii::ParameterHandler &prm) override
     {
-      prm.enter_subsection("simulation specific parameters");
-      {
-        prm.add_parameter("droplet shape",
-                          droplet_shape,
-                          "Shape of the droplet: circle or ellipse",
-                          dealii::Patterns::Selection("circle|ellipse"));
-        prm.add_parameter("side length", side_length, "Side length of the quadratic domain.");
-        prm.add_parameter("radius",
-                          radius,
-                          "Radius of (i) circle or (ii) of the first semi-axis of an ellipse.");
-        prm.add_parameter("radius 2", radius_2, "Radius of second semi-axis of an ellipse.");
-      }
-      prm.leave_subsection();
+      prm.add_parameter("droplet shape",
+                        droplet_shape,
+                        "Shape of the droplet: circle or ellipse",
+                        dealii::Patterns::Selection("circle|ellipse"));
+      prm.add_parameter("side length", side_length, "Side length of the quadratic domain.");
+      prm.add_parameter("radius",
+                        radius,
+                        "Radius of (i) circle or (ii) of the first semi-axis of an ellipse.");
+      prm.add_parameter("radius 2", radius_2, "Radius of second semi-axis of an ellipse.");
 
       return this->parameters.base.do_print_parameters;
     }

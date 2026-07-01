@@ -5,7 +5,7 @@
 #  include <deal.II/lac/generic_linear_algebra.h>
 
 #  include <meltpooldg/core/scratch_data.hpp>
-#  include <meltpooldg/core/simulation_base.hpp>
+#  include <meltpooldg/core/simulation_case_base.hpp>
 #  include <meltpooldg/level_set/normal_vector_operation_adaflo_wrapper.hpp>
 #  include <meltpooldg/level_set/reinitialization_operation_base.hpp>
 #  include <meltpooldg/post_processing/generic_data_out.hpp>

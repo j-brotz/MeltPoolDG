@@ -103,7 +103,7 @@
       "degree": 2
     }
   },
-  "simulation specific": {
+  "case specific": {
     "bc": {
       "inflow velocity": 0.0
     }

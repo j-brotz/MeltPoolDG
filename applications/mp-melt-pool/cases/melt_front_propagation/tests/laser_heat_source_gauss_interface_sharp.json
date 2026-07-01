@@ -15,7 +15,7 @@
     "time step size": 0.001,
     "max n steps": 1
   },
-  "simulation specific parameters": {
+  "case specific": {
     "domain x min": 0.0,
     "domain x max": 0.0006,
     "domain z min": -0.0002,

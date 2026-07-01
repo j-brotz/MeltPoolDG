@@ -2,7 +2,7 @@
 
 #include <deal.II/base/mpi.h>
 
-#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/core/simulation_case_base.hpp>
 
 #include <memory>
 #include <string>

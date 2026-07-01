@@ -172,35 +172,30 @@ namespace MeltPoolDG::Simulation::CfdDem
     }
 
     bool
-    add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
+    add_case_specific_parameters(dealii::ParameterHandler &prm) override
     {
-      prm.enter_subsection("am simulation specific parameters");
-      {
-        prm.add_parameter("ambient temperature",
-                          ambient_temperature,
-                          "Ambient temperature used at the inflow boundary.");
-        prm.add_parameter("ambient density",
-                          ambient_density,
-                          "Ambient density used at the inflow boundary.");
-        prm.add_parameter("domain size", domain_size, "size of the simulation domain.");
-        prm.add_parameter("domain discretization",
-                          domain_discretization,
-                          "Number of cells in the respective spatial direction.");
-        prm.add_parameter("jet hole diameter", jet_hole_diameter, "The diameter of the free jet.");
-        prm.add_parameter("jet hole center", jet_hole_center, "Jet hole center coordinates.");
-        prm.add_parameter(
-          "jet flow angle",
-          jet_flow_angle,
-          "Angle of the free jet. Zero degrees corresponds to a vertical jet flow.");
-        prm.add_parameter("jet peak velocity",
-                          jet_peak_velocity,
-                          "peak velocity of the free jet, measured at the jet hole center.");
-        prm.add_parameter(
-          "free jet profile",
-          free_jet_profile,
-          "The profile of the free jet velocity. There are two options: A 'constant' profile and a 'cosine' profile.");
-      }
-      prm.leave_subsection();
+      prm.add_parameter("ambient temperature",
+                        ambient_temperature,
+                        "Ambient temperature used at the inflow boundary.");
+      prm.add_parameter("ambient density",
+                        ambient_density,
+                        "Ambient density used at the inflow boundary.");
+      prm.add_parameter("domain size", domain_size, "size of the simulation domain.");
+      prm.add_parameter("domain discretization",
+                        domain_discretization,
+                        "Number of cells in the respective spatial direction.");
+      prm.add_parameter("jet hole diameter", jet_hole_diameter, "The diameter of the free jet.");
+      prm.add_parameter("jet hole center", jet_hole_center, "Jet hole center coordinates.");
+      prm.add_parameter("jet flow angle",
+                        jet_flow_angle,
+                        "Angle of the free jet. Zero degrees corresponds to a vertical jet flow.");
+      prm.add_parameter("jet peak velocity",
+                        jet_peak_velocity,
+                        "peak velocity of the free jet, measured at the jet hole center.");
+      prm.add_parameter(
+        "free jet profile",
+        free_jet_profile,
+        "The profile of the free jet velocity. There are two options: A 'constant' profile and a 'cosine' profile.");
 
       return this->parameters.base.do_print_parameters;
     }

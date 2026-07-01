@@ -35,7 +35,7 @@
     "boiling temperature": 600,
     "two phase fluid properties transition type": "sharp"
   },
-  "simulation specific domain": {
+  "case specific": {
     "domain y max": 0.0001,
     "domain y min": -0.0001,
     "cell repetitions": 500,

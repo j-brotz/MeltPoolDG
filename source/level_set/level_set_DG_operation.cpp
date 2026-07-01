@@ -5,7 +5,7 @@
 // DoFTools
 #include <deal.II/dofs/dof_tools.h>
 // MeltPoolDG
-#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/core/simulation_case_base.hpp>
 #include <meltpooldg/level_set/advection_diffusion_adaflo_wrapper.hpp>
 #include <meltpooldg/level_set/advection_diffusion_operation.hpp>
 #include <meltpooldg/level_set/curvature_operation.hpp>

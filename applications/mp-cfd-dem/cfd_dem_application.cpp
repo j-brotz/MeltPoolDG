@@ -8,7 +8,7 @@
 #include <deal.II/grid/tria.h>
 
 #include <meltpooldg/compressible_flow/dg_operation.hpp>
-#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/core/simulation_case_base.hpp>
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization.hpp>
 #include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_data.hpp>
 #include <meltpooldg/fluid_structure_interaction/fluid_structure_interaction_factory.hpp>

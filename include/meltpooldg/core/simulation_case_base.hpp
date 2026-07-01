@@ -282,7 +282,7 @@ namespace MeltPoolDG
      * @param prm ParameterHandler object to which parameters can be added.
      */
     virtual bool
-    add_simulation_specific_parameters(dealii::ParameterHandler &)
+    add_case_specific_parameters(dealii::ParameterHandler &)
     {
       return false;
       // default: do nothing
@@ -425,11 +425,13 @@ namespace MeltPoolDG
       add_and_parse_parameters(
         parameter_file,
         [this, &enable_print](dealii::ParameterHandler &prm) {
-          enable_print = add_simulation_specific_parameters(prm);
+          enable_print = add_case_specific_parameters(prm) &&
+                         (dealii::Utilities::MPI::this_mpi_process(mpi_communicator) == 0);
         },
-        enable_print && (dealii::Utilities::MPI::this_mpi_process(mpi_communicator) == 0),
+        enable_print,
         false /* print details */,
-        true /* skip undefined parameters */);
+        true /* skip undefined parameters */,
+        "case specific");
     }
   };
 

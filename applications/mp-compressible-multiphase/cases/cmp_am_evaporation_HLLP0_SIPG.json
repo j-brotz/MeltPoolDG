@@ -19,7 +19,7 @@
       "enable": false
     }
   },
-  "simulation specific parameters": {
+  "case specific": {
     "left boundary condition": "inflow",
     "right boundary condition": "outflow_fixed_energy",
     "initial conditions": {

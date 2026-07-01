@@ -46,24 +46,20 @@ namespace MeltPoolDG::Simulation::PowderBed
 
   template <int dim, typename number, typename CaseClass>
   bool
-  SimulationPowderBed<dim, number, CaseClass>::add_simulation_specific_parameters(
+  SimulationPowderBed<dim, number, CaseClass>::add_case_specific_parameters(
     dealii::ParameterHandler &prm)
   {
-    prm.enter_subsection("simulation specific parameters");
-    {
-      prm.add_parameter("domain x min", domain_x_min, "minimum x coordinate of simulation domain");
-      prm.add_parameter("domain x max", domain_x_max, "maximum x coordinate of simulation domain");
-      prm.add_parameter("domain y min", domain_y_min, "minimum y coordinate of simulation domain");
-      prm.add_parameter("domain y max", domain_y_max, "maximum y coordinate of simulation domain");
-      prm.add_parameter("domain z min", domain_z_min, "minimum z coordinate of simulation domain");
-      prm.add_parameter("domain z max", domain_z_max, "maximum z coordinate of simulation domain");
-      prm.add_parameter("cell repetitions",
-                        cell_repetitions,
-                        "cell repetitions per dim applied before global refinement or amr");
-      prm.add_parameter("initial temperature", T_initial, "Set the initial temperature.");
-      powder_bed_data.add_parameters(prm);
-    }
-    prm.leave_subsection();
+    prm.add_parameter("domain x min", domain_x_min, "minimum x coordinate of simulation domain");
+    prm.add_parameter("domain x max", domain_x_max, "maximum x coordinate of simulation domain");
+    prm.add_parameter("domain y min", domain_y_min, "minimum y coordinate of simulation domain");
+    prm.add_parameter("domain y max", domain_y_max, "maximum y coordinate of simulation domain");
+    prm.add_parameter("domain z min", domain_z_min, "minimum z coordinate of simulation domain");
+    prm.add_parameter("domain z max", domain_z_max, "maximum z coordinate of simulation domain");
+    prm.add_parameter("cell repetitions",
+                      cell_repetitions,
+                      "cell repetitions per dim applied before global refinement or amr");
+    prm.add_parameter("initial temperature", T_initial, "Set the initial temperature.");
+    powder_bed_data.add_parameters(prm);
 
     return this->parameters.base.do_print_parameters;
   }

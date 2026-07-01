@@ -23,7 +23,7 @@
       "preconditioner type": "AMG"
     }
   },
-  "simulation specific parameters": {
+  "case specific": {
     "power": 0.1,
     "source radius": 0.5,
     "interface case": "straight"

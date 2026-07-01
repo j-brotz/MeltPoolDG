@@ -33,7 +33,7 @@
   "application specific": {
     "do heat transfer": true
   },
-  "simulation specific": {
+  "case specific": {
     "liquid phase outside": true
   },
   "heat": {

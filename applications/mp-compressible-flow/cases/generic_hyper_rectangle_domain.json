@@ -7,7 +7,7 @@
     "verbosity level": 1,
     "global refinements": 1
   },
-  "case setup": {
+  "case specific": {
     "boundary x min": {
       "type": "inflow",
       "density": 0.4,

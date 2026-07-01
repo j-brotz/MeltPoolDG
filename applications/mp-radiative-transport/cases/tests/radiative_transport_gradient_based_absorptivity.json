@@ -33,7 +33,7 @@
   "laser": {
     "beam direction": "0.0,-1.0"
   },
-  "simulation specific parameters": {
+  "case specific": {
     "power": 0.1,
     "source radius": 0.2,
     "interface case": "single_powder_particle",

@@ -101,48 +101,42 @@ namespace MeltPoolDG::Simulation::RadiativeTransport
 
   template <int dim, typename number, typename Problem>
   bool
-  SimulationRadTrans<dim, number, Problem>::add_simulation_specific_parameters(
+  SimulationRadTrans<dim, number, Problem>::add_case_specific_parameters(
     dealii::ParameterHandler &prm)
   {
-    prm.enter_subsection("simulation specific parameters");
-    {
-      prm.add_parameter("domain x min", domain_x_min, "minimum x coordinate of simulation domain");
-      prm.add_parameter("domain y min", domain_y_min, "minimum y coordinate of simulation domain");
-      prm.add_parameter("domain x max", domain_x_max, "maximum x coordinate of simulation domain");
-      prm.add_parameter("domain y max", domain_y_max, "maximum y coordinate of simulation domain");
-      prm.add_parameter("cell repetitions",
-                        cell_repetitions,
-                        "cell repetitions per dim applied before global refinement or amr");
+    prm.add_parameter("domain x min", domain_x_min, "minimum x coordinate of simulation domain");
+    prm.add_parameter("domain y min", domain_y_min, "minimum y coordinate of simulation domain");
+    prm.add_parameter("domain x max", domain_x_max, "maximum x coordinate of simulation domain");
+    prm.add_parameter("domain y max", domain_y_max, "maximum y coordinate of simulation domain");
+    prm.add_parameter("cell repetitions",
+                      cell_repetitions,
+                      "cell repetitions per dim applied before global refinement or amr");
 
-      prm.add_parameter("power",
-                        power_in,
-                        "Sets the intensity scale of the laser source. Is a scalar value");
-      prm.add_parameter("source center", center_in, "location of the heat source center");
-      prm.add_parameter("source radius", radius_in, "heat source radius");
+    prm.add_parameter("power",
+                      power_in,
+                      "Sets the intensity scale of the laser source. Is a scalar value");
+    prm.add_parameter("source center", center_in, "location of the heat source center");
+    prm.add_parameter("source radius", radius_in, "heat source radius");
 
-      prm.add_parameter(
-        "interface case",
-        interface_case,
-        "kind of interface for this simulation. "
-        "straight: straigt interface that moves upwards; "
-        "single_powder_particle: a single hanging powder particle above a static straight interface; "
-        "powder bed: ");
+    prm.add_parameter(
+      "interface case",
+      interface_case,
+      "kind of interface for this simulation. "
+      "straight: straigt interface that moves upwards; "
+      "single_powder_particle: a single hanging powder particle above a static straight interface; "
+      "powder bed: ");
 
-      prm.add_parameter("straight interface upward speed",
-                        speed,
-                        "straight interface upward speed");
-      prm.add_parameter("straight interface movement end time",
-                        end_time,
-                        "end time of the straight interface movement");
+    prm.add_parameter("straight interface upward speed", speed, "straight interface upward speed");
+    prm.add_parameter("straight interface movement end time",
+                      end_time,
+                      "end time of the straight interface movement");
 
-      prm.add_parameter("powder particle radius",
-                        powder_particle_radius,
-                        "hanging powder particle radius");
-      prm.add_parameter("powder particle offset",
-                        powder_particle_offset,
-                        "hanging powder particle offset from [dim-1] = 0 plane");
-    }
-    prm.leave_subsection();
+    prm.add_parameter("powder particle radius",
+                      powder_particle_radius,
+                      "hanging powder particle radius");
+    prm.add_parameter("powder particle offset",
+                      powder_particle_offset,
+                      "hanging powder particle offset from [dim-1] = 0 plane");
 
     return this->parameters.base.do_print_parameters;
   }

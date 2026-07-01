@@ -392,37 +392,33 @@ namespace MeltPoolDG::Simulation::CompressibleMultiphase
      * @param prm The parameter handler to which the parameters are added.
      */
     bool
-    add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
+    add_case_specific_parameters(dealii::ParameterHandler &prm) override
     {
       const std::string boundary_condition_types_doc =
         "The following boundary conditions are supported:\n"
         "\t 'no_slip_wall', 'slip_wall', 'inflow', 'outflow_fixed_energy', "
         "\t 'outflow_fixed_pressure'";
 
-      prm.enter_subsection("simulation specific parameters");
+      prm.add_parameter("left boundary condition",
+                        left_boundary_condition,
+                        boundary_condition_types_doc);
+      prm.add_parameter("right boundary condition",
+                        right_boundary_condition,
+                        boundary_condition_types_doc);
+      prm.enter_subsection("initial conditions");
       {
-        prm.add_parameter("left boundary condition",
-                          left_boundary_condition,
-                          boundary_condition_types_doc);
-        prm.add_parameter("right boundary condition",
-                          right_boundary_condition,
-                          boundary_condition_types_doc);
-        prm.enter_subsection("initial conditions");
-        {
-          prm.add_parameter("gas",
-                            initial_conditions.gas,
-                            "Initial condition function for gas phase.");
-          prm.add_parameter("liquid",
-                            initial_conditions.liquid,
-                            "Initial condition function for liquid phase.");
-        }
-        prm.leave_subsection();
-        prm.add_parameter("atmospheric pressure",
-                          atmospheric_pressure,
-                          "Atmospheric pressure (Pa).",
-                          dealii::Patterns::Double(0., std::numeric_limits<number>::max()));
+        prm.add_parameter("gas",
+                          initial_conditions.gas,
+                          "Initial condition function for gas phase.");
+        prm.add_parameter("liquid",
+                          initial_conditions.liquid,
+                          "Initial condition function for liquid phase.");
       }
       prm.leave_subsection();
+      prm.add_parameter("atmospheric pressure",
+                        atmospheric_pressure,
+                        "Atmospheric pressure (Pa).",
+                        dealii::Patterns::Double(0., std::numeric_limits<number>::max()));
 
       return this->parameters.base.do_print_parameters;
     }

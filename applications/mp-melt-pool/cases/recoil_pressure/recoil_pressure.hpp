@@ -19,7 +19,7 @@
 #include <deal.II/grid/grid_tools.h>
 #include <deal.II/grid/manifold_lib.h>
 
-#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/core/simulation_case_base.hpp>
 #include <meltpooldg/heat/laser_data.hpp>
 #include <meltpooldg/post_processing/slice.hpp>
 #include <meltpooldg/utilities/boundary_ids_colorized.hpp>
@@ -119,104 +119,90 @@ namespace MeltPoolDG::Simulation::RecoilPressure
     {}
 
     bool
-    add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
+    add_case_specific_parameters(dealii::ParameterHandler &prm) override
     {
-      prm.enter_subsection("simulation specific domain");
+      prm.add_parameter("domain x min", domain_x_min, "minimum x coordinate of simulation domain");
+      prm.add_parameter("domain y min", domain_y_min, "minimum y coordinate of simulation domain");
+      prm.add_parameter("domain x max", domain_x_max, "maximum x coordinate of simulation domain");
+      prm.add_parameter("domain y max", domain_y_max, "maximum y coordinate of simulation domain");
+      prm.add_parameter("cell repetitions",
+                        cell_repetitions,
+                        "cell repetitions per dim applied before global refinement or amr");
+      prm.add_parameter("n local refinement",
+                        n_local_refinement,
+                        "number of (additional to the global) refinements for local region.");
+      prm.add_parameter("local refinement 1 bottom left",
+                        local_refinement_1_bottom_left,
+                        "Bottom left point of locally refined region.");
+      prm.add_parameter("local refinement 1 top right",
+                        local_refinement_1_top_right,
+                        "Bottom left point of locally refined region.");
+      prm.add_parameter("local refinement 2 bottom left",
+                        local_refinement_2_bottom_left,
+                        "Bottom left point of locally refined region.");
+      prm.add_parameter("local refinement 2 top right",
+                        local_refinement_2_top_right,
+                        "Bottom left point of locally refined region.");
+      prm.add_parameter(
+        "periodic boundary",
+        periodic_boundary,
+        "Set this parameter to true if the domain should be periodic in x direction.");
+      prm.add_parameter(
+        "evaporation boundary",
+        evaporation_boundary,
+        "Set this Parameter to true if the upper boundary of the domain should be open "
+        "to enable an outward mass flow.");
+      prm.add_parameter("outlet pressure",
+                        outlet_pressure,
+                        "If evaporation boundary is enabled, set the outlet pressure.");
+      prm.add_parameter(
+        "slip boundary",
+        slip_boundary,
+        "Set this Parameter to true if the outer boundaries should be slip boundaries instead of no-slip.");
+      prm.enter_subsection("initial temperature");
       {
-        prm.add_parameter("domain x min",
-                          domain_x_min,
-                          "minimum x coordinate of simulation domain");
-        prm.add_parameter("domain y min",
-                          domain_y_min,
-                          "minimum y coordinate of simulation domain");
-        prm.add_parameter("domain x max",
-                          domain_x_max,
-                          "maximum x coordinate of simulation domain");
-        prm.add_parameter("domain y max",
-                          domain_y_max,
-                          "maximum y coordinate of simulation domain");
-        prm.add_parameter("cell repetitions",
-                          cell_repetitions,
-                          "cell repetitions per dim applied before global refinement or amr");
-        prm.add_parameter("n local refinement",
-                          n_local_refinement,
-                          "number of (additional to the global) refinements for local region.");
-        prm.add_parameter("local refinement 1 bottom left",
-                          local_refinement_1_bottom_left,
-                          "Bottom left point of locally refined region.");
-        prm.add_parameter("local refinement 1 top right",
-                          local_refinement_1_top_right,
-                          "Bottom left point of locally refined region.");
-        prm.add_parameter("local refinement 2 bottom left",
-                          local_refinement_2_bottom_left,
-                          "Bottom left point of locally refined region.");
-        prm.add_parameter("local refinement 2 top right",
-                          local_refinement_2_top_right,
-                          "Bottom left point of locally refined region.");
-        prm.add_parameter(
-          "periodic boundary",
-          periodic_boundary,
-          "Set this parameter to true if the domain should be periodic in x direction.");
-        prm.add_parameter(
-          "evaporation boundary",
-          evaporation_boundary,
-          "Set this Parameter to true if the upper boundary of the domain should be open "
-          "to enable an outward mass flow.");
-        prm.add_parameter("outlet pressure",
-                          outlet_pressure,
-                          "If evaporation boundary is enabled, set the outlet pressure.");
-        prm.add_parameter(
-          "slip boundary",
-          slip_boundary,
-          "Set this Parameter to true if the outer boundaries should be slip boundaries instead of no-slip.");
-        prm.enter_subsection("initial temperature");
+        prm.add_parameter("top", T_initial_top, "Set the initial temperature on the top boundary.");
+        prm.add_parameter("bottom",
+                          T_initial_bottom,
+                          "Set the initial temperature on the bottom boundary.");
+      }
+      prm.leave_subsection();
+      prm.enter_subsection("bc temperature");
+      {
+        prm.add_parameter("top", T_bc_top, "Set the initial temperature on the top boundary.");
+        prm.add_parameter("bottom",
+                          T_bc_bottom,
+                          "Set the initial temperature on the bottom boundary.");
+      }
+      prm.leave_subsection();
+      prm.enter_subsection("output slice");
+      {
+        prm.add_parameter("enable",
+                          slice_data.enable,
+                          "Set this parameter to true, if a slice output should be"
+                          " enabled.");
+        prm.add_parameter("output variables",
+                          slice_data.output_variables,
+                          "Specify variables that you request to output for the slice."
+                          "In the default case, the one specified within the output "
+                          "section will be adopted.");
+        prm.add_parameter("n global refinement",
+                          slice_data.n_global_refinement,
+                          "Set the maximum (global) refinement level.");
+        prm.add_parameter("coord",
+                          slice_data.coord,
+                          "Set the x/y coordinate where the slice should take place.");
+        prm.enter_subsection("refined region");
         {
-          prm.add_parameter("top",
-                            T_initial_top,
-                            "Set the initial temperature on the top boundary.");
-          prm.add_parameter("bottom",
-                            T_initial_bottom,
-                            "Set the initial temperature on the bottom boundary.");
-        }
-        prm.leave_subsection();
-        prm.enter_subsection("bc temperature");
-        {
-          prm.add_parameter("top", T_bc_top, "Set the initial temperature on the top boundary.");
-          prm.add_parameter("bottom",
-                            T_bc_bottom,
-                            "Set the initial temperature on the bottom boundary.");
-        }
-        prm.leave_subsection();
-        prm.enter_subsection("output slice");
-        {
-          prm.add_parameter("enable",
-                            slice_data.enable,
-                            "Set this parameter to true, if a slice output should be"
-                            " enabled.");
-          prm.add_parameter("output variables",
-                            slice_data.output_variables,
-                            "Specify variables that you request to output for the slice."
-                            "In the default case, the one specified within the output "
-                            "section will be adopted.");
-          prm.add_parameter("n global refinement",
-                            slice_data.n_global_refinement,
-                            "Set the maximum (global) refinement level.");
-          prm.add_parameter("coord",
-                            slice_data.coord,
-                            "Set the x/y coordinate where the slice should take place.");
-          prm.enter_subsection("refined region");
-          {
-            prm.add_parameter("n local refinement",
-                              slice_data.refined_region.n_local_refinement,
-                              "Set the additional refinements of the locally refined region.");
-            prm.add_parameter("bottom left",
-                              slice_data.refined_region.bottom_left,
-                              "Coordinates of the bottom left point of the refined domain");
-            prm.add_parameter("top right",
-                              slice_data.refined_region.top_right,
-                              "Coordinates of the top right point of the refined domain");
-          }
-          prm.leave_subsection();
+          prm.add_parameter("n local refinement",
+                            slice_data.refined_region.n_local_refinement,
+                            "Set the additional refinements of the locally refined region.");
+          prm.add_parameter("bottom left",
+                            slice_data.refined_region.bottom_left,
+                            "Coordinates of the bottom left point of the refined domain");
+          prm.add_parameter("top right",
+                            slice_data.refined_region.top_right,
+                            "Coordinates of the top right point of the refined domain");
         }
         prm.leave_subsection();
       }

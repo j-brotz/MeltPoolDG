@@ -41,7 +41,7 @@
       "enable": true
     }
   },
-  "simulation specific": {
+  "case specific": {
     "velocity": 1.998e-05,
     "shell type": "quarter",
     "two phase": true,

@@ -221,23 +221,19 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusion
     }
 
     bool
-    add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
+    add_case_specific_parameters(dealii::ParameterHandler &prm) override
     {
-      prm.enter_subsection("simulation specific");
-      {
-        prm.add_parameter("inflow outflow bc",
-                          inflow_outflow_bc,
-                          "Set if the inflow/outflow boundary condition should be enabled.");
-        prm.add_parameter(
-          "level set type",
-          level_set_type,
-          "Choose which level set type should be initialized. "
-          "level_set: smooth tanh function, eps is controlled by reinit data; "
-          "smooth_heaviside: smooth heaviside function, eps is controlled by reinit data"
-          "heaviside: jump from 0 to 1 at the interface; "
-          "signed_distance: signed distance level set.");
-      }
-      prm.leave_subsection();
+      prm.add_parameter("inflow outflow bc",
+                        inflow_outflow_bc,
+                        "Set if the inflow/outflow boundary condition should be enabled.");
+      prm.add_parameter(
+        "level set type",
+        level_set_type,
+        "Choose which level set type should be initialized. "
+        "level_set: smooth tanh function, eps is controlled by reinit data; "
+        "smooth_heaviside: smooth heaviside function, eps is controlled by reinit data"
+        "heaviside: jump from 0 to 1 at the interface; "
+        "signed_distance: signed distance level set.");
 
       return this->parameters.base.do_print_parameters;
     }

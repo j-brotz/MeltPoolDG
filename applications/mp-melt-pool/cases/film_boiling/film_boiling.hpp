@@ -19,7 +19,7 @@
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/vector_tools.h>
 
-#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/core/simulation_case_base.hpp>
 #include <meltpooldg/post_processing/slice.hpp>
 #include <meltpooldg/utilities/boundary_ids_colorized.hpp>
 #include <meltpooldg/utilities/create_triangulation_with_marching_cube_algorithm.hpp>
@@ -159,34 +159,28 @@ namespace MeltPoolDG::Simulation::FilmBoiling
     {}
 
     bool
-    add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
+    add_case_specific_parameters(dealii::ParameterHandler &prm) override
     {
-      prm.enter_subsection("simulation specific");
-      {
-        prm.add_parameter("factor height",
-                          factor_height,
-                          "Set a factor multiplied with the height.");
-        prm.add_parameter("delta T",
-                          delta_T,
-                          "Set the delta of the wall temperature to the boiling temperature.");
-        prm.add_parameter("do symmetry",
-                          do_symmetry,
-                          "Exploit symmetry conditions along the center plane.");
-        prm.add_parameter("bc vertical faces",
-                          bc_vertical_faces,
-                          "Set the boundary condition along vertical faces.",
-                          dealii::Patterns::Selection("symmetry|periodic"));
-        prm.add_parameter("bc temperature top",
-                          bc_temperature_top,
-                          "Set the boundary condition at the top.",
-                          dealii::Patterns::Selection("adiabatic|dirichlet"));
-        prm.add_parameter("disturbance factors",
-                          disturbance_factors,
-                          "Set the factors controlling the initial interface function"
-                          " z_Γ  = z_0 + Δz * cos(2*π r/λ_0) with z_0 = factor_z0 * lambda_0 "
-                          "and Δz =  factor_delta_z * lambda_0");
-      }
-      prm.leave_subsection();
+      prm.add_parameter("factor height", factor_height, "Set a factor multiplied with the height.");
+      prm.add_parameter("delta T",
+                        delta_T,
+                        "Set the delta of the wall temperature to the boiling temperature.");
+      prm.add_parameter("do symmetry",
+                        do_symmetry,
+                        "Exploit symmetry conditions along the center plane.");
+      prm.add_parameter("bc vertical faces",
+                        bc_vertical_faces,
+                        "Set the boundary condition along vertical faces.",
+                        dealii::Patterns::Selection("symmetry|periodic"));
+      prm.add_parameter("bc temperature top",
+                        bc_temperature_top,
+                        "Set the boundary condition at the top.",
+                        dealii::Patterns::Selection("adiabatic|dirichlet"));
+      prm.add_parameter("disturbance factors",
+                        disturbance_factors,
+                        "Set the factors controlling the initial interface function"
+                        " z_Γ  = z_0 + Δz * cos(2*π r/λ_0) with z_0 = factor_z0 * lambda_0 "
+                        "and Δz =  factor_delta_z * lambda_0");
 
       return this->parameters.base.do_print_parameters;
     }

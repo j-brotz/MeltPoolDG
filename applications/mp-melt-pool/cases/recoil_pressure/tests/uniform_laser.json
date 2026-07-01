@@ -41,7 +41,7 @@
     },
     "two phase fluid properties transition type": "smooth"
   },
-  "simulation specific domain": {
+  "case specific": {
     "domain x max": 1e-06,
     "domain x min": 0.0,
     "domain y max": 0.0001,

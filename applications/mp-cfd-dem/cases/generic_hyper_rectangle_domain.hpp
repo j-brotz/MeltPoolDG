@@ -81,18 +81,14 @@ namespace MeltPoolDG::Simulation::CfdDem
      * the user input file.
      */
     bool
-    add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
+    add_case_specific_parameters(dealii::ParameterHandler &prm) override
     {
-      prm.enter_subsection("case setup");
-      {
-        MeltPoolDG::CompressibleFlow::add_hyper_rectangle_custom_boundary_condition_parameters(
-          prm, boundary_conditions);
+      MeltPoolDG::CompressibleFlow::add_hyper_rectangle_custom_boundary_condition_parameters(
+        prm, boundary_conditions);
 
-        triangulation_creator.add_parameters(prm);
+      triangulation_creator.add_parameters(prm);
 
-        initial_condition.add_parameters(prm);
-      }
-      prm.leave_subsection();
+      initial_condition.add_parameters(prm);
 
       return this->parameters.base.do_print_parameters;
     }

@@ -82,42 +82,38 @@ namespace MeltPoolDG::Simulation::PowderParticles
 
   template <int dim, typename number>
   bool
-  SimulationPowderParticles<dim, number>::add_simulation_specific_parameters(
+  SimulationPowderParticles<dim, number>::add_case_specific_parameters(
     dealii::ParameterHandler &prm)
   {
-    prm.enter_subsection("simulation specific parameters");
+    prm.add_parameter("domain x min", domain_x_min, "minimum x coordinate of simulation domain");
+    prm.add_parameter("domain x max", domain_x_max, "maximum x coordinate of simulation domain");
+    prm.add_parameter("domain y min", domain_y_min, "minimum y coordinate of simulation domain");
+    prm.add_parameter("domain y max", domain_y_max, "maximum y coordinate of simulation domain");
+    prm.add_parameter("domain z min", domain_z_min, "minimum z coordinate of simulation domain");
+    prm.add_parameter("domain z max", domain_z_max, "maximum z coordinate of simulation domain");
+    prm.add_parameter("cell repetitions",
+                      cell_repetitions,
+                      "cell repetitions per dim applied before global refinement or amr");
+
+    prm.add_parameter(
+      "particle distribution case",
+      particle_case,
+      "Choose what initial particle distribution shall be considered for this simulation. "
+      "two_particles: Two particles along the x-axis, specified in the \"two particles\" subsection."
+      "powder bed: Use a particle list file specified in the \"powder bed\" subsection.");
+
+    prm.enter_subsection("two particles");
     {
-      prm.add_parameter("domain x min", domain_x_min, "minimum x coordinate of simulation domain");
-      prm.add_parameter("domain x max", domain_x_max, "maximum x coordinate of simulation domain");
-      prm.add_parameter("domain y min", domain_y_min, "minimum y coordinate of simulation domain");
-      prm.add_parameter("domain y max", domain_y_max, "maximum y coordinate of simulation domain");
-      prm.add_parameter("domain z min", domain_z_min, "minimum z coordinate of simulation domain");
-      prm.add_parameter("domain z max", domain_z_max, "maximum z coordinate of simulation domain");
-      prm.add_parameter("cell repetitions",
-                        cell_repetitions,
-                        "cell repetitions per dim applied before global refinement or amr");
-
-      prm.add_parameter(
-        "particle distribution case",
-        particle_case,
-        "Choose what initial particle distribution shall be considered for this simulation. "
-        "two_particles: Two particles along the x-axis, specified in the \"two particles\" subsection."
-        "powder bed: Use a particle list file specified in the \"powder bed\" subsection.");
-
-      prm.enter_subsection("two particles");
-      {
-        prm.add_parameter("radius", two_partile_radius, "Radius of the two particles.");
-        prm.add_parameter("distance", two_partile_distance, "Distance of the two particles.");
-      }
-      prm.leave_subsection();
-
-      powder_bed_data.add_parameters(prm);
-
-      prm.add_parameter("level set type",
-                        level_set_type,
-                        "Level set type description of initial condition function.");
+      prm.add_parameter("radius", two_partile_radius, "Radius of the two particles.");
+      prm.add_parameter("distance", two_partile_distance, "Distance of the two particles.");
     }
     prm.leave_subsection();
+
+    powder_bed_data.add_parameters(prm);
+
+    prm.add_parameter("level set type",
+                      level_set_type,
+                      "Level set type description of initial condition function.");
 
     return this->parameters.base.do_print_parameters;
   }

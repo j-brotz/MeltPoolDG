@@ -50,7 +50,7 @@
     "do not reinitialize in solid": true,
     "set velocity to zero in solid": true
   },
-  "simulation specific domain": {
+  "case specific": {
     "domain x max": 0.0001,
     "domain x min": -0.0001,
     "domain y max": 0.0001,

@@ -15,7 +15,7 @@
 
 #include <deal.II/numerics/vector_tools.h>
 
-#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/core/simulation_case_base.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
 
 #include <boost/math/tools/roots.hpp>
@@ -182,14 +182,10 @@ namespace MeltPoolDG::Simulation::StefansProblem1WithFlowAndHeat
     }
 
     bool
-    add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
+    add_case_specific_parameters(dealii::ParameterHandler &prm) override
     {
-      prm.enter_subsection("simulation specific");
-      {
-        prm.add_parameter("y interface", y_interface, "initial interface location");
-        prm.add_parameter("T wall", T_wall, "heated temperature of the wall");
-      }
-      prm.leave_subsection();
+      prm.add_parameter("y interface", y_interface, "initial interface location");
+      prm.add_parameter("T wall", T_wall, "heated temperature of the wall");
 
       return this->parameters.base.do_print_parameters;
     }

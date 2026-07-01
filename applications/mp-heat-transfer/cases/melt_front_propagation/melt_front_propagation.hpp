@@ -42,7 +42,7 @@ namespace MeltPoolDG::Simulation::MeltFrontPropagation
     SimulationMeltFrontPropagation(std::string parameter_file, const MPI_Comm mpi_communicator);
 
     bool
-    add_simulation_specific_parameters(dealii::ParameterHandler &prm) override;
+    add_case_specific_parameters(dealii::ParameterHandler &prm) override;
 
     void
     create_spatial_discretization() override;

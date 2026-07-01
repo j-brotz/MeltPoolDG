@@ -19,7 +19,7 @@
 
 #include <deal.II/numerics/vector_tools.h>
 
-#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/core/simulation_case_base.hpp>
 
 #include <cmath>
 #include <iostream>
@@ -209,15 +209,11 @@ namespace MeltPoolDG::Simulation::AdvectionDiffusionDG
     }
 
     bool
-    add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
+    add_case_specific_parameters(dealii::ParameterHandler &prm) override
     {
-      prm.enter_subsection("simulation specific");
-      {
-        prm.add_parameter("inflow outflow bc",
-                          inflow_outflow_bc,
-                          "Set if the inflow/outflow boundary condition should be enabled.");
-      }
-      prm.leave_subsection();
+      prm.add_parameter("inflow outflow bc",
+                        inflow_outflow_bc,
+                        "Set if the inflow/outflow boundary condition should be enabled.");
 
       return this->parameters.base.do_print_parameters;
     }

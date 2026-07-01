@@ -11,7 +11,7 @@
       "type": "FE_DGQ"
     }
   },
-  "case setup": {
+  "case specific": {
     "boundary x min": {
       "type": "inflow",
       "density": 1.0,

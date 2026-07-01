@@ -9,7 +9,7 @@
       "degree": 1
     }
   },
-  "simulation specific": {
+  "case specific": {
     "domain length": 0.0001,
     "droplet radius": 2e-05,
     "domain type": "ball"

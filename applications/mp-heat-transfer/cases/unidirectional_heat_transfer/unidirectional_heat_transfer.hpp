@@ -3,7 +3,7 @@
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/parameter_handler.h>
 
-#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/core/simulation_case_base.hpp>
 
 #include <memory>
 #include <string>
@@ -71,7 +71,7 @@ namespace MeltPoolDG::Simulation::UnidirectionalHeatTransfer
                                          const MPI_Comm mpi_communicator);
 
     bool
-    add_simulation_specific_parameters(dealii::ParameterHandler &prm) override;
+    add_case_specific_parameters(dealii::ParameterHandler &prm) override;
 
     void
     create_spatial_discretization() override;

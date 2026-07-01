@@ -19,7 +19,7 @@
       "enable": false
     }
   },
-  "simulation specific parameters": {
+  "case specific": {
     "left boundary condition": "no_slip_wall",
     "right boundary condition": "no_slip_wall",
     "initial conditions": {

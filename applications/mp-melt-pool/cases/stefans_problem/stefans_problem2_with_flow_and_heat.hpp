@@ -17,7 +17,7 @@
 #include <deal.II/numerics/vector_tools.h>
 
 #include <meltpooldg/core/finite_element_data.hpp>
-#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/core/simulation_case_base.hpp>
 #include <meltpooldg/utilities/characteristic_functions.hpp>
 
 #include <cmath>

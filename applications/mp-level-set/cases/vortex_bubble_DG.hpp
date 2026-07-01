@@ -14,7 +14,7 @@
 #include <deal.II/numerics/error_estimator.h>
 #include <deal.II/numerics/vector_tools.h>
 
-#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/core/simulation_case_base.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/utility_functions.hpp>
@@ -282,13 +282,9 @@ namespace MeltPoolDG::Simulation::VortexBubbleDG
     }
 
     bool
-    add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
+    add_case_specific_parameters(dealii::ParameterHandler &prm) override
     {
-      prm.enter_subsection("simulation specific");
-      {
-        prm.add_parameter("T", Tf, "Period of vortex flow.");
-      }
-      prm.leave_subsection();
+      prm.add_parameter("T", Tf, "Period of vortex flow.");
 
       return this->parameters.base.do_print_parameters;
     }

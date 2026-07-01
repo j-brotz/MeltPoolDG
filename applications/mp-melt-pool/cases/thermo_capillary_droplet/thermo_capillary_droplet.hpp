@@ -30,7 +30,7 @@
 #include <deal.II/numerics/vector_tools_evaluate.h>
 
 #include <meltpooldg/core/finite_element_data.hpp>
-#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/core/simulation_case_base.hpp>
 #include <meltpooldg/flow/characteristic_numbers.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/utilities/characteristic_functions.hpp>
@@ -168,17 +168,13 @@ namespace MeltPoolDG::Simulation::ThermoCapillaryDroplet
     }
 
     bool
-    add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
+    add_case_specific_parameters(dealii::ParameterHandler &prm) override
     {
-      prm.enter_subsection("simulation specific");
-      {
-        prm.add_parameter(
-          "liquid phase outside",
-          liquid_phase_outside,
-          "set this parameter to true to flip the level set and have the \"liquid\" phase outside the droplet.",
-          dealii::Patterns::Bool());
-      }
-      prm.leave_subsection();
+      prm.add_parameter(
+        "liquid phase outside",
+        liquid_phase_outside,
+        "set this parameter to true to flip the level set and have the \"liquid\" phase outside the droplet.",
+        dealii::Patterns::Bool());
 
       return this->parameters.base.do_print_parameters;
     }

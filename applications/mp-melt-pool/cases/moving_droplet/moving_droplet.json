@@ -42,7 +42,7 @@
       "automatic grid refinement type": "fixed_fraction"
     }
   },
-  "simulation specific": {
+  "case specific": {
     "radius": 0.25,
     "side length": 2.0,
     "velocity": 0.1

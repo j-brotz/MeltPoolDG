@@ -7,7 +7,7 @@
 #include <deal.II/lac/la_parallel_vector.h>
 
 #include <meltpooldg/core/scratch_data.hpp>
-#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/core/simulation_case_base.hpp>
 #include <meltpooldg/level_set/reinitialization_operation_base.hpp>
 #include <meltpooldg/post_processing/postprocessor.hpp>
 #include <meltpooldg/time_integration/time_iterator.hpp>

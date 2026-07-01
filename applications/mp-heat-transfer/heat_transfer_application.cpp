@@ -21,7 +21,7 @@
 
 #include <meltpooldg/core/exceptions.hpp>
 #include <meltpooldg/core/material_data.hpp>
-#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/core/simulation_case_base.hpp>
 #include <meltpooldg/cut/amr.hpp>
 #include <meltpooldg/heat/heat_cut_operation.hpp>
 #include <meltpooldg/heat/heat_data.hpp>

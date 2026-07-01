@@ -14,7 +14,7 @@
 #include <deal.II/grid/grid_refinement.h>
 #include <deal.II/grid/manifold_lib.h>
 
-#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/core/simulation_case_base.hpp>
 #include <meltpooldg/level_set/level_set_type.hpp>
 #include <meltpooldg/utilities/characteristic_functions.hpp>
 
@@ -300,7 +300,7 @@ namespace MeltPoolDG::Simulation::LaserMeltingSimonds
      * @return Whether the parameter values should be printed.
      */
     bool
-    add_simulation_specific_parameters(dealii::ParameterHandler &prm) override;
+    add_case_specific_parameters(dealii::ParameterHandler &prm) override;
 
     /**
      * @brief Create the triangulation and initial spatial discretization.

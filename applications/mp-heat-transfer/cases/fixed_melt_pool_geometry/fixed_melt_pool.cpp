@@ -110,17 +110,12 @@ namespace MeltPoolDG::Simulation::FixedMeltPool
 
   template <int dim, typename number>
   bool
-  SimulationFixedMeltPool<dim, number>::add_simulation_specific_parameters(
-    dealii::ParameterHandler &prm)
+  SimulationFixedMeltPool<dim, number>::add_case_specific_parameters(dealii::ParameterHandler &prm)
   {
-    prm.enter_subsection("case specific");
-    {
-      prm.add_parameter("grid filename", grid_file, "optional grid input file");
-      prm.add_parameter("interface thickness",
-                        interface_thickness,
-                        "thickness of the diffuse interface transition region");
-    }
-    prm.leave_subsection();
+    prm.add_parameter("grid filename", grid_file, "optional grid input file");
+    prm.add_parameter("interface thickness",
+                      interface_thickness,
+                      "thickness of the diffuse interface transition region");
 
     return this->parameters.base.do_print_parameters;
   }

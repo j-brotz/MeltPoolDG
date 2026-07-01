@@ -34,7 +34,7 @@
     "absorptivity liquid": 0.5,
     "absorptivity gas": 0
   },
-  "simulation specific domain": {
+  "case specific": {
     "domain x min": -0.0002,
     "domain x max": 0.0002,
     "domain y min": -0.0001,
