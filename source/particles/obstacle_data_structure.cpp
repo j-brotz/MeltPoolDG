@@ -466,16 +466,17 @@ CellListParticleHandler<dim, number, ObstacleType>::sort_particles_into_subdomai
           dealii::TriaIterator<dealii::CellAccessor<dim>> cell = particle->get_surrounding_cell();
 
           Assert(
-            static_cast<unsigned int>(find_particle_cache_cell(cell)->index()) <
+            static_cast<unsigned int>(find_particle_cache_cell(cell)->global_level_cell_index()) <
               cell_particle_cache.locally_owned_particles.size(),
             dealii::ExcMessage(
               "The index of the cell in which the particle is located is larger than the size of "
               "the vector that stores the locally owned particles for each cell. The index of the cell is " +
-              std::to_string(find_particle_cache_cell(cell)->index()) +
+              std::to_string(find_particle_cache_cell(cell)->global_level_cell_index()) +
               ", while the size of the vector is " +
               std::to_string(cell_particle_cache.locally_owned_particles.size()) + "."));
 
-          cell_particle_cache.locally_owned_particles[find_particle_cache_cell(cell)->index()]
+          cell_particle_cache
+            .locally_owned_particles[find_particle_cache_cell(cell)->global_level_cell_index()]
             .emplace_back(particle);
         }
     }
@@ -487,8 +488,9 @@ CellListParticleHandler<dim, number, ObstacleType>::sort_particles_into_subdomai
         {
           n_particles_to_send[rank] +=
             cell_particle_cache
-              .locally_owned_particles
-                [obstacle_handler.get_triangulation().create_cell_iterator(cell_id)->index()]
+              .locally_owned_particles[obstacle_handler.get_triangulation()
+                                         .create_cell_iterator(cell_id)
+                                         ->global_level_cell_index()]
               .size();
         }
       MPI_Isend(&n_particles_to_send[rank],
@@ -630,8 +632,9 @@ CellListParticleHandler<dim, number, ObstacleType>::sort_particles_into_subdomai
       for (const dealii::CellId &cell_id : cells)
         {
           for (dealii::Particles::ParticleIterator<dim> particle :
-               cell_particle_cache.locally_owned_particles
-                 [obstacle_handler.get_triangulation().create_cell_iterator(cell_id)->index()])
+               cell_particle_cache.locally_owned_particles[obstacle_handler.get_triangulation()
+                                                             .create_cell_iterator(cell_id)
+                                                             ->global_level_cell_index()])
             {
               write_particle_data_to_memory(
                 send_buffer.data() + iter * serialized_size_in_bytes,
@@ -688,7 +691,8 @@ CellListParticleHandler<dim, number, ObstacleType>::sort_particles_into_subdomai
               cell = obstacle_handler.get_triangulation().create_cell_iterator(new_cell_id);
             }
 
-          cell_particle_cache.ghost_particles[cell->index()].push_back(received_data.handle);
+          cell_particle_cache.ghost_particles[cell->global_level_cell_index()].push_back(
+            received_data.handle);
           // TODO: We assume that the index i is the same for both the recv_futures and the
           // corresponding rank in the n_particles_to_receive vector, which should be the case
           // since they are filled in the same order. However, it might be safer to explicitly
