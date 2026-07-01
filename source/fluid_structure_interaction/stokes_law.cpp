@@ -25,8 +25,8 @@
 #include <numbers>
 
 
-template <int dim, typename number, typename ObstacleType>
-MeltPoolDG::StokesLawSphericalParticleForce<dim, number, ObstacleType>::
+template <int dim, typename number, int n_species, typename ObstacleType>
+MeltPoolDG::StokesLawSphericalParticleForce<dim, number, n_species, ObstacleType>::
   StokesLawSphericalParticleForce(const VectorType                     &solution,
                                   const MatrixFreeContext<dim, number> &matrix_free,
                                   const number                          dynamic_viscosity)
@@ -35,17 +35,17 @@ MeltPoolDG::StokesLawSphericalParticleForce<dim, number, ObstacleType>::
   , dynamic_viscosity(dynamic_viscosity)
 {}
 
-template <int dim, typename number, typename ObstacleType>
+template <int dim, typename number, int n_species, typename ObstacleType>
 void
-MeltPoolDG::StokesLawSphericalParticleForce<dim, number, ObstacleType>::add_load_to_obstacles(
-  ObstacleField<dim, number, ObstacleType> &obstacle_field) const
+MeltPoolDG::StokesLawSphericalParticleForce<dim, number, n_species, ObstacleType>::
+  add_load_to_obstacles(ObstacleField<dim, number, ObstacleType> &obstacle_field) const
 {
   for (DEMParticleAccessor<dim, number> &particle : obstacle_field.locally_owned_particle_range())
     {
-      dealii::FEPointEvaluation<dim + 2, dim> fe_point_eval(
-        *matrix_free.mf.get_mapping_info().mapping,
-        matrix_free.mf.get_dof_handler(matrix_free.dof_idx).get_fe(),
-        dealii::UpdateFlags::update_values);
+      dealii::FEPointEvaluation<CompressibleFlow::n_conserved_variables<dim, n_species>, dim>
+                                 fe_point_eval(*matrix_free.mf.get_mapping_info().mapping,
+                      matrix_free.mf.get_dof_handler(matrix_free.dof_idx).get_fe(),
+                      dealii::UpdateFlags::update_values);
       dealii::Point<dim, number> coordinates_on_unit_cell =
         matrix_free.mf.get_mapping_info().mapping->transform_real_to_unit_cell(
           particle.get_surrounding_cell(), particle.get_location());
@@ -58,8 +58,9 @@ MeltPoolDG::StokesLawSphericalParticleForce<dim, number, ObstacleType>::add_load
       dof_cell->get_dof_values(solution, dof_values);
       fe_point_eval.evaluate(dof_values, dealii::EvaluationFlags::values);
 
-      dealii::Tensor<1, dim + 2, number> w = fe_point_eval.get_value(0);
-      dealii::Tensor<1, dim, number>     fluid_velocity;
+      dealii::Tensor<1, CompressibleFlow::n_conserved_variables<dim, n_species>, number> w =
+        fe_point_eval.get_value(0);
+      dealii::Tensor<1, dim, number> fluid_velocity;
       for (unsigned i = 0; i < dim; ++i)
         fluid_velocity[i] = w[i + 1] / w[0];
 
@@ -70,8 +71,8 @@ MeltPoolDG::StokesLawSphericalParticleForce<dim, number, ObstacleType>::add_load
     }
 }
 
-template <int dim, typename number, typename ObstacleType>
-MeltPoolDG::StokesLawFluidForce<dim, number, ObstacleType>::StokesLawFluidForce(
+template <int dim, typename number, int n_species, typename ObstacleType>
+MeltPoolDG::StokesLawFluidForce<dim, number, n_species, ObstacleType>::StokesLawFluidForce(
   const dealii::LinearAlgebra::distributed::Vector<number> &solution,
   ObstacleField<dim, number, ObstacleType>                 &obstacle_handler,
   const MatrixFreeContext<dim, number>                     &matrix_free,
@@ -82,9 +83,9 @@ MeltPoolDG::StokesLawFluidForce<dim, number, ObstacleType>::StokesLawFluidForce(
   , obstacle_handler(obstacle_handler)
 {}
 
-template <int dim, typename number, typename ObstacleType>
+template <int dim, typename number, int n_species, typename ObstacleType>
 auto
-MeltPoolDG::StokesLawFluidForce<dim, number, ObstacleType>::value(
+MeltPoolDG::StokesLawFluidForce<dim, number, n_species, ObstacleType>::value(
   const number,
   const unsigned int cell_batch_id,
   const dealii::Point<dim, dealii::VectorizedArray<number>> &,
@@ -104,10 +105,11 @@ MeltPoolDG::StokesLawFluidForce<dim, number, ObstacleType>::value(
           for (const DEMParticleAccessor<dim, number> &particle :
                obstacle_handler.particles_in_cell(cell))
             {
-              dealii::FEPointEvaluation<dim + 2, dim> fe_point_eval(
-                *matrix_free.mf.get_mapping_info().mapping,
-                matrix_free.mf.get_dof_handler(matrix_free.dof_idx).get_fe(),
-                dealii::UpdateFlags::update_values);
+              dealii::FEPointEvaluation<CompressibleFlow::n_conserved_variables<dim, n_species>,
+                                        dim>
+                                         fe_point_eval(*matrix_free.mf.get_mapping_info().mapping,
+                              matrix_free.mf.get_dof_handler(matrix_free.dof_idx).get_fe(),
+                              dealii::UpdateFlags::update_values);
               dealii::Point<dim, number> coordinates_on_unit_cell =
                 matrix_free.mf.get_mapping_info().mapping->transform_real_to_unit_cell(
                   particle.get_surrounding_cell(), particle.get_location());
@@ -121,7 +123,8 @@ MeltPoolDG::StokesLawFluidForce<dim, number, ObstacleType>::value(
               dof_cell->get_dof_values(solution, dof_values);
               fe_point_eval.evaluate(dof_values, dealii::EvaluationFlags::values);
 
-              dealii::Tensor<1, dim + 2, number> conserved_variables = fe_point_eval.get_value(0);
+              dealii::Tensor<1, CompressibleFlow::n_conserved_variables<dim, n_species>, number>
+                conserved_variables = fe_point_eval.get_value(0);
 
               // compute fluid velocity at particle location from corresponding conserved variables
               dealii::Tensor<1, dim, number> fluid_velocity;
@@ -146,16 +149,30 @@ MeltPoolDG::StokesLawFluidForce<dim, number, ObstacleType>::value(
 }
 
 template struct MeltPoolDG::
-  StokesLawSphericalParticleForce<1, double, MeltPoolDG::SphericalParticle<1, double>>;
+  StokesLawSphericalParticleForce<1, double, 1, MeltPoolDG::SphericalParticle<1, double>>;
 template struct MeltPoolDG::
-  StokesLawSphericalParticleForce<2, double, MeltPoolDG::SphericalParticle<2, double>>;
+  StokesLawSphericalParticleForce<2, double, 1, MeltPoolDG::SphericalParticle<2, double>>;
 template struct MeltPoolDG::
-  StokesLawSphericalParticleForce<3, double, MeltPoolDG::SphericalParticle<3, double>>;
+  StokesLawSphericalParticleForce<3, double, 1, MeltPoolDG::SphericalParticle<3, double>>;
+
+template struct MeltPoolDG::
+  StokesLawSphericalParticleForce<1, double, 2, MeltPoolDG::SphericalParticle<1, double>>;
+template struct MeltPoolDG::
+  StokesLawSphericalParticleForce<2, double, 2, MeltPoolDG::SphericalParticle<2, double>>;
+template struct MeltPoolDG::
+  StokesLawSphericalParticleForce<3, double, 2, MeltPoolDG::SphericalParticle<3, double>>;
 
 
 template struct MeltPoolDG::
-  StokesLawFluidForce<1, double, MeltPoolDG::SphericalParticle<1, double>>;
+  StokesLawFluidForce<1, double, 1, MeltPoolDG::SphericalParticle<1, double>>;
 template struct MeltPoolDG::
-  StokesLawFluidForce<2, double, MeltPoolDG::SphericalParticle<2, double>>;
+  StokesLawFluidForce<2, double, 1, MeltPoolDG::SphericalParticle<2, double>>;
 template struct MeltPoolDG::
-  StokesLawFluidForce<3, double, MeltPoolDG::SphericalParticle<3, double>>;
+  StokesLawFluidForce<3, double, 1, MeltPoolDG::SphericalParticle<3, double>>;
+
+template struct MeltPoolDG::
+  StokesLawFluidForce<1, double, 2, MeltPoolDG::SphericalParticle<1, double>>;
+template struct MeltPoolDG::
+  StokesLawFluidForce<2, double, 2, MeltPoolDG::SphericalParticle<2, double>>;
+template struct MeltPoolDG::
+  StokesLawFluidForce<3, double, 2, MeltPoolDG::SphericalParticle<3, double>>;

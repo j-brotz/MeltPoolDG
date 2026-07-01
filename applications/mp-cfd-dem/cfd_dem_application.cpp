@@ -68,6 +68,10 @@ namespace MeltPoolDG
   void
   CfdDemApplication<dim, number>::run()
   {
+    AssertThrow(this->simulation_case->parameters.material.number_of_species == 2,
+                dealii::ExcMessage(
+                  "Only two species are supported in the current implementation!"));
+
     initialize();
 
     if (restart_monitor->do_load())
@@ -244,7 +248,7 @@ namespace MeltPoolDG
       scratch_data->get_mapping());
 
     // initialize compressible flow operation
-    comp_flow_operation = std::make_unique<CompressibleFlow::DGOperation<dim, number>>(
+    comp_flow_operation = std::make_unique<CompressibleFlow::DGOperation<dim, number, n_species>>(
       *scratch_data,
       simulation_case->parameters.flow,
       simulation_case->parameters.material,
@@ -287,7 +291,7 @@ namespace MeltPoolDG
       cell_batch_particle_cache));
 
     auto [fsi_fluid_force_residual, fsi_fluid_force_jacobian, fsi_obstacle_load] =
-      setup_fluid_structure_interaction<dim, number, SphericalParticle<dim, number>>(
+      setup_fluid_structure_interaction<dim, number, n_species, SphericalParticle<dim, number>>(
         simulation_case->parameters.fluid_structure_interaction_data,
         *obstacle_field,
         simulation_case->parameters.material,

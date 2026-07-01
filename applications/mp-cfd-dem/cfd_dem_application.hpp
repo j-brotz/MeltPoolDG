@@ -20,8 +20,9 @@ namespace MeltPoolDG
   class CfdDemApplication
   {
   private:
-    using CaseType   = CfdDemCase<dim, number>;
-    using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
+    using CaseType                          = CfdDemCase<dim, number>;
+    using VectorType                        = dealii::LinearAlgebra::distributed::Vector<number>;
+    static constexpr unsigned int n_species = 2;
 
   public:
     explicit CfdDemApplication(std::unique_ptr<CaseType> simulation_case)
@@ -130,7 +131,7 @@ namespace MeltPoolDG
     dealii::AffineConstraints<number>                                           constraints;
     std::shared_ptr<ScratchData<dim, dim, number>>                              scratch_data;
     std::shared_ptr<TimeIntegration::TimeIterator<number>>                      time_iterator;
-    std::unique_ptr<CompressibleFlow::DGOperation<dim, number>>                 comp_flow_operation;
+    std::unique_ptr<CompressibleFlow::DGOperation<dim, number, n_species>>      comp_flow_operation;
     std::unique_ptr<ObstacleField<dim, number, SphericalParticle<dim, number>>> obstacle_field;
     std::unique_ptr<Profiling::ProfilingMonitor<number>>                        profiling_monitor;
     std::unique_ptr<Restart::RestartMonitor<number>>                            restart_monitor;

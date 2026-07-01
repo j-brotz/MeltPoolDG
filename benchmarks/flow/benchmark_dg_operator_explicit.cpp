@@ -403,6 +403,8 @@ namespace
   BENCHMARK_DEFINE_F(CompressibleFlowOperatorFixture, ApplyOperatorWithBrinkmanPenalty)
   (benchmark::State &state)
   {
+    constexpr int n_species = 1;
+
     // Create the obstacle field with the specified number of particles.
     ObstacleData<number> obstacle_data;
     auto [particle_locations, particle_properties] = define_particles(state.range(0));
@@ -423,9 +425,12 @@ namespace
                                      .dof_idx  = 0,
                                      .quad_idx = 0});
 
-    auto fsi_fluid_force_residual = std::make_shared<
-      BrinkmanPenalizationResidualContribution<dim, number, SphericalParticle<dim, number>>>(
-      brinkman_data, cell_batch_particle_cache);
+    auto fsi_fluid_force_residual =
+      std::make_shared<BrinkmanPenalizationResidualContribution<dim,
+                                                                number,
+                                                                n_species,
+                                                                SphericalParticle<dim, number>>>(
+        brinkman_data, cell_batch_particle_cache);
     this->data->flow_operator->add_external_force(fsi_fluid_force_residual, nullptr);
 
     // Run the benchmark loop, applying the operator with the Brinkman penalization forces included.

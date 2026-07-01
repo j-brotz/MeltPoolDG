@@ -8,6 +8,7 @@
 
 #include <deal.II/particles/particle_accessor.h>
 
+#include <meltpooldg/compressible_flow/data_types.hpp>
 #include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization.hpp>
 #include <meltpooldg/fluid_structure_interaction/brinkman_penalization_data.hpp>
@@ -23,8 +24,8 @@
 #include <utility>
 
 
-template <int dim, typename number, typename ObstacleType>
-MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::BrinkmanObstacleForce(
+template <int dim, typename number, int n_species, typename ObstacleType>
+MeltPoolDG::BrinkmanObstacleForce<dim, number, n_species, ObstacleType>::BrinkmanObstacleForce(
   const VectorType                       &solution,
   const MatrixFreeContext<dim, number>   &matrix_free,
   const BrinkmanPenalizationData<number> &data)
@@ -33,9 +34,9 @@ MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::BrinkmanObstacleFo
   , solution(solution)
 {}
 
-template <int dim, typename number, typename ObstacleType>
+template <int dim, typename number, int n_species, typename ObstacleType>
 void
-MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::add_load_to_obstacles(
+MeltPoolDG::BrinkmanObstacleForce<dim, number, n_species, ObstacleType>::add_load_to_obstacles(
   ObstacleField<dim, number, ObstacleType> &obstacle_field) const
 {
   using VectorizedArrayType = dealii::VectorizedArray<number>;
@@ -48,9 +49,8 @@ MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::add_load_to_obstac
                            dealii::Tensor<1, dim, number> &,
                            const VectorType                    &solution,
                            const std::pair<unsigned, unsigned> &cell_range) {
-      FECellIntegrator<dim, dim + 2, number> phi(matrix_free.mf,
-                                                 matrix_free.dof_idx,
-                                                 matrix_free.quad_idx);
+      FECellIntegrator<dim, CompressibleFlow::n_conserved_variables<dim, n_species>, number> phi(
+        matrix_free.mf, matrix_free.dof_idx, matrix_free.quad_idx);
 
       for (unsigned cell = cell_range.first; cell < cell_range.second; ++cell)
         {
@@ -125,8 +125,8 @@ MeltPoolDG::BrinkmanObstacleForce<dim, number, ObstacleType>::add_load_to_obstac
   matrix_free.mf.cell_loop(local_apply_cell, particle_force_dummy, solution);
 }
 
-template <int dim, typename number, typename ObstacleType>
-MeltPoolDG::BrinkmanPenalizationResidualContribution<dim, number, ObstacleType>::
+template <int dim, typename number, int n_species, typename ObstacleType>
+MeltPoolDG::BrinkmanPenalizationResidualContribution<dim, number, n_species, ObstacleType>::
   BrinkmanPenalizationResidualContribution(
     const BrinkmanPenalizationData<number> &brinkman_penalization_data,
     const std::shared_ptr<MatrixFreeCellBatchParticleCache<dim, number, ObstacleType>> &cell_cache)
@@ -136,9 +136,9 @@ MeltPoolDG::BrinkmanPenalizationResidualContribution<dim, number, ObstacleType>:
   AssertThrow(cell_cache != nullptr, dealii::ExcMessage("Cell cache must not be null."));
 }
 
-template <int dim, typename number, typename ObstacleType>
+template <int dim, typename number, int n_species, typename ObstacleType>
 auto
-MeltPoolDG::BrinkmanPenalizationResidualContribution<dim, number, ObstacleType>::value(
+MeltPoolDG::BrinkmanPenalizationResidualContribution<dim, number, n_species, ObstacleType>::value(
   const number,
   const unsigned int                                         cell_batch_id,
   const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
@@ -173,8 +173,8 @@ MeltPoolDG::BrinkmanPenalizationResidualContribution<dim, number, ObstacleType>:
   return fluid_force;
 }
 
-template <int dim, typename number, typename ObstacleType>
-MeltPoolDG::BrinkmanPenalizationJacobianContribution<dim, number, ObstacleType>::
+template <int dim, typename number, int n_species, typename ObstacleType>
+MeltPoolDG::BrinkmanPenalizationJacobianContribution<dim, number, n_species, ObstacleType>::
   BrinkmanPenalizationJacobianContribution(
     const BrinkmanPenalizationData<number> &brinkman_penalization_data,
     const std::shared_ptr<MatrixFreeCellBatchParticleCache<dim, number, ObstacleType>> &cell_cache)
@@ -184,9 +184,9 @@ MeltPoolDG::BrinkmanPenalizationJacobianContribution<dim, number, ObstacleType>:
   AssertThrow(cell_cache != nullptr, dealii::ExcMessage("Cell cache must not be null."));
 }
 
-template <int dim, typename number, typename ObstacleType>
+template <int dim, typename number, int n_species, typename ObstacleType>
 auto
-MeltPoolDG::BrinkmanPenalizationJacobianContribution<dim, number, ObstacleType>::value(
+MeltPoolDG::BrinkmanPenalizationJacobianContribution<dim, number, n_species, ObstacleType>::value(
   const number,
   const unsigned int                                         cell_batch_id,
   const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
@@ -237,22 +237,41 @@ MeltPoolDG::BrinkmanPenalizationJacobianContribution<dim, number, ObstacleType>:
 }
 
 template struct MeltPoolDG::
-  BrinkmanPenalizationResidualContribution<1, double, MeltPoolDG::SphericalParticle<1, double>>;
+  BrinkmanPenalizationResidualContribution<1, double, 1, MeltPoolDG::SphericalParticle<1, double>>;
 template struct MeltPoolDG::
-  BrinkmanPenalizationResidualContribution<2, double, MeltPoolDG::SphericalParticle<2, double>>;
+  BrinkmanPenalizationResidualContribution<2, double, 1, MeltPoolDG::SphericalParticle<2, double>>;
 template struct MeltPoolDG::
-  BrinkmanPenalizationResidualContribution<3, double, MeltPoolDG::SphericalParticle<3, double>>;
+  BrinkmanPenalizationResidualContribution<3, double, 1, MeltPoolDG::SphericalParticle<3, double>>;
 template struct MeltPoolDG::
-  BrinkmanPenalizationJacobianContribution<1, double, MeltPoolDG::SphericalParticle<1, double>>;
+  BrinkmanPenalizationJacobianContribution<1, double, 1, MeltPoolDG::SphericalParticle<1, double>>;
 template struct MeltPoolDG::
-  BrinkmanPenalizationJacobianContribution<2, double, MeltPoolDG::SphericalParticle<2, double>>;
+  BrinkmanPenalizationJacobianContribution<2, double, 1, MeltPoolDG::SphericalParticle<2, double>>;
 template struct MeltPoolDG::
-  BrinkmanPenalizationJacobianContribution<3, double, MeltPoolDG::SphericalParticle<3, double>>;
+  BrinkmanPenalizationJacobianContribution<3, double, 1, MeltPoolDG::SphericalParticle<3, double>>;
 
+template struct MeltPoolDG::
+  BrinkmanPenalizationResidualContribution<1, double, 2, MeltPoolDG::SphericalParticle<1, double>>;
+template struct MeltPoolDG::
+  BrinkmanPenalizationResidualContribution<2, double, 2, MeltPoolDG::SphericalParticle<2, double>>;
+template struct MeltPoolDG::
+  BrinkmanPenalizationResidualContribution<3, double, 2, MeltPoolDG::SphericalParticle<3, double>>;
+template struct MeltPoolDG::
+  BrinkmanPenalizationJacobianContribution<1, double, 2, MeltPoolDG::SphericalParticle<1, double>>;
+template struct MeltPoolDG::
+  BrinkmanPenalizationJacobianContribution<2, double, 2, MeltPoolDG::SphericalParticle<2, double>>;
+template struct MeltPoolDG::
+  BrinkmanPenalizationJacobianContribution<3, double, 2, MeltPoolDG::SphericalParticle<3, double>>;
 
 template struct MeltPoolDG::
-  BrinkmanObstacleForce<1, double, MeltPoolDG::SphericalParticle<1, double>>;
+  BrinkmanObstacleForce<1, double, 1, MeltPoolDG::SphericalParticle<1, double>>;
 template struct MeltPoolDG::
-  BrinkmanObstacleForce<2, double, MeltPoolDG::SphericalParticle<2, double>>;
+  BrinkmanObstacleForce<2, double, 1, MeltPoolDG::SphericalParticle<2, double>>;
 template struct MeltPoolDG::
-  BrinkmanObstacleForce<3, double, MeltPoolDG::SphericalParticle<3, double>>;
+  BrinkmanObstacleForce<3, double, 1, MeltPoolDG::SphericalParticle<3, double>>;
+
+template struct MeltPoolDG::
+  BrinkmanObstacleForce<1, double, 2, MeltPoolDG::SphericalParticle<1, double>>;
+template struct MeltPoolDG::
+  BrinkmanObstacleForce<2, double, 2, MeltPoolDG::SphericalParticle<2, double>>;
+template struct MeltPoolDG::
+  BrinkmanObstacleForce<3, double, 2, MeltPoolDG::SphericalParticle<3, double>>;
