@@ -149,14 +149,14 @@ namespace MeltPoolDG
   LevelAdjacentCellsCache<dim>::compute_global_cell_count(const dealii::Triangulation<dim> &tria,
                                                           const unsigned int                level)
   {
-    n_global_level_cells = 0;
+    unsigned int n_locally_owned_level_cells = 0;
     for (auto cell : tria.cell_iterators_on_level(level))
       {
         if (cell->is_locally_owned_on_level())
-          n_global_level_cells += 1;
+          n_locally_owned_level_cells += 1;
       }
     n_global_level_cells =
-      dealii::Utilities::MPI::sum(n_global_level_cells, tria.get_mpi_communicator());
+      dealii::Utilities::MPI::sum(n_locally_owned_level_cells, tria.get_mpi_communicator());
   }
 
   template <int dim>
