@@ -155,6 +155,9 @@ namespace MeltPoolDG
         if (cell->is_locally_owned_on_level())
           n_locally_owned_level_cells += 1;
       }
+    std::cout << "Rank " << dealii::Utilities::MPI::this_mpi_process(tria.get_mpi_communicator())
+              << " has " << n_locally_owned_level_cells << " locally owned cells on level " << level
+              << std::endl;
     n_global_level_cells =
       dealii::Utilities::MPI::sum(n_locally_owned_level_cells, tria.get_mpi_communicator());
   }
