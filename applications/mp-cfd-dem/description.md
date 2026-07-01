@@ -1,0 +1,4 @@
+- 4-way coupled multi-species compressible flow-particle interaction
+- DG-FEM-based discretization
+- resolved and unresolved immersed boundary methods
+- discrete element method (DEM)

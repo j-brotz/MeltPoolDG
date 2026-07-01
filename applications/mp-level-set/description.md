@@ -1,0 +1,7 @@
+- level-set transport and reinitialization
+- prescribed velocity fields
+- inflow, outflow, inflow-outflow, and wetting boundary conditions
+- evaporation-induced interface motion
+- curvature and normal-vector evaluation
+- CG-FEM and DG-FEM discretizations
+- hyperbolic, elliptic and geometric reinitialization methods
