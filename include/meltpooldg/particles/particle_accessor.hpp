@@ -31,8 +31,11 @@ namespace MeltPoolDG
      *
      * @param location Reference to the particle location.
      * @param properties View to the particle properties.
+     * @param particle_id The unique identifier for the particle.
      */
-    DEMParticleAccessor(dealii::Point<dim, number> &location, dealii::ArrayView<number> properties);
+    DEMParticleAccessor(dealii::Point<dim, number>   &location,
+                        dealii::ArrayView<number>     properties,
+                        dealii::types::particle_index particle_id);
 
     /**
      * @brief Construct accessor from a PropertyPool handle.
@@ -240,8 +243,16 @@ namespace MeltPoolDG
      *
      * @return The particle ID.
      */
-    const number &
+    dealii::types::particle_index
     id() const;
+
+    /**
+     * Returns the rank local particle index of the particle, which can be used for array access.
+     *
+     * @return The rank local particle index.
+     */
+    dealii::types::particle_index
+    local_id() const;
 
     /**
      * Returns the radius of the particle.
@@ -270,6 +281,20 @@ namespace MeltPoolDG
      */
     const number &
     mass() const;
+
+    /**
+     * Returns the density of the particle.
+     *
+     * @return The density of the particle.
+     */
+    number &
+    density();
+
+    /**
+     * Same as above but for const access.
+     */
+    const number &
+    density() const;
 
     /**
      * This function returns the value of a single-valued property stored in the given particle.
@@ -308,6 +333,13 @@ namespace MeltPoolDG
     /// The surrounding active cell of the particle center location. This is only valid for locally
     /// owned particles.
     typename dealii::Triangulation<dim>::active_cell_iterator surrounding_cell;
+
+    /// The global unique identifier of the particle.
+    dealii::types::particle_index particle_id;
+
+    /// The MPI rank local particle index which can be used e.g. for array access (only available
+    /// for locally owned particles).
+    dealii::types::particle_index local_particle_id = dealii::numbers::invalid_unsigned_int;
   };
 
 
@@ -317,13 +349,17 @@ namespace MeltPoolDG
     : location(particle.get_location())
     , properties(particle.get_properties())
     , surrounding_cell(particle.get_surrounding_cell())
+    , particle_id(particle.get_id())
+    , local_particle_id(particle.get_local_index())
   {}
 
   template <int dim, typename number>
-  DEMParticleAccessor<dim, number>::DEMParticleAccessor(dealii::Point<dim, number> &location,
-                                                        dealii::ArrayView<number>   properties)
+  DEMParticleAccessor<dim, number>::DEMParticleAccessor(dealii::Point<dim, number>   &location,
+                                                        dealii::ArrayView<number>     properties,
+                                                        dealii::types::particle_index particle_id)
     : location(location)
     , properties(properties)
+    , particle_id(particle_id)
   {}
 
   template <int dim, typename number>
@@ -332,6 +368,7 @@ namespace MeltPoolDG
     const typename dealii::Particles::PropertyPool<dim>::Handle handle) noexcept
     : location(property_pool.get_location(handle))
     , properties(property_pool.get_properties(handle))
+    , particle_id(property_pool.get_id(handle))
   {}
 
   template <int dim, typename number>
@@ -527,11 +564,19 @@ namespace MeltPoolDG
   }
 
   template <int dim, typename number>
-  const number &
+  dealii::types::particle_index
   DEMParticleAccessor<dim, number>::id() const
   {
-    Assert(!properties.empty(), dealii::ExcInternalError());
-    return properties[SphericalParticle<dim, number>::Properties::particle_id];
+    return particle_id;
+  }
+
+  template <int dim, typename number>
+  dealii::types::particle_index
+  DEMParticleAccessor<dim, number>::local_id() const
+  {
+    Assert(local_particle_id != dealii::numbers::invalid_unsigned_int,
+           dealii::ExcMessage("The local particle ID is only valid for locally owned particles."));
+    return local_particle_id;
   }
 
   template <int dim, typename number>
@@ -561,6 +606,20 @@ namespace MeltPoolDG
   DEMParticleAccessor<dim, number>::mass() const
   {
     return properties[SphericalParticle<dim, number>::Properties::mass];
+  }
+
+  template <int dim, typename number>
+  number &
+  DEMParticleAccessor<dim, number>::density()
+  {
+    return properties[SphericalParticle<dim, number>::Properties::density];
+  }
+
+  template <int dim, typename number>
+  const number &
+  DEMParticleAccessor<dim, number>::density() const
+  {
+    return properties[SphericalParticle<dim, number>::Properties::density];
   }
 
 

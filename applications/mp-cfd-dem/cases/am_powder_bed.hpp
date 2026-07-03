@@ -121,6 +121,8 @@ namespace MeltPoolDG::Simulation::CfdDem
 
       dealii::GridGenerator::subdivided_hyper_rectangle(
         *this->triangulation, domain_discretization, p1, p2, true);
+
+      this->triangulation->refine_global(this->parameters.base.global_refinements);
     }
 
     void

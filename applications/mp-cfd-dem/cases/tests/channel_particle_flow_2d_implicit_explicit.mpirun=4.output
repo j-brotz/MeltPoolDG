@@ -10,7 +10,7 @@
 +--------------------------------------------------------------------------------------------------+
 | Newton Raphson solver converged: ||solution|| = 1.50543e+07                newton_raphson_solver |
 | norm rho: 6.4838e-05, rho * u: 8.4206e-01, rho * energy: 5.9144e+03            compressible_flow |
-| accumulated norm: 9.2609e-12                                                      obstacle_force |
+| accumulated norm: 9.2608e-12                                                      obstacle_force |
 +--------------------------------------------------------------------------------------------------+
 | Performing mesh refinement...                                                                    |
 | Flow grid before refinement:    # cells: 288, # dofs: 10368                    compressible_flow |

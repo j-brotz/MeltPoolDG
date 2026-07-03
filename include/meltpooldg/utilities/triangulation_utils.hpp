@@ -158,7 +158,7 @@ namespace MeltPoolDG
   class LevelCommunicationPattern
   {
   public:
-    LevelCommunicationPattern(const dealii::parallel::distributed::Triangulation<dim> &tria);
+    LevelCommunicationPattern(const dealii::Triangulation<dim> &tria);
 
     /**
      * Build the communication pattern for the given level. This includes determining which cells

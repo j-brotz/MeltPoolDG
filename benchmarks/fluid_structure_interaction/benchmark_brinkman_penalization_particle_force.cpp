@@ -198,7 +198,6 @@ namespace
     BrinkmanPenalizationData<number> brinkman_data;
     brinkman_data.permeability = 1e-9;
     BrinkmanObstacleForce<dim, number, SphericalParticle<dim, number>> brinkman_obstacle_force(
-      obstacle_field,
       solution,
       MatrixFreeContext<dim, number>(scratch_data.get_matrix_free(), dof_index, quad_index),
       brinkman_data);

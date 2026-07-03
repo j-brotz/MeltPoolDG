@@ -45,10 +45,7 @@ namespace MeltPoolDG
                 obstacle_field, fsi_data.brinkman_penalization_data);
             fsi_obstacle_load = std::make_unique<ObstacleLoad<dim, number, ObstacleType>>(
               BrinkmanObstacleForce<dim, number, ObstacleType>(
-                obstacle_field,
-                flow_solution,
-                flow_mf_context,
-                fsi_data.brinkman_penalization_data));
+                flow_solution, flow_mf_context, fsi_data.brinkman_penalization_data));
             break;
           }
           case FSICouplingMethod::stokes_law: {

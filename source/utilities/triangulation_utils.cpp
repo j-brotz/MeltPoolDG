@@ -160,8 +160,7 @@ namespace MeltPoolDG
   }
 
   template <int dim>
-  LevelCommunicationPattern<dim>::LevelCommunicationPattern(
-    const dealii::parallel::distributed::Triangulation<dim> &tria)
+  LevelCommunicationPattern<dim>::LevelCommunicationPattern(const dealii::Triangulation<dim> &tria)
     : triangulation(tria)
     , mpi_communicator(triangulation.get_mpi_communicator())
   {}
@@ -170,7 +169,7 @@ namespace MeltPoolDG
   void
   LevelCommunicationPattern<dim>::build_pattern(const unsigned int level)
   {
-    Assert(
+    AssertThrow(
       triangulation.n_global_levels() > 1,
       dealii::ExcMessage(
         "The triangulation must have at least two levels to build a level specific communication pattern."));
