@@ -177,7 +177,8 @@ namespace MeltPoolDG::TimeIntegration
                             ci[0] * time_step,
                             n_stages == 1 ? solution_history.get_current_solution() :
                                             rk_register_ri,
-                            rk_register_ri);
+                            n_stages == 1 ? solution_history.get_current_solution() :
+                                            rk_register_ri);
 
     for (unsigned int stage = 1; stage < bi.size(); ++stage)
       {
