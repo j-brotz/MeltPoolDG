@@ -270,6 +270,10 @@ namespace MeltPoolDG
     std::set<dealii::CellId> parent_cells;
     for (auto &cell : triangulation.active_cell_iterators())
       {
+        Assert(
+          cell->level() >= partition_level,
+          dealii::ExcMessage(
+            "The level of the active cell is lower than the specified partition level. This is currently not supported."));
         if (cell->is_locally_owned())
           parent_cells.insert(level_parent_cell_id(level_parent_cell_id, *cell, partition_level));
       }

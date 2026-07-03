@@ -124,10 +124,12 @@ CellListParticleHandler<dim, number, ObstacleType>::reinit()
   cell_particle_cache.global_max_particle_radius = compute_max_particle_radius();
   // TODO
   constexpr number influence_tolerance = 1.2;
+
+  int local_cache_level = 0;
   if (cell_particle_cache.global_max_particle_radius == 0)
     {
       // If there are only particles with zero radius, we can store them on the finest level.
-      cell_particle_cache.cell_level = obstacle_handler.get_triangulation().n_global_levels() - 1;
+      local_cache_level = obstacle_handler.get_triangulation().n_global_levels() - 1;
     }
   else
     {
@@ -140,31 +142,59 @@ CellListParticleHandler<dim, number, ObstacleType>::reinit()
       // interested in getting the active cells occupied by a particle, a cell size a cell size of
       // the maximum particle radius would be sufficient. However, to keep things simple we use the
       // same level for both purposes for now.
-      for (unsigned int level = 0; level < tria.n_global_levels(); ++level)
+
+      // If the cells on the coarsest level are too small to contain the largest particle, we throw
+      // an assertion because this would require searching in more than one cell, which is not
+      // implemented yet.
+      AssertThrow(
+        2 * influence_tolerance * cell_particle_cache.global_max_particle_radius <=
+          tria.begin(0)->minimum_vertex_distance(),
+        dealii::ExcMessage(
+          "The influence area of the largest particle (" +
+          std::to_string(2 * influence_tolerance * cell_particle_cache.global_max_particle_radius) +
+          ") is larger than the cell size on the coarsest level of the domain (" +
+          std::to_string(tria.begin(0)->minimum_vertex_distance()) +
+          "). This means that we need to search in more than one neighboring cell, which is not "
+          "implemented yet. Please either provide a triangulation which has further coarser levels "
+          "or reduce the size of the largest particle."));
+
+      for (unsigned int level = 0; level < tria.n_levels(); ++level)
         {
           if (tria.begin(level)->minimum_vertex_distance() <
               2 * influence_tolerance * cell_particle_cache.global_max_particle_radius)
             {
-              cell_particle_cache.cell_level = level == 0 ? 0 : level - 1;
+              local_cache_level = level == 0 ? 0 : level - 1;
               break;
+            }
+
+          if (level == tria.n_levels() - 1)
+            {
+              // If the finest level is still large enough to contain the largest particle, we store
+              // the particles on the finest level.
+              local_cache_level = level;
             }
         }
     }
 
-  AssertThrow(
-    2 * influence_tolerance * cell_particle_cache.global_max_particle_radius <=
-      tria.begin(cell_particle_cache.cell_level)->minimum_vertex_distance(),
-    dealii::ExcMessage(
-      "The influence area of the largest particle (" +
-      std::to_string(2 * influence_tolerance * cell_particle_cache.global_max_particle_radius) +
-      ") is larger than the cell size on the level used for caching particles (" +
-      std::to_string(tria.begin(cell_particle_cache.cell_level)->minimum_vertex_distance()) +
-      "). This means that we need to search in more than one cell, which is not implemented yet. "
-      "Please either provide a triangulation which has further coarser levels or reduce the size "
-      "of the largest particle."));
+  // We need to ensure that the local level on which we store particles is equal or smaller than
+  // the level of the coarsest active cell.
+  int smallest_local_level = tria.n_levels();
+  for (auto &cell : tria.active_cell_iterators())
+    {
+      smallest_local_level = std::min(smallest_local_level, cell->level());
+    }
 
-  MPI_Allreduce(
-    MPI_IN_PLACE, &cell_particle_cache.cell_level, 1, MPI_INT, MPI_MIN, mpi_communicator);
+  if (local_cache_level > smallest_local_level)
+    {
+      local_cache_level = smallest_local_level;
+    }
+
+  // We need to ensure that the level on which we store particles is the same across all MPI
+  // ranks. Therefore, we perform a global reduction to find the minimum cache level across all
+  // ranks.
+  // TODO: Can we use the own cache level on each rank?
+  cell_particle_cache.cell_level =
+    dealii::Utilities::MPI::min(local_cache_level, tria.get_mpi_communicator());
 
   triangulation_level_cache.level = cell_particle_cache.cell_level;
 
