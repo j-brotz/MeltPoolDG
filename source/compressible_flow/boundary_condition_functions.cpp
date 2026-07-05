@@ -209,7 +209,6 @@ namespace MeltPoolDG::CompressibleFlow
   void
   FreeJetVelocityFunction<dim, number>::set_time(const number new_time)
   {
-    this->set_time(new_time);
     free_jet_center.set_time(new_time);
   }
 
