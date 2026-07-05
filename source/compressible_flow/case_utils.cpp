@@ -70,7 +70,10 @@ namespace MeltPoolDG::CompressibleFlow
     prm.enter_subsection("free jet");
     {
       prm.add_parameter("jet hole diameter", jet_hole_diameter, "The diameter of the free jet.");
-      prm.add_parameter("jet hole center", jet_hole_center, "Jet hole center coordinates.");
+      prm.add_parameter(
+        "jet hole center",
+        jet_hole_center,
+        "Jet hole center coordinates. Provide a semicolon separated list of coordinates. These may depend on the time t.");
       prm.add_parameter("jet peak velocity",
                         jet_peak_velocity,
                         "peak velocity of the free jet, measured at the jet hole center.");

@@ -143,10 +143,10 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number>
   FreeJetVelocityFunction<dim, number>::FreeJetVelocityFunction(
-    const number                     peak_inflow_velocity,
-    const FreeJetProfile             free_jet_profile,
-    const dealii::Point<dim, number> free_jet_center,
-    const number                     free_jet_diameter)
+    const number         peak_inflow_velocity,
+    const FreeJetProfile free_jet_profile,
+    const std::string    free_jet_center,
+    const number         free_jet_diameter)
     : dealii::Function<dim, number>(dim)
     , free_jet_profile(free_jet_profile)
     , free_jet_center(free_jet_center)
@@ -165,7 +165,16 @@ namespace MeltPoolDG::CompressibleFlow
     // We use distance_square here to avoid the costly square root operation in distance()
     // since the comparison with the squared radius is sufficient to determine whether we are in the
     // free jet area or not.
-    if (free_jet_center.distance_square(location) > free_jet_radius * free_jet_radius)
+    double distance_squared = 0.;
+    for (unsigned int d = 0; d < dim; ++d)
+      {
+        distance_squared +=
+          std::pow(location[d] -
+                     free_jet_center.value(dealii::Point<dim, number>() /* dummy value  */, d),
+                   2);
+      }
+
+    if (distance_squared > free_jet_radius * free_jet_radius)
       {
         // not in free jet area
         return 0.;
@@ -178,8 +187,8 @@ namespace MeltPoolDG::CompressibleFlow
           {
               case FreeJetProfile::cosine: {
                 velocity =
-                  peak_inflow_velocity * std::cos(free_jet_center.distance(location) /
-                                                  free_jet_radius * 0.5 * std::numbers::pi);
+                  peak_inflow_velocity *
+                  std::cos(std::sqrt(distance_squared) / free_jet_radius * 0.5 * std::numbers::pi);
                 break;
               }
               case FreeJetProfile::constant: {
@@ -197,13 +206,21 @@ namespace MeltPoolDG::CompressibleFlow
   }
 
   template <int dim, typename number>
-  FreeJetInflow<dim, number>::FreeJetInflow(const number                     initial_time,
-                                            const number                     density,
-                                            const number                     inner_energy,
-                                            const number                     peak_inflow_velocity,
-                                            const FreeJetProfile             free_jet_profile,
-                                            const dealii::Point<dim, number> free_jet_center,
-                                            const number                     free_jet_diameter)
+  void
+  FreeJetVelocityFunction<dim, number>::set_time(const number new_time)
+  {
+    this->set_time(new_time);
+    free_jet_center.set_time(new_time);
+  }
+
+  template <int dim, typename number>
+  FreeJetInflow<dim, number>::FreeJetInflow(const number         initial_time,
+                                            const number         density,
+                                            const number         inner_energy,
+                                            const number         peak_inflow_velocity,
+                                            const FreeJetProfile free_jet_profile,
+                                            const std::string    free_jet_center,
+                                            const number         free_jet_diameter)
     : dealii::Function<dim, number>(n_conserved_variables<dim> + 1, initial_time)
     , conservative_variables(
         initial_time,
@@ -213,19 +230,19 @@ namespace MeltPoolDG::CompressibleFlow
                                                                free_jet_center,
                                                                free_jet_diameter),
         std::make_shared<dealii::Functions::ConstantFunction<dim, number>>(inner_energy))
-    , free_jet_parameters{.jet_hole_radius = free_jet_diameter * 0.5,
-                          .jet_hole_center = free_jet_center}
+    , jet_hole_radius(free_jet_diameter * 0.5)
+    , jet_hole_center(free_jet_center)
   {}
 
   template <int dim, typename number>
-  FreeJetInflow<dim, number>::FreeJetInflow(const number                     initial_time,
-                                            const number                     density,
-                                            const number                     inner_energy,
-                                            const std::vector<number>       &species_mass_fractions,
-                                            const number                     peak_inflow_velocity,
-                                            const FreeJetProfile             free_jet_profile,
-                                            const dealii::Point<dim, number> free_jet_center,
-                                            const number                     free_jet_diameter)
+  FreeJetInflow<dim, number>::FreeJetInflow(const number               initial_time,
+                                            const number               density,
+                                            const number               inner_energy,
+                                            const std::vector<number> &species_mass_fractions,
+                                            const number               peak_inflow_velocity,
+                                            const FreeJetProfile       free_jet_profile,
+                                            const std::string          free_jet_center,
+                                            const number               free_jet_diameter)
     : dealii::Function<dim, number>(n_conserved_variables<dim> + 1 + species_mass_fractions.size(),
                                     initial_time)
     , conservative_variables(
@@ -237,9 +254,8 @@ namespace MeltPoolDG::CompressibleFlow
                                                                free_jet_diameter),
         std::make_shared<dealii::Functions::ConstantFunction<dim, number>>(inner_energy),
         std::make_shared<dealii::Functions::ConstantFunction<dim, number>>(species_mass_fractions))
-    , n_mass_fractions(species_mass_fractions.size())
-    , free_jet_parameters{.jet_hole_radius = free_jet_diameter * 0.5,
-                          .jet_hole_center = free_jet_center}
+    , jet_hole_radius(free_jet_diameter * 0.5)
+    , jet_hole_center(free_jet_center)
   {}
 
   template <int dim, typename number>
@@ -254,6 +270,7 @@ namespace MeltPoolDG::CompressibleFlow
   FreeJetInflow<dim, number>::set_time(const number new_time)
   {
     conservative_variables.set_time(new_time);
+    jet_hole_center.set_time(new_time);
   }
 
   template <int dim, typename number>
@@ -264,8 +281,15 @@ namespace MeltPoolDG::CompressibleFlow
     // We use distance_square here to avoid the costly square root operation in distance()
     // since the comparison with the squared radius is sufficient to determine whether we are in the
     // free jet area or not.
-    return free_jet_parameters.jet_hole_center.distance_square(location) <=
-           free_jet_parameters.jet_hole_radius * free_jet_parameters.jet_hole_radius;
+    double distance_squared = 0.;
+    for (unsigned int d = 0; d < dim; ++d)
+      {
+        distance_squared +=
+          std::pow(location[d] -
+                     jet_hole_center.value(dealii::Point<dim, number>() /* dummy value  */, d),
+                   2);
+      }
+    return distance_squared <= jet_hole_radius * jet_hole_radius;
   }
 
   template <int dim, typename number>

@@ -6,6 +6,7 @@
 
 #include <deal.II/base/exception_macros.h>
 #include <deal.II/base/function.h>
+#include <deal.II/base/function_parser.h>
 
 #include <meltpooldg/compressible_flow/boundary_conditions.hpp>
 #include <meltpooldg/compressible_flow/data_types.hpp>
@@ -186,10 +187,18 @@ namespace MeltPoolDG::CompressibleFlow
      * @param free_jet_center The center of the circular area where the free jet inflow is applied.
      * @param free_jet_diameter The diameter of the circular area where the free jet inflow is applied.
      */
-    FreeJetVelocityFunction(const number                     peak_inflow_velocity,
-                            const FreeJetProfile             free_jet_profile,
-                            const dealii::Point<dim, number> free_jet_center,
-                            const number                     free_jet_diameter);
+    FreeJetVelocityFunction(const number         peak_inflow_velocity,
+                            const FreeJetProfile free_jet_profile,
+                            const std::string    free_jet_center,
+                            const number         free_jet_diameter);
+
+    /**
+     * Sets the current time for the function.
+     *
+     * @param new_time Time to be set.
+     */
+    void
+    set_time(const number new_time) override;
 
     /**
      * Evaluates the velocity component of the free jet inflow at a given location. The velocity is
@@ -208,7 +217,7 @@ namespace MeltPoolDG::CompressibleFlow
     const FreeJetProfile free_jet_profile;
 
     /// The center of the circular area where the free jet inflow is applied.
-    const dealii::Point<dim, number> free_jet_center;
+    dealii::FunctionParser<dim> free_jet_center;
 
     /// The radius of the circular area where the free jet inflow is applied.
     const number free_jet_radius;
@@ -232,13 +241,13 @@ namespace MeltPoolDG::CompressibleFlow
      * @param free_jet_center The center of the circular area where the free jet inflow is applied.
      * @param free_jet_diameter The diameter of the circular area where the free jet inflow is applied.
      */
-    FreeJetInflow(const number                     initial_time,
-                  const number                     density,
-                  const number                     inner_energy,
-                  const number                     peak_inflow_velocity,
-                  const FreeJetProfile             free_jet_profile,
-                  const dealii::Point<dim, number> free_jet_center,
-                  const number                     free_jet_diameter);
+    FreeJetInflow(const number         initial_time,
+                  const number         density,
+                  const number         inner_energy,
+                  const number         peak_inflow_velocity,
+                  const FreeJetProfile free_jet_profile,
+                  const std::string    free_jet_center,
+                  const number         free_jet_diameter);
 
     /**
      * Constructor for the multi-species case.
@@ -252,14 +261,14 @@ namespace MeltPoolDG::CompressibleFlow
      * @param free_jet_center The center of the circular area where the free jet inflow is applied.
      * @param free_jet_diameter The diameter of the circular area where the free jet inflow is applied.
      */
-    FreeJetInflow(const number                     initial_time,
-                  const number                     density,
-                  const number                     inner_energy,
-                  const std::vector<number>       &species_mass_fractions,
-                  const number                     peak_inflow_velocity,
-                  const FreeJetProfile             free_jet_profile,
-                  const dealii::Point<dim, number> free_jet_center,
-                  const number                     free_jet_diameter);
+    FreeJetInflow(const number               initial_time,
+                  const number               density,
+                  const number               inner_energy,
+                  const std::vector<number> &species_mass_fractions,
+                  const number               peak_inflow_velocity,
+                  const FreeJetProfile       free_jet_profile,
+                  const std::string          free_jet_center,
+                  const number               free_jet_diameter);
 
     /**
      * Set a velocity ramp-up for the free jet inflow. If this function is never called or if a
@@ -300,14 +309,11 @@ namespace MeltPoolDG::CompressibleFlow
     /// provides conservative variables, the total number of partial densities provided.
     unsigned n_mass_fractions = 1;
 
-    struct
-    {
-      /// The radius of the circular area where the free jet inflow is applied.
-      number jet_hole_radius;
+    /// The radius of the circular area where the free jet inflow is applied.
+    number jet_hole_radius;
 
-      /// The center of the circular area where the free jet inflow is applied.
-      dealii::Point<dim, number> jet_hole_center;
-    } free_jet_parameters;
+    /// The center of the circular area where the free jet inflow is applied.
+    dealii::FunctionParser<dim> jet_hole_center;
 
     /**
      * Checks whether a given point is located within the circular area (the "jet hole") where the

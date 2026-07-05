@@ -63,7 +63,7 @@ namespace MeltPoolDG::CompressibleFlow
     std::vector<number> jet_hole_mass_fractions;
 
     /// Jet-hole center coordinates
-    dealii::Point<dim, number> jet_hole_center;
+    std::string jet_hole_center;
 
     /// Flow jet peak velocity
     number jet_peak_velocity{0.};
