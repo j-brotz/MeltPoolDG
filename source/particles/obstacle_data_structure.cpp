@@ -446,6 +446,8 @@ CellListParticleHandler<dim, number, ObstacleType>::update_ghost_particle_proper
     {
       future.wait();
     }
+
+  notify(NotifyEvent::UpdateGhostParticleProperties);
 }
 
 template <int dim, typename number, typename ObstacleType>
@@ -730,6 +732,24 @@ CellListParticleHandler<dim, number, ObstacleType>::sort_particles_into_subdomai
     tria.begin(tria.n_levels() - 1)->minimum_vertex_distance();
 
   neighbor_list_update_tracker.reinit_after_update(skin_thickness, max_displacement_before_update);
+
+  notify(NotifyEvent::SortParticlesIntoSubdomainsAndCells);
+}
+
+template <int dim, typename number, typename ObstacleType>
+void
+CellListParticleHandler<dim, number, ObstacleType>::subscribe(
+  std::function<void(CellListParticleHandler &, const NotifyEvent)> callback)
+{
+  notify_signal.connect(callback);
+  callback(*this, NotifyEvent::ObserverInitialization);
+}
+
+template <int dim, typename number, typename ObstacleType>
+void
+CellListParticleHandler<dim, number, ObstacleType>::notify(const NotifyEvent &event)
+{
+  notify_signal(*this, event);
 }
 
 template <int dim, typename number, typename ObstacleType>

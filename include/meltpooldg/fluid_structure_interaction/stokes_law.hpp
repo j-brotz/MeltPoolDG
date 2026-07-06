@@ -93,16 +93,16 @@ namespace MeltPoolDG
      * term in the fluid momentum equations.
      *
      * @param time_step_size The current time-step size.
-     * @param cell_iterators Container holding an iterator to the cells associated with the provided points.
+     * @param cell_batch_id The ID of the cell batch for which to compute the penalty term.
      * @param q_point Coordinates at which the penalty term is evaluated.
      * @param w_q Conserved variables evaluated at the given coordinates.
      * @return The computed penalty term at the specified points.
      */
     ConservedVariablesType
-    value(number                                                              time_step_size,
-          const std::vector<dealii::TriaIterator<dealii::CellAccessor<dim>>> &cell_iterators,
-          const dealii::Point<dim, dealii::VectorizedArray<number>>          &q_point,
-          const ConservedVariablesType                                       &w_q) override;
+    value(number                                                     time_step_size,
+          unsigned int                                               cell_batch_id,
+          const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
+          const ConservedVariablesType                              &w_q) override;
 
   private:
     /// Solution of the flow field.

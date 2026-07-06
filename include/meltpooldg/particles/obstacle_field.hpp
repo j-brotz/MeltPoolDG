@@ -289,6 +289,20 @@ namespace MeltPoolDG
     unsigned int
     n_global_particles() const;
 
+    /**
+     * Registers a callback function to be notified whenever the obstacle data structure is updated.
+     *
+     * @param callback A callable that takes a reference to the obstacle data structure and the
+     * event type that triggered the update. The callable will be invoked whenever the obstacle data
+     * structure is updated, allowing the subscriber to react accordingly.
+     */
+    void
+    subscribe_to_data_structure(
+      std::function<
+        void(CellListParticleHandler<dim, number, ObstacleType> &,
+             const typename CellListParticleHandler<dim, number, ObstacleType>::NotifyEvent &)>
+        callback);
+
   private:
     /// Struct holding configuration data for obstacles.
     const ObstacleData<number> &data;
