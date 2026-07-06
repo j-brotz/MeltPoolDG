@@ -205,10 +205,14 @@ CellListParticleHandler<dim, number, ObstacleType>::reinit()
   number skin_thickness = tria.begin(cell_particle_cache.cell_level)->minimum_vertex_distance() -
                           2 * cell_particle_cache.global_max_particle_radius;
 
-  number max_displacement_before_update =
+  number local_max_displacement_before_update =
     tria.begin(tria.n_levels() - 1)->minimum_vertex_distance();
 
-  neighbor_list_update_tracker.reinit_after_update(skin_thickness, max_displacement_before_update);
+  number global_max_displacement_before_update =
+    dealii::Utilities::MPI::min(local_max_displacement_before_update, mpi_communicator);
+
+  neighbor_list_update_tracker.reinit_after_update(skin_thickness,
+                                                   global_max_displacement_before_update);
 }
 
 template <int dim, typename number, typename ObstacleType>
@@ -755,10 +759,14 @@ CellListParticleHandler<dim, number, ObstacleType>::sort_particles_into_subdomai
   number skin_thickness = tria.begin(cell_particle_cache.cell_level)->minimum_vertex_distance() -
                           2 * cell_particle_cache.global_max_particle_radius;
 
-  number max_displacement_before_update =
+  number local_max_displacement_before_update =
     tria.begin(tria.n_levels() - 1)->minimum_vertex_distance();
 
-  neighbor_list_update_tracker.reinit_after_update(skin_thickness, max_displacement_before_update);
+  number global_max_displacement_before_update =
+    dealii::Utilities::MPI::min(local_max_displacement_before_update, mpi_communicator);
+
+  neighbor_list_update_tracker.reinit_after_update(skin_thickness,
+                                                   global_max_displacement_before_update);
 
   notify(NotifyEvent::SortParticlesIntoSubdomainsAndCells);
 }
