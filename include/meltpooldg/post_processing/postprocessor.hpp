@@ -102,8 +102,7 @@ namespace MeltPoolDG
     }
 
     void
-    process_triangulation_partitioning(const unsigned int                n_time_step,
-                                       const number                      time);
+    process_triangulation_partitioning(const unsigned int n_time_step, const number time);
 
   private:
     const MPI_Comm                    mpi_communicator;

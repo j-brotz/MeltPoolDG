@@ -886,6 +886,11 @@
           "description": "File in which the obstacle initial state data is stored.",
           "default": ""
         },
+        "gravity constant": {
+          "type": "number",
+          "description": "Gravitational acceleration constant used for computing the gravitational force acting on the obstacles.",
+          "default": 9.81
+        },
         "amr": {
           "type": "object",
           "properties": {

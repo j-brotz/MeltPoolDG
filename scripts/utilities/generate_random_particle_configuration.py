@@ -122,11 +122,11 @@ def save_to_csv(data, filename="particles.csv"):
 # --- Example usage ---
 if __name__ == "__main__":
     particles = generate_particles(
-        n_particles=500,
+        n_particles=1000,
         dim=3,
-        box_min=(4e-3, 0, 0),
-        box_max=(5e-3, 1e-3, 600e-6),
-        radius_range=(15e-6, 50e-6),
+        box_min=(0, 0, 0),
+        box_max=(1000e-6, 1000e-6, 500e-6),
+        radius_range=(15e-6, 30e-6),
         density_range=(4386, 4386.1),
         max_attempts=10000,
         seed=42,

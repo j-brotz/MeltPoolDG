@@ -163,7 +163,9 @@ namespace MeltPoolDG
 
     void
     register_particle_output(Postprocessor<dim, number> &postprocessor)
-    {}
+    {
+      obstacle_data_structure.register_particle_output(postprocessor);
+    }
 
     /**
      * Computes the sum of all particle forces and prints the corresponding norm to the
@@ -327,6 +329,6 @@ namespace MeltPoolDG
   void
   ObstacleField<dim, number, ObstacleType>::serialize(Archive &ar, const unsigned int version)
   {
-    //obstacle_handler.serialize(ar, version);
+    // obstacle_handler.serialize(ar, version);
   }
 } // namespace MeltPoolDG

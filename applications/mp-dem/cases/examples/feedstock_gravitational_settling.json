@@ -1,56 +1,56 @@
 {
-    "base": {
-        "problem name": "dem",
-        "case name": "particles_in_box",
-        "dimension": 3,
-        "do print parameters": true,
-        "number": "double",
-        "verbosity level": 4
+  "base": {
+    "problem name": "dem",
+    "case name": "particles_in_box",
+    "dimension": 3,
+    "do print parameters": true,
+    "number": "double",
+    "verbosity level": 4
+  },
+  "case setup": {
+    "bounding box corner 1": "4e-3, 0, 0",
+    "bounding box corner 2": "13.85e-3, 2e-3, 600e-6"
+  },
+  "profiling": {
+    "time type": "real",
+    "enable wall time statistics": true
+  },
+  "obstacles": {
+    "gravity constant": 9.81,
+    "obstacle state input file": "/home/brotz/Development/meltpooldg/meltpooldg/applications/mp-dem/cases/examples/feedstock_settling_initial_state.csv",
+    "stationary": false,
+    "cohesive forces": {
+      "cut off relative decline van der waals": 0.1,
+      "hamaker constant": 4e-19,
+      "surface energy": 0.00035
     },
-    "case setup": {
-        "bounding box corner 1": "4e-3, 0, 0",
-        "bounding box corner 2": "13.85e-3, 2e-3, 600e-6"
-    },
-    "profiling": {
-        "time type": "real",
-        "enable wall time statistics": true
-    },
-    "obstacles": {
-        "gravity constant": 9.81,
-        "obstacle state input file": "/home/brotz/Development/meltpooldg/meltpooldg/applications/mp-dem/cases/examples/feedstock_settling_initial_state.csv",
-        "stationary": false,
-        "cohesive forces": {
-            "cut off relative decline van der waals": 0.1,
-            "hamaker constant": 4e-19,
-            "surface energy": 35e-5
-        },
-        "spherical particle contact force": {
-            "restitution coefficient": 0.9,
-            "rolling resistance coefficient": 0.10,
-            "sliding friction coefficient": 0.2,
-            "particle-particle contact": {
-                "poisson ratio": 0.342,
-                "youngs modulus": 26.25e6
-            }
-        }
-    },
-    "output": {
-        "directory": "./settling_output",
-        "do user defined postprocessing": true,
-        "write frequency": 1000,
-        "paraview": {
-            "enable": true,
-            "filename": "settling",
-            "output subdomains": true
-        },
-        "particles": {
-            "enable": true,
-            "filename": "settling_particles"
-        }
-    },
-    "time stepping": {
-        "end time": 0.1,
-        "start time": 0,
-        "time step size": 1e-7
+    "spherical particle contact force": {
+      "restitution coefficient": 0.9,
+      "rolling resistance coefficient": 0.1,
+      "sliding friction coefficient": 0.2,
+      "particle-particle contact": {
+        "poisson ratio": 0.342,
+        "youngs modulus": 26250000.0
+      }
     }
+  },
+  "output": {
+    "directory": "./settling_output",
+    "do user defined postprocessing": true,
+    "write frequency": 1000,
+    "paraview": {
+      "enable": true,
+      "filename": "settling",
+      "output subdomains": true
+    },
+    "particles": {
+      "enable": true,
+      "filename": "settling_particles"
+    }
+  },
+  "time stepping": {
+    "end time": 0.1,
+    "start time": 0,
+    "time step size": 1e-07
+  }
 }

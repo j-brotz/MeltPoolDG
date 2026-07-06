@@ -40,6 +40,7 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
   auto [obstacle_locations, obstacle_properties] = read_obstacle_state_input_file();
   insert_obstacles(obstacle_locations, obstacle_properties);
   obstacle_data_structure.reinit();
+  obstacle_data_structure.sort_particles_into_subdomains_and_cells();
 }
 
 template <int dim, typename number, typename ObstacleType>
@@ -62,6 +63,7 @@ MeltPoolDG::ObstacleField<dim, number, ObstacleType>::ObstacleField(
 {
   insert_obstacles(obstacle_locations, obstacle_properties);
   obstacle_data_structure.reinit();
+  obstacle_data_structure.sort_particles_into_subdomains_and_cells();
 }
 
 template <int dim, typename number, typename ObstacleType>

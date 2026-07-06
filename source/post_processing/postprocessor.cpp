@@ -288,9 +288,8 @@ namespace MeltPoolDG
 
   template <int dim, typename number>
   void
-  Postprocessor<dim, number>::process_triangulation_partitioning(
-    const unsigned int                n_time_step,
-    const number                      time)
+  Postprocessor<dim, number>::process_triangulation_partitioning(const unsigned int n_time_step,
+                                                                 const number       time)
   {
     if (not is_output_timestep(n_time_step, time) or not output_data.paraview.output_subdomains)
       return;
@@ -298,7 +297,7 @@ namespace MeltPoolDG
     Journal::print_line(pcout, "write triangulation partitioning to paraview", "postprocessor");
 
     namespace fs = std::filesystem;
-    dealii::DataOut<dim>   data_out;
+    dealii::DataOut<dim> data_out;
     data_out.attach_triangulation(triangulation);
     dealii::Vector<number> subdomains(triangulation.n_active_cells());
     subdomains = dealii::Utilities::MPI::this_mpi_process(mpi_communicator);
