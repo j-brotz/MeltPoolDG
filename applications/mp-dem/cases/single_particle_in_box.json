@@ -1,0 +1,59 @@
+{
+    "base": {
+        "problem name": "dem",
+        "case name": "single_particle_in_box",
+        "dimension": 3,
+        "do print parameters": true,
+        "number": "double",
+        "verbosity level": 4,
+        "global refinements": 6
+    },
+    "case setup": {
+        "bounding box corner 1": "0, 0, 0",
+        "bounding box corner 2": "2e-3, 2e-3, 2e-3",
+        "n subdivisions": "2, 2, 2",
+        "max particle influence radius": 60e-6
+    },
+    "profiling": {
+        "time type": "real",
+        "enable wall time statistics": true
+    },
+    "obstacles": {
+        "stationary": false,
+        "obstacle state input file": "/dss/dsshome1/0B/ge37fof2/development/meltpooldg/meltpooldg/applications/mp-dem/cases/single_particle.csv",
+        "gravity constant": 9.81,
+        "cohesive forces": {
+            "cut off relative decline van der waals": 0.0,
+            "hamaker constant": 0.0,
+            "surface energy": 0.0
+        },
+        "spherical particle contact force": {
+            "restitution coefficient": 1,
+            "rolling resistance coefficient": 0.0,
+            "sliding friction coefficient": 0.0,
+            "particle-particle contact": {
+                "poisson ratio": 0.342,
+                "youngs modulus": 26.25e6
+            }
+        }
+    },
+    "output": {
+        "directory": "./settling_output",
+        "do user defined postprocessing": true,
+        "write frequency": 100,
+        "paraview": {
+            "enable": true,
+            "filename": "settling_single_particle_pv",
+            "output subdomains": true
+        },
+        "particles": {
+            "enable": true,
+            "filename": "settling_single_particle"
+        }
+    },
+    "time stepping": {
+        "start time": 0,
+        "end time": 0.03,
+        "time step size": 1e-6
+    }
+}

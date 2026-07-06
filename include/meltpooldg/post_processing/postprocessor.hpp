@@ -57,6 +57,17 @@ namespace MeltPoolDG
             const number                                              time = -1.0);
 
     /**
+     * This function performs the relevant output steps related to particles, i.e. writing particle
+     * output files and printing boundary ids if requested.
+     *
+     * @param n_time_step Current time step number.
+     * @param time Current simulation time.
+     */
+    void
+    process_particles(const int n_time_step, const number time);
+
+
+    /**
      * Determines whether postprocessing should be performed now.
      */
     inline bool
@@ -73,8 +84,8 @@ namespace MeltPoolDG
     void
     serialize(Archive &ar, const unsigned int /*version*/)
     {
-      ar &vector_times_and_names;
-      ar &time_at_last_output;
+      ar & vector_times_and_names;
+      ar & time_at_last_output;
     }
 
     void
@@ -89,6 +100,9 @@ namespace MeltPoolDG
       obstacle_output.property_data_component_interpretation =
         property_data_component_interpretation;
     }
+
+    void
+    process_triangulation_partitioning(const unsigned int n_time_step, const number time);
 
   private:
     const MPI_Comm                    mpi_communicator;
@@ -113,6 +127,9 @@ namespace MeltPoolDG
 
     /// Times and filenames of previously written vector output
     std::vector<std::pair<number, std::string>> vector_times_and_names;
+
+    /// Times and filenames of previously written partitioning
+    std::vector<std::pair<number, std::string>> partitioning_times_and_names;
 
     /// Times and filenames of previously written particle output
     std::vector<std::pair<number, std::string>> particle_times_and_names;
