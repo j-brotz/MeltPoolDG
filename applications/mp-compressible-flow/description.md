@@ -1,3 +1,0 @@
-- multi-species compressible flow solver
-- high-order DG-FEM-based discretization
-- geometrically fitted and unfitted domain (CutDG)
