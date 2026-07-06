@@ -10,12 +10,12 @@
     "bounding box corner 1": "0, 0, 0",
     "bounding box corner 2": "2e-3, 2e-3, 2e-3",
     "n subdivisions": "2, 2, 2",
-    "max particle influence radius": 60e-6
+    "max particle influence radius": 6e-05
   },
   "time stepping": {
     "start time": 0.0,
     "end time": 0.03,
-    "time step size": 1e-6
+    "time step size": 1e-06
   },
   "output": {
     "directory": "/dss/lxclscratch/0B/ge37fof2/ge37fof2/output/settling_output",
@@ -46,7 +46,7 @@
       "sliding friction coefficient": 0.0,
       "particle-particle contact": {
         "poisson ratio": 0.342,
-        "youngs modulus": 26.25e6
+        "youngs modulus": 26250000.0
       }
     }
   }

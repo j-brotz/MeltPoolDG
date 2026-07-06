@@ -5,7 +5,7 @@
 
 #include <meltpooldg/core/base_data.hpp>
 #include <meltpooldg/core/parameters_base.hpp>
-#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/core/simulation_case_base.hpp>
 #include <meltpooldg/particles/contact_forces.hpp>
 #include <meltpooldg/particles/obstacle_data.hpp>
 #include <meltpooldg/post_processing/output_data.hpp>
@@ -14,6 +14,7 @@
 #include <meltpooldg/utilities/better_enum.hpp>
 #include <meltpooldg/utilities/profiling_data.hpp>
 #include <meltpooldg/utilities/restart.hpp>
+
 #include <memory>
 
 namespace MeltPoolDG
@@ -57,7 +58,7 @@ namespace MeltPoolDG
   class DemCase : public SimulationCaseBase<dim, number>
   {
   public:
-    DemCaseParameters<number> parameters;
+    DemCaseParameters<number>                                   parameters;
     std::vector<std::unique_ptr<dealii::Function<dim, number>>> walls;
 
     DemCase(const std::string &parameter_file_in, MPI_Comm mpi_communicator_in)

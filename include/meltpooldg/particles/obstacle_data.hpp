@@ -39,7 +39,7 @@ namespace MeltPoolDG
     SphericalParticleContactData<number> contact_forces;
 
     /// Gravity constant data defining the gravitational acceleration acting on all particles.
-    number gravity_constant;
+    number gravity_constant = 9.81;
 
     void
     add_parameters(dealii::ParameterHandler &prm)
@@ -52,9 +52,10 @@ namespace MeltPoolDG
         prm.add_parameter("obstacle state input file",
                           obstacle_state_input_file,
                           "File in which the obstacle initial state data is stored.");
-        prm.add_parameter("gravity constant", 
-                          gravity_constant, 
-                          "Gravity constant data defining the gravitational acceleration acting on all particles.");     
+        prm.add_parameter(
+          "gravity constant",
+          gravity_constant,
+          "Gravity constant data defining the gravitational acceleration acting on all particles.");
         prm.enter_subsection("amr");
         {
           prm.add_parameter(

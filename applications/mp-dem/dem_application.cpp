@@ -7,7 +7,7 @@
 
 #include <deal.II/grid/tria.h>
 
-#include <meltpooldg/core/simulation_base.hpp>
+#include <meltpooldg/core/simulation_case_base.hpp>
 #include <meltpooldg/particles/cohesive_forces.hpp>
 #include <meltpooldg/particles/contact_forces.hpp>
 #include <meltpooldg/particles/obstacle_data_structure.hpp>
@@ -61,8 +61,7 @@ namespace MeltPoolDG
         time_iterator->compute_next_time_increment();
         time_iterator->print_me(scratch_data->get_pcout(1));
 
-        obstacle_field->advance_time(time_iterator->get_current_time(),
-                                     time_iterator->get_current_time_increment());
+        obstacle_field->advance_time(time_iterator->get_current_time_increment());
 
         // do output if requested
         output_results(time_iterator->get_current_time_step_number(),
@@ -140,9 +139,7 @@ namespace MeltPoolDG
     const auto [property_names, property_component_interpretations] =
       SphericalParticle<dim, number>::get_property_names_and_component_interpretation();
 
-    post_processor->register_obstacle_output(&obstacle_field->get_particle_handler(),
-                                             property_names,
-                                             property_component_interpretations);
+    obstacle_field->register_particle_output(*post_processor);
 
     // initialize restart monitor
     restart_monitor =

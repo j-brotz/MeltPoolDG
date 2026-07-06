@@ -323,6 +323,15 @@ namespace MeltPoolDG
     typename dealii::Triangulation<dim>::active_cell_iterator
     get_surrounding_cell() const;
 
+    std::vector<number>
+    get_properties() const
+    {
+      std::vector<number> copied_properties;
+      copied_properties.reserve(properties.size());
+      std::copy(properties.begin(), properties.end(), properties.data());
+      return copied_properties;
+    }
+
   private:
     /// Reference to the particle location.
     std::reference_wrapper<dealii::Point<dim, number>> location;

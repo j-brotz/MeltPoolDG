@@ -286,7 +286,7 @@ namespace MeltPoolDG
       }
   }
 
- template <int dim, typename number>
+  template <int dim, typename number>
   void
   Postprocessor<dim, number>::process_triangulation_partitioning(const unsigned int n_time_step,
                                                                  const number       time)

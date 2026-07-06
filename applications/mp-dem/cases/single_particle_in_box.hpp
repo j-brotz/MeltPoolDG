@@ -11,7 +11,7 @@
 
 #include <deal.II/grid/grid_generator.h>
 
-//#include "meltpooldg/particles/particle.hpp"
+// #include "meltpooldg/particles/particle.hpp"
 #include <meltpooldg/particles/obstacle_data_structure.hpp>
 #include <meltpooldg/utilities/better_enum.hpp>
 
@@ -90,33 +90,29 @@ namespace MeltPoolDG::Simulation::Dem
      * the user input file.
      */
     bool
-    add_simulation_specific_parameters(dealii::ParameterHandler &prm) override
+    add_case_specific_parameters(dealii::ParameterHandler &prm) override
     {
-      prm.enter_subsection("case setup");
-      {
-        prm.add_parameter(
-          "bounding box corner 1",
-          bounding_box_corners.first,
-          "Phyiscal location of the first corner of the bounding box containing all particles (e.g. the lower left corner). The x, y, and z "
-          "coordinates are given at indices 0, 1, and 2, respectively.");
+      prm.add_parameter(
+        "bounding box corner 1",
+        bounding_box_corners.first,
+        "Phyiscal location of the first corner of the bounding box containing all particles (e.g. the lower left corner). The x, y, and z "
+        "coordinates are given at indices 0, 1, and 2, respectively.");
 
-        prm.add_parameter(
-          "bounding box corner 2",
-          bounding_box_corners.second,
-          "Phyiscal location of the second corner of the bounding box containing all particles (e.g. the upper right corner). The x, y, and z "
-          "coordinates are given at indices 0, 1, and 2, respectively.");
+      prm.add_parameter(
+        "bounding box corner 2",
+        bounding_box_corners.second,
+        "Phyiscal location of the second corner of the bounding box containing all particles (e.g. the upper right corner). The x, y, and z "
+        "coordinates are given at indices 0, 1, and 2, respectively.");
 
-        prm.add_parameter(
-          "max particle influence radius",
-          max_particle_influence_radius,
-          "Maximum influence radius of particles, used for determining the necessary mesh resolution.");
+      prm.add_parameter(
+        "max particle influence radius",
+        max_particle_influence_radius,
+        "Maximum influence radius of particles, used for determining the necessary mesh resolution.");
 
-        prm.add_parameter(
-          "n subdivisions",
-          n_subdivisions_per_dimension,
-          "Number of subdivisions in each dimension for the initial mesh. If this parameter is not provided, the mesh will be refined uniformly until the cell size is smaller than the maximum particle influence radius which is the optimal case for the particle search data structure. ");
-      }
-      prm.leave_subsection();
+      prm.add_parameter(
+        "n subdivisions",
+        n_subdivisions_per_dimension,
+        "Number of subdivisions in each dimension for the initial mesh. If this parameter is not provided, the mesh will be refined uniformly until the cell size is smaller than the maximum particle influence radius which is the optimal case for the particle search data structure. ");
 
       return this->parameters.base.do_print_parameters;
     }
@@ -126,7 +122,8 @@ namespace MeltPoolDG::Simulation::Dem
     /// and 2, respectively.
     std::pair<dealii::Point<dim, number>, dealii::Point<dim, number>> bounding_box_corners;
 
-    //std::array<std::unique_ptr<dealii::Functions::SignedDistance::Plane<dim>>, 2 * dim - 1> box_boundaries;
+    // std::array<std::unique_ptr<dealii::Functions::SignedDistance::Plane<dim>>, 2 * dim - 1>
+    // box_boundaries;
 
     std::vector<unsigned> n_subdivisions_per_dimension;
 
