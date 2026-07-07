@@ -3,10 +3,10 @@
 <br clear="left"/>
 <br clear="left"/>
 
-[![Indent](https://github.com/MeltPoolDG/MeltPoolDG-dev/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/MeltPoolDG/MeltPoolDG-dev/actions/workflows/indentation.yml)
-[![GitHub CI](https://github.com/MeltPoolDG/MeltPoolDG-dev/actions/workflows/nightly_tests.yml/badge.svg)](https://github.com/MeltPoolDG/MeltPoolDG-dev/actions/workflows/nightly_tests.yml)
-[![Nightly Install](https://github.com/MeltPoolDG/MeltPoolDG-dev/actions/workflows/nightly_install.yml/badge.svg)](https://github.com/MeltPoolDG/MeltPoolDG-dev/actions/workflows/nightly_install.yml)
-[![Documentation](https://github.com/MeltPoolDG/MeltPoolDG-dev/actions/workflows/deploy.yml/badge.svg)](https://github.com/MeltPoolDG/MeltPoolDG-dev/actions/workflows/deploy.yml)
+[![Indent](https://github.com/MeltPoolDG/MeltPoolDG/actions/workflows/pre-commit.yml/badge.svg)](https://github.com/MeltPoolDG/MeltPoolDG/actions/workflows/indentation.yml)
+[![GitHub CI](https://github.com/MeltPoolDG/MeltPoolDG/actions/workflows/nightly_tests.yml/badge.svg)](https://github.com/MeltPoolDG/MeltPoolDG/actions/workflows/nightly_tests.yml)
+[![Nightly Install](https://github.com/MeltPoolDG/MeltPoolDG/actions/workflows/nightly_install.yml/badge.svg)](https://github.com/MeltPoolDG/MeltPoolDG/actions/workflows/nightly_install.yml)
+[![Documentation](https://github.com/MeltPoolDG/MeltPoolDG/actions/workflows/deploy.yml/badge.svg)](https://github.com/MeltPoolDG/MeltPoolDG/actions/workflows/deploy.yml)
 
 **MeltPoolDG** is an open-source, research-driven simulation software for **high-fidelity metal additive manufacturing**. It predicts the coupled **powder–melt–gas dynamics** occurring in processes such as **laser powder bed fusion (LPBF)** and **binder jetting**, aiming for the detailed simulations of melting, solidification, evaporation, recoil pressure, capillary effects, powder transport, and multiphase thermo-fluid–structure-contact interactions.
 
@@ -45,11 +45,11 @@ https://meltpooldg.github.io/MeltPoolDG/installation.html
 ## Contributing
 
 If you're interested in contributing to MeltPoolDG, we welcome your collaboration.
-Please follow [our contributing guidelines](https://github.com/MeltPoolDG/MeltPoolDG-dev/blob/main/CONTRIBUTING.md)
-and [Code of Conduct](https://github.com/MeltPoolDG/MeltPoolDG-dev/blob/main/CODE_OF_CONDUCT.md).
+Please follow [our contributing guidelines](https://github.com/MeltPoolDG/MeltPoolDG/blob/main/CONTRIBUTING.md)
+and [Code of Conduct](https://github.com/MeltPoolDG/MeltPoolDG/blob/main/CODE_OF_CONDUCT.md).
 
 If you need help with MeltPoolDG, feel free to ask questions, either via a discussion on GitHub or write directly to magdalena.schreter@tum.de.
 
 ## License
 
-see the [LICENSE](https://github.com/MeltPoolDG/MeltPoolDG-dev/blob/main/LICENSE.md) file.
+see the [LICENSE](https://github.com/MeltPoolDG/MeltPoolDG/blob/main/LICENSE.md) file.
