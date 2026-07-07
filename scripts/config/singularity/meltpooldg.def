@@ -67,8 +67,8 @@ From: ubuntu:22.04
     #--------------------------------------
     # install MeltPoolDG
     #--------------------------------------
-    git clone https://github.com/MeltPoolDG/MeltPoolDG-dev
-    mpDir=$pwd/MeltPoolDG-dev
+    git clone https://github.com/MeltPoolDG/MeltPoolDG
+    mpDir=$pwd/MeltPoolDG
     echo "Install MeltPoolDG into $mpDir"
 
     # install dependencies

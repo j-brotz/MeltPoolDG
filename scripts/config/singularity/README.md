@@ -1,6 +1,6 @@
 # Build a Singularity container of MeltPoolDG
 
-This projects provides the utilities for creating a Singularity container of the current master of [MeltPoolDG](https://github.com/MeltPoolDG/MeltPoolDG-dev) with all its dependencies.
+This projects provides the utilities for creating a Singularity container of the current master of [MeltPoolDG](https://github.com/MeltPoolDG/MeltPoolDG) with all its dependencies.
 
 ## Installation
 
