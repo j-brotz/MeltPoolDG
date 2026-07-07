@@ -319,33 +319,35 @@ namespace MeltPoolDG
       std::make_unique<dealii::Functions::SignedDistance::Plane<dim>>(dealii::Point<dim>(),
                                                                       ground_wall_normal));
 
-    if constexpr (dim == 3)
-      {
-        // TODO: Remove, this is hardcoded
-        // walls in x direction
-        dealii::Tensor<1, dim, number> x0_wall_normal;
-        ground_wall_normal[0] = 1.;
-        contact_force.attach_wall(
-          std::make_unique<dealii::Functions::SignedDistance::Plane<dim>>(dealii::Point<dim>(),
-                                                                          x0_wall_normal));
+    /*
+if constexpr (dim == 3)
+{
+// TODO: Remove, this is hardcoded
+// walls in x direction
+dealii::Tensor<1, dim, number> x0_wall_normal;
+ground_wall_normal[0] = 1.;
+contact_force.attach_wall(
+std::make_unique<dealii::Functions::SignedDistance::Plane<dim>>(dealii::Point<dim>(),
+        x0_wall_normal));
 
-        dealii::Tensor<1, dim, number> x1_wall_normal;
-        x1_wall_normal[0] = -1.;
-        contact_force.attach_wall(std::make_unique<dealii::Functions::SignedDistance::Plane<dim>>(
-          dealii::Point<dim>({1000e-6, 0., 0.}), x1_wall_normal));
+dealii::Tensor<1, dim, number> x1_wall_normal;
+x1_wall_normal[0] = -1.;
+contact_force.attach_wall(std::make_unique<dealii::Functions::SignedDistance::Plane<dim>>(
+dealii::Point<dim>({1000e-6, 0., 0.}), x1_wall_normal));
 
-        // walls in x direction
-        dealii::Tensor<1, dim, number> y0_wall_normal;
-        ground_wall_normal[1] = 1.;
-        contact_force.attach_wall(
-          std::make_unique<dealii::Functions::SignedDistance::Plane<dim>>(dealii::Point<dim>(),
-                                                                          y0_wall_normal));
+// walls in x direction
+dealii::Tensor<1, dim, number> y0_wall_normal;
+ground_wall_normal[1] = 1.;
+contact_force.attach_wall(
+std::make_unique<dealii::Functions::SignedDistance::Plane<dim>>(dealii::Point<dim>(),
+        y0_wall_normal));
 
-        dealii::Tensor<1, dim, number> y1_wall_normal;
-        y1_wall_normal[1] = -1.;
-        contact_force.attach_wall(std::make_unique<dealii::Functions::SignedDistance::Plane<dim>>(
-          dealii::Point<dim>({0., 1000e-6, 0.}), y1_wall_normal));
-      }
+dealii::Tensor<1, dim, number> y1_wall_normal;
+y1_wall_normal[1] = -1.;
+contact_force.attach_wall(std::make_unique<dealii::Functions::SignedDistance::Plane<dim>>(
+dealii::Point<dim>({0., 1000e-6, 0.}), y1_wall_normal));
+}
+*/
 
 
 
