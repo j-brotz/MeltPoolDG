@@ -6,7 +6,7 @@
 
 Clone the repository via:
 ```bash
-git clone git@github.com:MeltPoolDG/MeltPoolDG-dev.git
+git clone git@github.com:MeltPoolDG/MeltPoolDG.git
 ```
 
 ### Installation of CMake
@@ -35,7 +35,7 @@ export PATH="$PATH:path_to_dealii/dealii/contrib/utilities/programs/clang-16/bin
 ## Full installation of MeltPoolDG including dependencies (recommended)
 To install MeltPoolDG along with its dependencies, simply run:
 ```bash
-cd MeltPoolDG-dev
+cd MeltPoolDG
 bash scripts/config/install.sh
 ```
 Follow the command-line instructions. By default, the following directory tree will be created:
@@ -48,11 +48,11 @@ external_libs/
 │  ├─ build_release/
 │  ├─ build_debug/
 │  ├─ include/
-MeltPoolDG-dev/
+MeltPoolDG/
 ├─ build_debug/
 ├─ build_release/
 ```
-MeltPoolDG is compiled in release mode in `MeltPoolDG-dev/build_release` and in debug mode in `MeltPoolDG-dev/build_debug`.
+MeltPoolDG is compiled in release mode in `MeltPoolDG/build_release` and in debug mode in `MeltPoolDG/build_debug`.
 
 ## Manual installation
 
@@ -67,7 +67,7 @@ cd external_libs
 Then, run the installation script with the desired number of processes and build configuration (`Debug`, `Release` or `DebugRelease` [default]):
 ```bash
 # install the dependencies with 8 processes and DebugRelease configuration
-bash path_to_meltpooldg/MeltPoolDG-dev/scripts/config/download_and_install_dependencies.sh 8 DebugRelease
+bash path_to_meltpooldg/MeltPoolDG/scripts/config/download_and_install_dependencies.sh 8 DebugRelease
 ```
 ### Building MeltPoolDG
 
@@ -75,14 +75,14 @@ Once all dependencies are installed (e.g. in `external_libs`), MeltPoolDG can be
 
 ```bash
 # build MeltPoolDG with 8 processes in DebugRelease configuration and create the build folders insource, indicated by the last argument
-cd path_to_meltpooldg/MeltPoolDG-dev
+cd path_to_meltpooldg/MeltPoolDG
 scripts/config/install_meltpooldg.sh 8 external_libs/dealii-build external_libs/adaflo/include external_libs/adaflo/build_release DebugRelease .
 ```
 Alternatively, you can manually configure and build the project using CMake.
 Create a build directory and configure CMake:
 
 ```bash
-cd path_to_meltpooldg/MeltPoolDG-dev
+cd path_to_meltpooldg/MeltPoolDG
 mkdir build
 cd build
 cmake \

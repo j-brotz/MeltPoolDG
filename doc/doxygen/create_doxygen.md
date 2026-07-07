@@ -2,7 +2,7 @@
 
 Go to the root path of the repo e.g.
 ```sh
-cd MeltPoolDG-dev
+cd MeltPoolDG
 ```
 and execute
 ```sh

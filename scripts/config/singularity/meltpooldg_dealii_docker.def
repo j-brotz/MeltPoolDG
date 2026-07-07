@@ -54,8 +54,8 @@ From: dealii/dealii:master-focal
   # meltpooldg
   #-------------------------------------- 
   cd /
-  git clone https://github.com/MeltPoolDG/MeltPoolDG-dev
-  cd MeltPoolDG-dev
+  git clone https://github.com/MeltPoolDG/MeltPoolDG
+  cd MeltPoolDG
   mkdir -p build
   cd build
   rm -rf CMakeFiles/ CMakeCache.txt || true
@@ -63,5 +63,5 @@ From: dealii/dealii:master-focal
   make release
   make -j$MAKE_JOBS
   # make a symbolic link --> @todo: this should be replaced by make install
-  ln -s /MeltPoolDG-dev/build/meltpooldg /usr/bin/meltpooldg
+  ln -s /MeltPoolDG/build/meltpooldg /usr/bin/meltpooldg
 

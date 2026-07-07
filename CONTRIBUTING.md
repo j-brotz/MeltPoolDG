@@ -8,7 +8,7 @@ This document outlines the guidelines for contributing to MeltPoolDG.
 ## How can I contribute?
 
 Contributions to MeltPoolDG should be submitted through *pull requests* on the project's
-[official GitHub repository](https://github.com/MeltPoolDG/MeltPoolDG-dev).
+[official GitHub repository](https://github.com/MeltPoolDG/MeltPoolDG).
 We recommend creating a personal *fork* of the repository and developing changes on a dedicated *branch*.
 Once your work is ready, you can propose its inclusion in the main code base by opening a pull request,
 allowing other developers to review and discuss the proposed changes.
@@ -35,7 +35,7 @@ and contributors should follow our
 ## Bug reports
 Reporting bugs is a valuable way to contribute to the further development of MeltPoolDG.
 We keep track of all open issues with the library
-[here](https://github.com/MeltPoolDG/MeltPoolDG-dev/issues). If you encounter a bug, please create an issue and,
+[here](https://github.com/MeltPoolDG/MeltPoolDG/issues). If you encounter a bug, please create an issue and,
 whenever possible, include a minimal reproducible example that demonstrates the problem.
 This greatly helps the developers investigate and resolve the issue efficiently.
 
