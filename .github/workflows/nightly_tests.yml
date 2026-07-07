@@ -10,7 +10,7 @@ concurrency:
 
 env:
   COMPILE_JOBS: 4
-  PROJECT_NAME: MeltPoolDG-dev
+  PROJECT_NAME: MeltPoolDG
 
 jobs:
   build:
@@ -58,7 +58,7 @@ jobs:
           # Add github.com to known hosts to avoid host verification issues
           mkdir -p ~/.ssh
           ssh-keyscan -t rsa github.com >> /root/.ssh/known_hosts
-          git config --global --add safe.directory /__w/MeltPoolDG-dev/MeltPoolDG-dev
+          git config --global --add safe.directory /__w/MeltPoolDG/MeltPoolDG
           git clone git@github.com:tum-sam/applications-dev.git
           mkdir build
           cd build
