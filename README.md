@@ -7,6 +7,7 @@
 [![GitHub CI](https://github.com/MeltPoolDG/MeltPoolDG/actions/workflows/nightly_tests.yml/badge.svg)](https://github.com/MeltPoolDG/MeltPoolDG/actions/workflows/nightly_tests.yml)
 [![Nightly Install](https://github.com/MeltPoolDG/MeltPoolDG/actions/workflows/nightly_install.yml/badge.svg)](https://github.com/MeltPoolDG/MeltPoolDG/actions/workflows/nightly_install.yml)
 [![Documentation](https://github.com/MeltPoolDG/MeltPoolDG/actions/workflows/deploy.yml/badge.svg)](https://github.com/MeltPoolDG/MeltPoolDG/actions/workflows/deploy.yml)
+[![Docker Image](https://img.shields.io/badge/docker-ghcr.io-blue?logo=docker)](https://ghcr.io/meltpooldg/meltpooldg)
 
 **MeltPoolDG** is an open-source, research-driven simulation software for **high-fidelity metal additive manufacturing**. It predicts the coupled **powder–melt–gas dynamics** occurring in processes such as **laser powder bed fusion (LPBF)** and **binder jetting**, aiming for the detailed simulations of melting, solidification, evaporation, recoil pressure, capillary effects, powder transport, and multiphase thermo-fluid–structure-contact interactions.
 
