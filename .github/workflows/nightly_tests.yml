@@ -35,6 +35,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup SSH Keys
+        uses: webfactory/ssh-agent@v0.10.0
+        with:
+          ssh-private-key: ${{ secrets.APPLICATION_DEV_PRIVATE_KEY }}
+
       - name: Compile adaflo
         if: matrix.adaflo == 'adaflo=on'
         run: |
@@ -50,6 +55,11 @@ jobs:
 
       - name: Compile MeltPoolDG
         run: |
+          # Add github.com to known hosts to avoid host verification issues
+          mkdir -p ~/.ssh
+          ssh-keyscan -t rsa github.com >> /root/.ssh/known_hosts
+          git config --global --add safe.directory /__w/MeltPoolDG-dev/MeltPoolDG-dev
+          git clone git@github.com:tum-sam/applications-dev.git
           mkdir build
           cd build
           cmake \
