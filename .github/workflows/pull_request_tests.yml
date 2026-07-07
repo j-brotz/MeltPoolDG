@@ -2,7 +2,7 @@ name: Pull request run of GitHub CI
 
 on:
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
     types: [ opened, synchronize, reopened, labeled ]
 
 concurrency:
@@ -11,14 +11,14 @@ concurrency:
 
 env:
   COMPILE_JOBS: 4
-  PROJECT_NAME: MeltPoolDG-dev
+  PROJECT_NAME: MeltPoolDG
   CTEST_COMMAND: ctest
 
 jobs:
   build:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'ready to test') }}
     name: Build ${{ matrix.build_type }}-dealii:${{ matrix.dealii_version }}-${{ matrix.adaflo }}
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
@@ -107,7 +107,7 @@ jobs:
 
   clean:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'ready to test') }}
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     env:
       ACTIONS_RUNNER_DEBUG: true
       ACTIONS_STEP_DEBUG: true
