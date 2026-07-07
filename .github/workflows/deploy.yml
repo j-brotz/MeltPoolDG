@@ -3,7 +3,7 @@ name: Publish doc to GitHub Pages
 on:
   push:
     branches:
-      - master
+      - main
 
 # Cancels running instances when a pull request is updated by a commit
 concurrency:
@@ -50,7 +50,5 @@ jobs:
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
-          deploy_key: ${{ secrets.PRIVATE_KEY }}
-          external_repository: MeltPoolDG/MeltPoolDG
           publish_branch: gh-pages
           publish_dir: doc/deploy
