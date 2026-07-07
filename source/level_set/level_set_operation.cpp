@@ -16,6 +16,7 @@
 #include <meltpooldg/level_set/curvature_operation_adaflo_wrapper.hpp>
 #include <meltpooldg/level_set/level_set_tools.hpp>
 #include <meltpooldg/level_set/nearest_point.hpp>
+#include <meltpooldg/level_set/reinitialization_elliptic_operation.hpp>
 #include <meltpooldg/level_set/reinitialization_geometric_operation.hpp>
 #include <meltpooldg/level_set/reinitialization_hyperbolic_CG_operation.hpp>
 #include <meltpooldg/level_set/reinitialization_olsson_operation_adaflo_wrapper.hpp>
@@ -24,7 +25,6 @@
 #include <meltpooldg/utilities/dof_monitor.hpp>
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
-
 
 namespace MeltPoolDG::LevelSet
 {
@@ -138,6 +138,11 @@ namespace MeltPoolDG::LevelSet
             reinit_operation = std::make_shared<ReinitializationGeometricOperation<dim, number>>(
               scratch_data, ls.reinit, ls_dof_idx, ls_quad_idx_in);
           }
+        else if (ls.reinit.modeltype == LevelSet::ModelType::elliptic)
+          {
+            reinit_operation = std::make_shared<ReinitializationEllipticOperation<dim, number>>(
+              scratch_data, ls.reinit, reinit_dof_idx_in, ls_quad_idx_in, ls_dof_idx);
+          }
         else
           AssertThrow(false, ExcNotImplemented());
       }
@@ -241,12 +246,22 @@ namespace MeltPoolDG::LevelSet
                                          initial_field_function,
                                          distance_to_level_set);
 
-        // transform distance to level set function
-        transform_distance_to_level_set();
+        // elliptic reinit operates on pure signed distance and does not require a tanh field
+        if (not dynamic_cast<ReinitializationEllipticOperation<dim, number> *>(
+              reinit_operation.get()))
+          {
+            transform_distance_to_level_set();
+          }
       }
     // do reinitialization of the initial field only if it is not a signed distance function
     else
       {
+        if (dynamic_cast<ReinitializationEllipticOperation<dim, number> *>(reinit_operation.get()))
+          AssertThrow(
+            false,
+            ExcMessage(
+              "Elliptic reinit can only be used with a signed distance function as input."));
+
         if (reinit_operation)
           {
             reinit_time_iterator.reset_max_n_time_steps(
@@ -568,13 +583,20 @@ namespace MeltPoolDG::LevelSet
             Journal::print_line(scratch_data.get_pcout(1), str.str(), "reinitialization", 2);
           }
       }
-    else
+    else if (dynamic_cast<ReinitializationEllipticOperation<dim, number> *>(
+               reinit_operation.get()) or
+             dynamic_cast<ReinitializationGeometricOperation<dim, number> *>(
+               reinit_operation.get()))
       {
         reinit_operation->set_initial_condition(get_level_set());
         reinit_operation->solve();
 
         // reset the solution of the level set field to the reinitialized solution ...
         get_level_set().copy_locally_owned_data_from(reinit_operation->get_level_set());
+      }
+    else
+      {
+        AssertThrow(false, ExcNotImplemented());
       }
 
     // update ghost values of reinitialized solution
@@ -664,39 +686,77 @@ namespace MeltPoolDG::LevelSet
 
     std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
 
-    for (const auto &cell :
-         scratch_data.get_dof_handler(ls_hanging_nodes_dof_idx).active_cell_iterators())
-      if (cell->is_locally_owned())
-        {
-          cell->get_dof_indices(local_dof_indices);
+    if (dynamic_cast<ReinitializationEllipticOperation<dim, number> *>(reinit_operation.get()))
+      {
+        for (const auto &cell :
+             scratch_data.get_dof_handler(ls_hanging_nodes_dof_idx).active_cell_iterators())
+          {
+            if (not cell->is_locally_owned())
+              continue;
 
-          const number epsilon_cell =
-            level_set_data.reinit.compute_interface_thickness_parameter_epsilon(
-              cell->diameter() / std::sqrt(dim) / level_set_data.get_n_subdivisions());
+            cell->get_dof_indices(local_dof_indices);
 
-          for (unsigned int i = 0; i < dofs_per_cell; ++i)
-            {
-              distance_to_level_set(local_dof_indices[i]) =
-                LevelSet::Tools::approximate_distance_from_tanh_level_set(
-                  get_level_set()[local_dof_indices[i]],
-                  epsilon_cell,
-                  std::tanh(4) /*cut off value*/);
+            const number epsilon_cell =
+              level_set_data.reinit.compute_interface_thickness_parameter_epsilon(
+                cell->diameter() / std::sqrt(dim) / level_set_data.get_n_subdivisions());
 
-              if (level_set_data.do_localized_heaviside)
-                {
-                  const number distance = LevelSet::Tools::approximate_distance_from_tanh_level_set(
+            for (unsigned int i = 0; i < dofs_per_cell; ++i)
+              {
+                distance_to_level_set(local_dof_indices[i]) = get_level_set()[local_dof_indices[i]];
+
+                if (level_set_data.do_localized_heaviside)
+                  {
+                    level_set_as_heaviside(local_dof_indices[i]) =
+                      smooth_heaviside_from_distance_value(
+                        2 * get_level_set()[local_dof_indices[i]] / (3 * epsilon_cell));
+                  }
+                else
+                  AssertThrow(
+                    false,
+                    ExcMessage("Elliptic reinit entered non-localized heaviside function branch."));
+              }
+          }
+      }
+    else
+      {
+        for (const auto &cell :
+             scratch_data.get_dof_handler(ls_hanging_nodes_dof_idx).active_cell_iterators())
+          {
+            if (not cell->is_locally_owned())
+              continue;
+
+            cell->get_dof_indices(local_dof_indices);
+
+            const number epsilon_cell =
+              level_set_data.reinit.compute_interface_thickness_parameter_epsilon(
+                cell->diameter() / std::sqrt(dim) / level_set_data.get_n_subdivisions());
+
+            for (unsigned int i = 0; i < dofs_per_cell; ++i)
+              {
+                distance_to_level_set(local_dof_indices[i]) =
+                  LevelSet::Tools::approximate_distance_from_tanh_level_set(
                     get_level_set()[local_dof_indices[i]],
                     epsilon_cell,
-                    std::tanh(2) /*cut off value*/);
+                    std::tanh(4) /*cut off value*/);
 
+                if (level_set_data.do_localized_heaviside)
+                  {
+                    const number distance =
+                      LevelSet::Tools::approximate_distance_from_tanh_level_set(
+                        get_level_set()[local_dof_indices[i]],
+                        epsilon_cell,
+                        std::tanh(2) /*cut off value*/);
+
+                    level_set_as_heaviside(local_dof_indices[i]) =
+                      smooth_heaviside_from_distance_value(2 * distance / (3 * epsilon_cell));
+                  }
+                else
                   level_set_as_heaviside(local_dof_indices[i]) =
-                    smooth_heaviside_from_distance_value(2 * distance / (3 * epsilon_cell));
-                }
-              else
-                level_set_as_heaviside(local_dof_indices[i]) =
-                  (get_level_set()(local_dof_indices[i]) + 1.) * 0.5;
-            }
-        }
+                    (get_level_set()(local_dof_indices[i]) + 1.) * 0.5;
+              }
+          }
+      }
+
     scratch_data.get_constraint(ls_hanging_nodes_dof_idx).distribute(level_set_as_heaviside);
     scratch_data.get_constraint(ls_hanging_nodes_dof_idx).distribute(distance_to_level_set);
 

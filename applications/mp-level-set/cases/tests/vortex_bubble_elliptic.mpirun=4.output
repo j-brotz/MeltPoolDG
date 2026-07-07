@@ -1,0 +1,51 @@
+| || normal_0 ||L2 = 6.71410178058e-01                                               normal_vector |
+| || normal_1 ||L2 = 7.26117470612e-01                                               normal_vector |
+| || curvature ||L2 = 4.42605293577e+00                                                  curvature |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 1      t = 0.0000e+00 to 1.0000e-02 ( dt = 1.0000e-02 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| || advected field ||L2 = 3.4726366717e-01                                    advection_diffusion |
+| || |Δψ|/|ψ^n| ||L2  = 5.53597845e-05                                           reinitialization |
+| Reinitialization completed in 10 iterations.                                    reinitialization |
+| || normal_0 ||L2 = 6.72246861055e-01                                               normal_vector |
+| || normal_1 ||L2 = 7.26031051308e-01                                               normal_vector |
+| || curvature ||L2 = 4.42885533638e+00                                                  curvature |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 2      t = 1.0000e-02 to 2.0000e-02 ( dt = 1.0000e-02 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| || advected field ||L2 = 3.4742227617e-01                                    advection_diffusion |
+| || |Δψ|/|ψ^n| ||L2  = 6.86994330e-05                                           reinitialization |
+| Reinitialization completed in 10 iterations.                                    reinitialization |
+| || normal_0 ||L2 = 6.73484625822e-01                                               normal_vector |
+| || normal_1 ||L2 = 7.24749751190e-01                                               normal_vector |
+| || curvature ||L2 = 4.43023838289e+00                                                  curvature |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 3      t = 2.0000e-02 to 3.0000e-02 ( dt = 1.0000e-02 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| || advected field ||L2 = 3.4737580741e-01                                    advection_diffusion |
+| || |Δψ|/|ψ^n| ||L2  = 1.05589267e-04                                           reinitialization |
+| Reinitialization completed in 10 iterations.                                    reinitialization |
+| || normal_0 ||L2 = 6.76220384936e-01                                               normal_vector |
+| || normal_1 ||L2 = 7.22116306311e-01                                               normal_vector |
+| || curvature ||L2 = 4.43040274681e+00                                                  curvature |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 4      t = 3.0000e-02 to 4.0000e-02 ( dt = 1.0000e-02 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| || advected field ||L2 = 3.4734780352e-01                                    advection_diffusion |
+| || |Δψ|/|ψ^n| ||L2  = 8.68414030e-05                                           reinitialization |
+| Reinitialization completed in 10 iterations.                                    reinitialization |
+| || normal_0 ||L2 = 6.78994194141e-01                                               normal_vector |
+| || normal_1 ||L2 = 7.19320413752e-01                                               normal_vector |
+| || curvature ||L2 = 4.43192212099e+00                                                  curvature |
++--------------------------------------------------------------------------------------------------+
+|  Time increment # 5      t = 4.0000e-02 to 5.0000e-02 ( dt = 1.0000e-02 )          time_iterator |
++--------------------------------------------------------------------------------------------------+
+| || advected field ||L2 = 3.4724559519e-01                                    advection_diffusion |
+| || |Δψ|/|ψ^n| ||L2  = 1.00875014e-04                                           reinitialization |
+| Reinitialization completed in 10 iterations.                                    reinitialization |
+| || normal_0 ||L2 = 6.82247247379e-01                                               normal_vector |
+| || normal_1 ||L2 = 7.15860461244e-01                                               normal_vector |
+| || curvature ||L2 = 4.43659881916e+00                                                  curvature |
++--------------------------------------------------------------------------------------------------+
+|  end of simulation                                                                               |
++--------------------------------------------------------------------------------------------------+
