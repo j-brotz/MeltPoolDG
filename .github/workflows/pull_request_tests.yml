@@ -17,7 +17,7 @@ env:
 jobs:
   build:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'ready to test') }}
-    name: Build ${{ matrix.build_type }}-dealii:${{ matrix.dealii_version }}-${{ matrix.adaflo }}
+    name: Build ${{ matrix.build_type }}-dealii:${{ matrix.dealii_version }}
     runs-on: self-hosted
 
     strategy:
@@ -32,35 +32,35 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
       - name: Determine filters for ctest
         id: test_command
         run: |
-          # Save GitHub labels JSON to a variable
-          LABELS_JSON='${{ toJson(github.event.pull_request.labels) }}'
+          LABELS_JSON=$(cat <<'EOF'
+          ${{ toJson(github.event.pull_request.labels) }}
+          EOF
+          )
 
-          # Extract label names
-          LABELS=$(echo "$LABELS_JSON" | grep -o '"name": "[^"]*"' | cut -d':' -f2 | tr -d '"')
+          LABELS=$(echo "$LABELS_JSON" | grep -o '"name": "[^"]*"' | cut -d':' -f2 | tr -d '" ')
           echo "Labels found: $LABELS"
 
           TEST_FILTER=""
           for LABEL in mp-advec-diff mp-heat-transfer mp-radiative-transport mp-reinit mp-level-set mp-melt-pool unit_tests; do
-            if echo "$LABELS" | grep -q "$LABEL"; then
+            if echo "$LABELS" | grep -qx "$LABEL"; then
               TEST_FILTER="${TEST_FILTER}${LABEL}|"
             fi
           done
 
-          # Remove trailing '|'
           TEST_FILTER=${TEST_FILTER%|}
-          # Construct the final CTEST_COMMAND
-          if [ -z ${TEST_FILTER} ] ; then
+
+          if [ -z "$TEST_FILTER" ]; then
             FINAL_CTEST_COMMAND="${{ env.CTEST_COMMAND }}"
           else
-            FINAL_CTEST_COMMAND="${{ env.CTEST_COMMAND }} -R \"${TEST_FILTER}\""
+            FINAL_CTEST_COMMAND="${{ env.CTEST_COMMAND }} -R ${TEST_FILTER}"
           fi
-          echo "CTest command: $FINAL_CTEST_COMMAND"
 
-          # Save the new command into the environment variable
-          echo "CTEST_COMMAND=$FINAL_CTEST_COMMAND" >> $GITHUB_ENV
+          echo "CTest command: $FINAL_CTEST_COMMAND"
+          echo "CTEST_COMMAND=$FINAL_CTEST_COMMAND" >> "$GITHUB_ENV"
 
       - name: Compile adaflo
         if: ${{ !contains(github.event.pull_request.labels.*.name, 'no_adaflo') }}
@@ -95,7 +95,7 @@ jobs:
           export OMPI_ALLOW_RUN_AS_ROOT=1
           export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
           cd build
-          ${{ env.CTEST_COMMAND }} -j${{ env.COMPILE_JOBS }} --output-on-failure
+          $CTEST_COMMAND -j${{ env.COMPILE_JOBS }} --output-on-failure
 
       - name: Failed test log
         if: ${{ failure() }}
@@ -103,7 +103,7 @@ jobs:
         with:
           name: test-log
           path: |
-              build/**/{tests,unit_tests}/**/*{stdout,output}*
+            build/**/{tests,unit_tests}/**/*{stdout,output}*
 
   clean:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'ready to test') }}
