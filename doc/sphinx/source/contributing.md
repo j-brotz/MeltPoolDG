@@ -31,12 +31,12 @@ Now, you are ready to start contributing!
 
 ## Making Changes and Pushing to the Repository
 
-### Get the Latest `master` Branch
+### Get the Latest `main` Branch
 
 Before making changes, ensure your local branch is up to date with the original repository (see **[Useful GIT commands](#-useful-git-commands)** section):
 ```bash
 git fetch upstream
-git rebase upstream/master
+git rebase upstream/main
 ```
 ### Create a New Branch
 
@@ -171,9 +171,9 @@ pre-commit install
 
 ---
 ## Useful GIT commands
-### Rebasing Your Branch onto the Latest `master`
+### Rebasing Your Branch onto the Latest `main`
 
-If you're working on `my_branch` and need to update it with the latest `master`, follow these steps.
+If you're working on `my_branch` and need to update it with the latest `main`, follow these steps.
 
 ⚠ **Warning:** If you are unfamiliar with rebasing, create a backup before proceeding.
 
@@ -192,7 +192,7 @@ If you're working on `my_branch` and need to update it with the latest `master`,
    ```
 4. Start the rebase process:
    ```bash
-   git rebase -i origin/master
+   git rebase -i origin/main
    ```
 5. If there are **no conflicts**, force-push the rebased branch:
    ```bash
