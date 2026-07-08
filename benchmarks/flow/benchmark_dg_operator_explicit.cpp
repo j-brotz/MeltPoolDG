@@ -7,6 +7,7 @@
  */
 
 #include <deal.II/base/function.h>
+#include <deal.II/base/mpi.h>
 #include <deal.II/base/point.h>
 
 #include <deal.II/distributed/tria.h>
@@ -408,7 +409,11 @@ namespace
   {
     // Create the obstacle field with the specified number of particles.
     ObstacleData<number> obstacle_data;
-    auto [particle_locations, particle_properties] = define_particles(state.range(0));
+    auto [particle_locations, particle_properties] =
+      dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0 ?
+        define_particles(state.range(0)) :
+        std::make_pair(std::vector<dealii::Point<dim, number>>(),
+                       std::vector<std::vector<number>>());
     ObstacleField<dim, number, SphericalParticle<dim, number>> obstacle_field(
       obstacle_data,
       this->data->triangulation,
