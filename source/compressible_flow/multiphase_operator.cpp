@@ -136,10 +136,10 @@ namespace MeltPoolDG::Multiphase
   template <int dim, typename number, bool is_viscous_gas, bool is_viscous_liquid>
   void
   CompressibleMultiphaseOperator<dim, number, is_viscous_gas, is_viscous_liquid>::
-    local_apply_cell_rhs(const dealii::MatrixFree<dim, number> &matrix_free,
-                         VectorType                            &dst,
-                         const VectorType                      &src,
-                         const std::pair<unsigned, unsigned>   &cell_range) const
+    local_apply_cell_rhs(const dealii::MatrixFree<dim, number> &,
+                         VectorType                          &dst,
+                         const VectorType                    &src,
+                         const std::pair<unsigned, unsigned> &cell_range) const
   {
     const auto cell_category =
       multiphase_scratch_data.scratch_data.get_cell_range_category(cell_range);
