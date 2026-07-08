@@ -72,6 +72,10 @@ namespace MeltPoolDG::Evaporation
                 compute_evaporative_cooling_derivative_with_temperature_dependent_mass_flux(
                   material_data.boiling_temperature);
           }
+        else
+          {
+            activation_temperature = evapor_data.evaporative_cooling.activation_temperature;
+          }
 
         if (ramp_enabled)
           {

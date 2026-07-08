@@ -41,7 +41,7 @@ main()
 
     std::cout << "With activation ramp" << std::endl;
 
-    for (const auto T : {T_ac - 10.0, T_ac, 0.5 * (T_ac + T_v), T_v, T_v + 10.0})
+    for (const auto T : {T_ac - 10.0, T_ac + 0.01, 0.5 * (T_ac + T_v), T_v, T_v + 10.0})
       std::cout << "T = " << T
                 << ", evaporative cooling = " << evaporative_cooling.compute_evaporative_cooling(T)
                 << ", derivative = "
@@ -57,7 +57,7 @@ main()
 
     std::cout << "\nWithout activation ramp" << std::endl;
 
-    for (const auto T : {T_ac - 10.0, T_ac, 0.5 * (T_ac + T_v), T_v, T_v + 10.0})
+    for (const auto T : {T_ac - 10.0, T_ac + 0.01, 0.5 * (T_ac + T_v), T_v, T_v + 10.0})
       std::cout << "T = " << T << ", evaporative cooling = "
                 << evaporative_cooling_no_ramp.compute_evaporative_cooling(T) << ", derivative = "
                 << evaporative_cooling_no_ramp
