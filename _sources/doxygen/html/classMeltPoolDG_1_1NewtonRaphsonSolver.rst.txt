@@ -1,0 +1,14 @@
+.. meta::a2fa95a073420bc737d36db34bb479a5c1218379de1e4db91dc0c1127e04286ec83384496bdcfd04ecee1913f76ea1d3123de980c92aad9336ceb1c135165864
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::NewtonRaphsonSolver&lt; number, VectorType &gt; Class Template Reference
+
+NewtonRaphsonSolver&lt; number, VectorType &gt; Class Template Reference
+========================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: classMeltPoolDG_1_1NewtonRaphsonSolver.html

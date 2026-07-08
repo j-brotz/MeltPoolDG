@@ -1,0 +1,14 @@
+.. meta::06e1157b55b3e952ebcfc9be8053e1319e1ca64ab1ab72f5bdb2c42f931e74bde0cae3f3b343b2944164ff3e1a2a196560fb8e71bdf12ab1d50c1ceca55dc51f
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::CompressibleFlow::ConvectiveKernels&lt; dim, number &gt; Struct Template Reference
+
+ConvectiveKernels&lt; dim, number &gt; Struct Template Reference
+================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structMeltPoolDG_1_1CompressibleFlow_1_1ConvectiveKernels.html

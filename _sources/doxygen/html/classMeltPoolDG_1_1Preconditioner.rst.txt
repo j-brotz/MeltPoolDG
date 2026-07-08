@@ -1,0 +1,14 @@
+.. meta::5b6335dfdd70681e88cd11035d6b853af0be18c704f596eedcdbb618f7c3e9556edfaa0909d756c23dea801e4b3716b1d873246f7eaefa2e34be19fd364510f9
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::Preconditioner&lt; dim, VectorType, number &gt; Class Template Reference
+
+Preconditioner&lt; dim, VectorType, number &gt; Class Template Reference
+========================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: classMeltPoolDG_1_1Preconditioner.html

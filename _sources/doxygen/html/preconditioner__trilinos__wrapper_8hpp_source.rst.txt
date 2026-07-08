@@ -1,0 +1,14 @@
+.. meta::6893df986fcbe69cad8ba3abfa29c33df08afa06c71e198da23e721c0a1f223b1f7fb955bce8afaf215d21b7bb11ebcf7a3ac59a606c81c2a89570edb8259acc
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/linear_algebra/preconditioner_trilinos_wrapper.hpp Source File
+
+include/meltpooldg/linear\_algebra/preconditioner\_trilinos\_wrapper.hpp Source File
+====================================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: preconditioner__trilinos__wrapper_8hpp_source.html

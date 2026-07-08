@@ -1,0 +1,14 @@
+.. meta::505f128d607c06c3bf608650dda67a48f12306cca84268edd4d3a28cf4645f1a6f6ced25b11c38a350a96c4a4dd1e487c6184a906a58e9624c690e9d3fc41bd1
+
+:orphan:
+
+.. title:: Developer Documentation: Class Members - Functions
+
+Class Members - Functions
+=========================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: functions_func_r.html

@@ -1,0 +1,14 @@
+.. meta::dfc0c53c1f9ce3291a988bb9a7cdd379552aa39b162c23a037cb5f77a1ae153ca540182da78c29af3c858eeaa93ce1177c4bd2eb100f9b85f4ec72372ba4fabd
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::CompressibleFlow::MultiSpeciesDofStateView&lt; dim, n_species, number, Value &gt; Struct Template Reference
+
+MultiSpeciesDofStateView&lt; dim, n\_species, number, Value &gt; Struct Template Reference
+==========================================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structMeltPoolDG_1_1CompressibleFlow_1_1MultiSpeciesDofStateView.html

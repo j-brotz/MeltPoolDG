@@ -1,0 +1,14 @@
+.. meta::4073237001f4809ee82cda37bb97480677d782ff8b1514bd6c46fec81b44aded32e0cad8cb68087848fdec46d38d920979ac8727131e2fee710bd1a3204467cf
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/core/material.hpp File Reference
+
+include/meltpooldg/core/material.hpp File Reference
+===================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: core_2material_8hpp.html

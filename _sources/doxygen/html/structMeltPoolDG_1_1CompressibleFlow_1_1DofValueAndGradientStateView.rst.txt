@@ -1,0 +1,14 @@
+.. meta::8176c12b5854e02841bf3855abdbddb09ab21294ee9c9dfcf4d7ff9b023480afac6f93350b211738c83baeee920c03abba4452e599061fb6a182bbd9b8c2b0a7
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::CompressibleFlow::DofValueAndGradientStateView&lt; dim, number, Value, Gradient &gt; Struct Template Reference
+
+DofValueAndGradientStateView&lt; dim, number, Value, Gradient &gt; Struct Template Reference
+============================================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structMeltPoolDG_1_1CompressibleFlow_1_1DofValueAndGradientStateView.html

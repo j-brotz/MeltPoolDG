@@ -1,0 +1,14 @@
+.. meta::32180b0b1be97e7b7b935aacc49d1fbb3853ba411acb973cccd5031185b9f0414a35d3ad3f98a03e6d604f7e4c3543d44ec3efd6b4a28bd3d6ca5e60b8ff825e
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/utilities/dg_generic_convection_diffusion_worker.hpp Source File
+
+include/meltpooldg/utilities/dg\_generic\_convection\_diffusion\_worker.hpp Source File
+=======================================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: dg__generic__convection__diffusion__worker_8hpp_source.html

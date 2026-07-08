@@ -1,0 +1,14 @@
+.. meta::f4ec20d40a7a787490b7ff5e57e6e8b7c5983376bd3aa60a26e0cc56d365ff835f77c5955e7cb3c2b13cf2f1044950f1ec727ada5d7a70da1a4950182cbc3df2
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/compressible_flow/operation_type_erasure.hpp File Reference
+
+include/meltpooldg/compressible\_flow/operation\_type\_erasure.hpp File Reference
+=================================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: operation__type__erasure_8hpp.html

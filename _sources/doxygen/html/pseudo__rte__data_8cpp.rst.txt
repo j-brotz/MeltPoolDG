@@ -1,0 +1,14 @@
+.. meta::a86fe42c2e656fbf73ad00d2101242b7d3cd064e98ea3ba18ec04bfcb98f14d759e083550a6dca36e83428d6bbb4fa40a25c743c2e581da1f5b4b11ed56c09cc
+
+:orphan:
+
+.. title:: Developer Documentation: source/radiative_transport/pseudo_rte_data.cpp File Reference
+
+source/radiative\_transport/pseudo\_rte\_data.cpp File Reference
+================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: pseudo__rte__data_8cpp.html

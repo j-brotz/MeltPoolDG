@@ -1,0 +1,14 @@
+.. meta::f5909121e4ac45c8a615d88e7c18cc59b09cd2683061ac612ac2ede5bc8590a01563394d3778028f41a0c125ba79a09ed5fff4661f86cc07e162013e54e1907f
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::LevelSet::LevelSetData&lt; number &gt; Struct Template Reference
+
+LevelSetData&lt; number &gt; Struct Template Reference
+======================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structMeltPoolDG_1_1LevelSet_1_1LevelSetData.html

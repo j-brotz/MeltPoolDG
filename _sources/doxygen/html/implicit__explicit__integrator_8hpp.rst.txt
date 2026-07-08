@@ -1,0 +1,14 @@
+.. meta::8d874ac8808d99403e09b8a74c0e976338851b1b62afbe6f74dd1791ce2b630f761eb08e7560aac449cb84649ec1c30b6e30856764095c013126d6ee5dab12e6
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/time_integration/implicit_explicit_integrator.hpp File Reference
+
+include/meltpooldg/time\_integration/implicit\_explicit\_integrator.hpp File Reference
+======================================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: implicit__explicit__integrator_8hpp.html

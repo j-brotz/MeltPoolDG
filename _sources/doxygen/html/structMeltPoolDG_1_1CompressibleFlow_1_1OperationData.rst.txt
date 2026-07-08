@@ -1,0 +1,14 @@
+.. meta::fdc5a988777e2ab037267a265f4a8c457de06faa2278e5b81bc0d8b6978c97894b6fd04511f5a52e7cb5e5d3ce33b2246d7ec76a0155a005cd0a6bdb3f832f03
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::CompressibleFlow::OperationData&lt; number &gt; Struct Template Reference
+
+OperationData&lt; number &gt; Struct Template Reference
+=======================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structMeltPoolDG_1_1CompressibleFlow_1_1OperationData.html

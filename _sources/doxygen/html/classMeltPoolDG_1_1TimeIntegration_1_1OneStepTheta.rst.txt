@@ -1,0 +1,14 @@
+.. meta::1851aa727d149dffadaff2c818cff06e989349902902bdd7907a52920275cec4e4dde3ae8c483d08a8de20a30ee5fdcf8dde8ab446371654ddfb8f4c8882c73a
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::TimeIntegration::OneStepTheta&lt; number, PDEOperator &gt; Class Template Reference
+
+OneStepTheta&lt; number, PDEOperator &gt; Class Template Reference
+==================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: classMeltPoolDG_1_1TimeIntegration_1_1OneStepTheta.html

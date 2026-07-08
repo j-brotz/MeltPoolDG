@@ -1,0 +1,14 @@
+.. meta::1ff13c6f1ffd709af2ae69fc2950786469aa0ec82799ff29cc990198bef98891d8a568907983db09f92de83a59606c3d5a40b073e7786fdea6cc25f4ce5becd6
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::CompressibleFlow::MaterialView&lt; dim, number &gt; Struct Template Reference
+
+MaterialView&lt; dim, number &gt; Struct Template Reference
+===========================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structMeltPoolDG_1_1CompressibleFlow_1_1MaterialView.html

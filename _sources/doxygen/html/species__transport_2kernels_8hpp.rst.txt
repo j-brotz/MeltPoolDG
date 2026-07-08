@@ -1,0 +1,14 @@
+.. meta::e40bec3398609fbce1c52330fccf4616988d419f55f7edf1cf1b4ee9a189d8a71f145540fb904707506ce56da16817198c983257c8c60f1b63ce661ebf1a20cb
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/species_transport/kernels.hpp File Reference
+
+include/meltpooldg/species\_transport/kernels.hpp File Reference
+================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: species__transport_2kernels_8hpp.html

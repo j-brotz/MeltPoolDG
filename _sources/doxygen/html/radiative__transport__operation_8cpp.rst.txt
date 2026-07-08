@@ -1,0 +1,14 @@
+.. meta::3efe113995954c42d03d3e1b78b8902ba0c955d8355e02c792e47542967fcc80899df193dcbe4c9c9c0eb9f4a11aa361fe7603ca656ea7645876a06874435af4
+
+:orphan:
+
+.. title:: Developer Documentation: source/radiative_transport/radiative_transport_operation.cpp File Reference
+
+source/radiative\_transport/radiative\_transport\_operation.cpp File Reference
+==============================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: radiative__transport__operation_8cpp.html

@@ -1,0 +1,14 @@
+.. meta::b36cfc5fba840eef08ea84a2e843d3036c1b5582bd34fcb57cb6b8bc93b3b1d1842130658435534f23ed17846eda6d0bb2e54eafc66d01e3c8d25ac6ff943bcf
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/level_set/advection_diffusion_operation_base.hpp Source File
+
+include/meltpooldg/level\_set/advection\_diffusion\_operation\_base.hpp Source File
+===================================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: advection__diffusion__operation__base_8hpp_source.html

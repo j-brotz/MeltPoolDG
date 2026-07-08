@@ -1,0 +1,14 @@
+.. meta::184bc537ef00eaa041d939aa5fa187c3754c5bdf635cbb843607fa240e00ca5bb406e5d5c535967ba30bd94e47705d6a36185b04ea772b6f67c06af5b226bf2b
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/heat/laser_heat_source_projection_based.hpp Source File
+
+include/meltpooldg/heat/laser\_heat\_source\_projection\_based.hpp Source File
+==============================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: laser__heat__source__projection__based_8hpp_source.html

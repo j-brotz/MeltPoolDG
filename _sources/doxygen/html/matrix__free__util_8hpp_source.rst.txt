@@ -1,0 +1,14 @@
+.. meta::078fc8df4d125dc6e6dab674d2eb2599ca7814ef2e52f60099bacf969582d7891587de47312e2291a2306e98217b7ec0b039ac03ab045082117bebe649717b47
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/utilities/matrix_free_util.hpp Source File
+
+include/meltpooldg/utilities/matrix\_free\_util.hpp Source File
+===============================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: matrix__free__util_8hpp_source.html

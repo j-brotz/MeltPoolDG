@@ -1,0 +1,14 @@
+.. meta::3cdca573b7a188a0690d250f3a54d9a583e7d7a28f6d658873a7de26d1eec2e6fd2fd9bfe54549f74f093daf9e3c937c523bb1f7737e3513ded4553a812d0fa0
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/compressible_flow/material_views_mixins.hpp Source File
+
+include/meltpooldg/compressible\_flow/material\_views\_mixins.hpp Source File
+=============================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: material__views__mixins_8hpp_source.html

@@ -1,0 +1,14 @@
+.. meta::1159531b6292bdeb69be53a993751bb692c6b21e5a40cf16f2431097ffdf4bd3815344396150353a8357088b3a65c57b1a30f60d89f55093661531d1dac5ec57
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::Simulation::VortexBubble::PhiExact&lt; dim, number &gt; Class Template Reference
+
+PhiExact&lt; dim, number &gt; Class Template Reference
+======================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: classMeltPoolDG_1_1Simulation_1_1VortexBubble_1_1PhiExact.html

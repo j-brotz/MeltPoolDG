@@ -1,0 +1,14 @@
+.. meta::8fd7a65a69c60181de10bf04db724a15d3a978ba68a8bb13bc37bf87cd9e365c977971239dd8e66ed1a34edebe7f06a606bc324ef48da1103948c04f50d8f86f
+
+:orphan:
+
+.. title:: Developer Documentation: source/cut/cut_norm.cpp File Reference
+
+source/cut/cut\_norm.cpp File Reference
+=======================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: cut__norm_8cpp.html

@@ -1,0 +1,14 @@
+.. meta::15b2c4b57abc54b1045380a253d13facc83b148a61f1d3e3124fdd1ce98cfdcaeca3a2a13d7d568ddcb506cc97692fb42a98379a0e882ace6be33c572c1314ba
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::MeltPoolApplication&lt; dim, number &gt; Class Template Reference
+
+MeltPoolApplication&lt; dim, number &gt; Class Template Reference
+=================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: classMeltPoolDG_1_1MeltPoolApplication.html

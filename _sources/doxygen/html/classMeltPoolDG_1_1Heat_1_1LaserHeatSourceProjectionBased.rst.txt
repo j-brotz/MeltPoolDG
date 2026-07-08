@@ -1,0 +1,14 @@
+.. meta::84bb56d22be3260603b8dc7ba341f5959a7376c3b303f0ebbe9ab0ae983f45e3bc91672e35a70b495f3c3f3d69d3ba3e983723df31fd72e0844d7c8084eca142
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::Heat::LaserHeatSourceProjectionBased&lt; dim, number &gt; Class Template Reference
+
+LaserHeatSourceProjectionBased&lt; dim, number &gt; Class Template Reference
+============================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: classMeltPoolDG_1_1Heat_1_1LaserHeatSourceProjectionBased.html

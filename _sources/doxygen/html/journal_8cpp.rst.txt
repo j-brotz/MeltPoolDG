@@ -1,0 +1,14 @@
+.. meta::fab04ede097f5e5818da1c346d9a74775a4f60e14954377ef6201af6e4241e825450da583ee0fb694ef585df690894e48da73d81fe9e21755b027c2ed2dfdfea
+
+:orphan:
+
+.. title:: Developer Documentation: source/utilities/journal.cpp File Reference
+
+source/utilities/journal.cpp File Reference
+===========================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: journal_8cpp.html

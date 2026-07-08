@@ -1,0 +1,14 @@
+.. meta::2168b4cd1992994912cd50194971eb8e9b273b17ea689f918e1fe8d62bfadaef725a8587fd3a848df3c247b27b22c40f0454448847405eee582210b48117a33e
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::IterationMonitor&lt; number &gt; Class Template Reference
+
+IterationMonitor&lt; number &gt; Class Template Reference
+=========================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: classMeltPoolDG_1_1IterationMonitor.html

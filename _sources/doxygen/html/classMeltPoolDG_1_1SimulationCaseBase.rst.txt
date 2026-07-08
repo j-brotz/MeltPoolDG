@@ -1,0 +1,14 @@
+.. meta::c01c2c829fe353d6ef53dba2bfd877fcc96ff52147b12e0bbd3cd8b1e6427609765565836f7a35bfc6ad7ced553e1ece44515b25ef9b131b7842252d688c8281
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::SimulationCaseBase&lt; dim, number, spacedim &gt; Class Template Reference
+
+SimulationCaseBase&lt; dim, number, spacedim &gt; Class Template Reference
+==========================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: classMeltPoolDG_1_1SimulationCaseBase.html

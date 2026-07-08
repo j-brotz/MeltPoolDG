@@ -1,0 +1,14 @@
+.. meta::6ce3624f93e55d47dca1db23f854cebb7f0c60e748e5005c733a90cac7e72fd896986a4a4bb76cef83032aadcf07d83b26e58cd536e8b922e38495336d494ba1
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/utilities/profiling_data.hpp Source File
+
+include/meltpooldg/utilities/profiling\_data.hpp Source File
+============================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: profiling__data_8hpp_source.html

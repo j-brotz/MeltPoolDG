@@ -1,0 +1,14 @@
+.. meta::72444fd24458011aa0c2d6890328a091ba23db3a4d3bfa0235c71b3ef20dc5106cf8be8a1ccbb2d2892935854e1349ed94c7fd3196bc81e9e04083ca4f313703
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/compressible_flow/phase_coupling_data.hpp Source File
+
+include/meltpooldg/compressible\_flow/phase\_coupling\_data.hpp Source File
+===========================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: phase__coupling__data_8hpp_source.html

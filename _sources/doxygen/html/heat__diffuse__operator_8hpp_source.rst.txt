@@ -1,0 +1,14 @@
+.. meta::0382c4e5501831133a57f1d34878752e440df89df7acf42c53f27d1b6e7012be7155efa15f06e7415ae6b01d8b7d0e27016b170f09cf1aa42fa924d9d18fc71f
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/heat/heat_diffuse_operator.hpp Source File
+
+include/meltpooldg/heat/heat\_diffuse\_operator.hpp Source File
+===============================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: heat__diffuse__operator_8hpp_source.html

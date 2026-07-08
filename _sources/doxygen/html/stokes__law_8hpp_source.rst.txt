@@ -1,0 +1,14 @@
+.. meta::83b608535df0bc9bedb8c04121fcc27840d5ae1fe2ac79bca231591ca7bacdf8db01a5688c406275c2a03d5b470976140d01e5a9744db494dd7f29c4ea9c99eb
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/fluid_structure_interaction/stokes_law.hpp Source File
+
+include/meltpooldg/fluid\_structure\_interaction/stokes\_law.hpp Source File
+============================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: stokes__law_8hpp_source.html

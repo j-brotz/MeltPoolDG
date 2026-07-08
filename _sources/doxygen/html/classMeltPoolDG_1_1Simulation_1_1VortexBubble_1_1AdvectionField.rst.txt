@@ -1,0 +1,14 @@
+.. meta::02df47cdf4d435ebd89d905d6c117ec45b245dc2b16d31bd1df8262d103939a655016941b2f0d86802ffa5991c02489b33857da0ea352db0d4b3ea794b2156c6
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::Simulation::VortexBubble::AdvectionField&lt; dim, number &gt; Class Template Reference
+
+AdvectionField&lt; dim, number &gt; Class Template Reference
+============================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: classMeltPoolDG_1_1Simulation_1_1VortexBubble_1_1AdvectionField.html

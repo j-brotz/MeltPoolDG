@@ -1,0 +1,14 @@
+.. meta::0c1f6872731edc9ad2e65f5b754a61e64fda0920663fa83bcebf0e2e3287ad9f74143378935b1853acc3d9beec7e2c3d3039940837ce3f9cb728b981c5a06034
+
+:orphan:
+
+.. title:: Developer Documentation: Member List
+
+Member List
+===========
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structMeltPoolDG_1_1BrinkmanPenalizationResidualContribution-members.html

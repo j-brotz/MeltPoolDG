@@ -1,0 +1,14 @@
+.. meta::5ce023e42a667b2c322d4be99519065147725178342ac8c0562a5afcdbccceaf9157e96b1a4d2a70757b6a55e2f2292e4605e41a00f1984da8f7caa8df43f801
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/cut/util.hpp File Reference
+
+include/meltpooldg/cut/util.hpp File Reference
+==============================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: util_8hpp.html

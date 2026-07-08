@@ -1,0 +1,14 @@
+.. meta::84a43ce223fd788881282e84457fa326d1d5cb9175a46c8d096609b4f46b5623e9c9d81af3d9ddb10612e4e0d782a7e1c53ad2452ec6d12e404788e3e62c50c0
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::CompressibleFlow::DGOperatorBase&lt; dim, number, n_species &gt; Class Template Reference
+
+DGOperatorBase&lt; dim, number, n\_species &gt; Class Template Reference
+========================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: classMeltPoolDG_1_1CompressibleFlow_1_1DGOperatorBase.html

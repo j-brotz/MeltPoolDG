@@ -1,0 +1,14 @@
+.. meta::1b07eda0e8056151cf987a27a925d0d0e1fb56e742f72b996a706691d939f8c800275d64507a33ee21ce0bdf9ebff783219e60e960de085bc636f6a88fcc50d3
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::LevelSet::ReinitializationEllipticOperation&lt; dim, number &gt; Class Template Reference
+
+ReinitializationEllipticOperation&lt; dim, number &gt; Class Template Reference
+===============================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: classMeltPoolDG_1_1LevelSet_1_1ReinitializationEllipticOperation.html

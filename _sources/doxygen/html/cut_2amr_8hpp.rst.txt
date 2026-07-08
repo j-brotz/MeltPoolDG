@@ -1,0 +1,14 @@
+.. meta::1e88a1ec1d900d9f06eaeaad1a0083d5601e2b2d9c2dd4f52aaae30bcc39322ede4a35e61bb3da08ddcb691931a1b8d17aba50b3a995453fa1a4d4766cb021ce
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/cut/amr.hpp File Reference
+
+include/meltpooldg/cut/amr.hpp File Reference
+=============================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: cut_2amr_8hpp.html

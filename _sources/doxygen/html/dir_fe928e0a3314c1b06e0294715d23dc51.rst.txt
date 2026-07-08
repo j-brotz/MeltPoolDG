@@ -1,0 +1,14 @@
+.. meta::4c0b016aca09d15c4e9f22662a581ff122e19c4ed157b332ccdb3f472efc2563ac66173dfd9e93b91ae7202e983dd35ca685fa8a0a58e239b193ffdb504e4fbe
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/core Directory Reference
+
+include/meltpooldg/core Directory Reference
+===========================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: dir_fe928e0a3314c1b06e0294715d23dc51.html

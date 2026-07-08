@@ -1,0 +1,14 @@
+.. meta::3f951dcff47295ad59ce2160bcd1466b543b02ac551740a00c5a2a2d44c8309150f21e515c76e49ec46e568d7d933c167b8019d3562dd39c8eb6f9e429091f3b
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/core/scratch_data.hpp Source File
+
+include/meltpooldg/core/scratch\_data.hpp Source File
+=====================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: scratch__data_8hpp_source.html

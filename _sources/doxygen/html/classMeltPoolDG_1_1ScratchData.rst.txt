@@ -1,0 +1,14 @@
+.. meta::2e24dafe06f25abfeceeea08c94bdd389472ccc7bb1d18a660a67526c82f7c076ab164cb88430a0716b7b339d653ecf6a57c03a6a0a1eabbeaf4d4b82763256c
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::ScratchData&lt; dim, spacedim, number &gt; Class Template Reference
+
+ScratchData&lt; dim, spacedim, number &gt; Class Template Reference
+===================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: classMeltPoolDG_1_1ScratchData.html

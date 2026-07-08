@@ -1,0 +1,14 @@
+.. meta::e427f17bc109aee6bdb67783ef42ddf19960807f9c472b4e414f9b2542005392ba3687ab66275ebafe34a65d9a624bb03291b6ca0d190dcb8181122b428de146
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::Flow::EOSValueMixin&lt; dim, ValueType, Derived &gt; Struct Template Reference
+
+EOSValueMixin&lt; dim, ValueType, Derived &gt; Struct Template Reference
+========================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structMeltPoolDG_1_1Flow_1_1EOSValueMixin.html

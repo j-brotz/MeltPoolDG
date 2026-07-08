@@ -1,0 +1,14 @@
+.. meta::aec3d323ee87412a7e242b522cf6df533122a6aeef1a1b3d7dd3669c802cd93b2bbd06b3debdd84a3699077d50c3e4c15d339dc764d19ae04e0baac279ed496c
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::TimeIntegration::ImplicitExplicitIntegrator&lt; dim, number &gt; Class Template Reference
+
+ImplicitExplicitIntegrator&lt; dim, number &gt; Class Template Reference
+========================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: classMeltPoolDG_1_1TimeIntegration_1_1ImplicitExplicitIntegrator.html

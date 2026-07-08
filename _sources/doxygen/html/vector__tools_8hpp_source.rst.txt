@@ -1,0 +1,14 @@
+.. meta::cd94a6e6d21ce2274182a4907b7b2812a11200c8793d5858c5b9dbdb6e8a93b3cc8b314c424ecb32f67586d8f34883d2e5bd933cb4c3b16cb599f2ec17353ef3
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/utilities/vector_tools.hpp Source File
+
+include/meltpooldg/utilities/vector\_tools.hpp Source File
+==========================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: vector__tools_8hpp_source.html

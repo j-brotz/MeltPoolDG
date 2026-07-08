@@ -1,0 +1,14 @@
+.. meta::09c295e2320f1755217353f74a6939388fcbab9ca3183b77a6a1efd6416c2000c45b2ba4667aa790a373c9de68a29f18344dbfd08e68638b2b6c9d18d2550439
+
+:orphan:
+
+.. title:: Developer Documentation: applications/mp-reinit/cases/reinit_circle/reinit_circle_DG.hpp Source File
+
+applications/mp-reinit/cases/reinit\_circle/reinit\_circle\_DG.hpp Source File
+==============================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: reinit__circle__DG_8hpp_source.html

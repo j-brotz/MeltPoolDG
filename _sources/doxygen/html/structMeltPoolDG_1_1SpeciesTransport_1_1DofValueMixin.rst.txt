@@ -1,0 +1,14 @@
+.. meta::9c392917180b044aca6879b0db901b551cbd172122838144cccab57b758f2cfa22cb7882a24be24ad9f7e5efb476bf0194037dca07cff0248df9842d61ec6bf8
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::SpeciesTransport::DofValueMixin&lt; n_start_index, n_species, ValueType, Derived &gt; Struct Template Reference
+
+DofValueMixin&lt; n\_start\_index, n\_species, ValueType, Derived &gt; Struct Template Reference
+================================================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structMeltPoolDG_1_1SpeciesTransport_1_1DofValueMixin.html

@@ -1,0 +1,14 @@
+.. meta::39fe408c6d2bca8d3161800d9418d854b0934c6fe0caab839d22f5b2d5dcac812d90b2a274475fbc3f9df5fde2f95bbce8f2b7ac4794742eb0b0cd68640a211a
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::LevelSet::ReinitializationCaseParameters&lt; number &gt; Struct Template Reference
+
+ReinitializationCaseParameters&lt; number &gt; Struct Template Reference
+========================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structMeltPoolDG_1_1LevelSet_1_1ReinitializationCaseParameters.html

@@ -1,0 +1,14 @@
+.. meta::cb4a8f7717a36747f85de575497737d4585bd1468599202cb70bf22b87cc2cc847744ea6ca863621e7bfcebe41f413ca1e5a7a0d009dc6b3c36554019de575e4
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::LevelSet::ReinitializationData&lt; number &gt; Struct Template Reference
+
+ReinitializationData&lt; number &gt; Struct Template Reference
+==============================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structMeltPoolDG_1_1LevelSet_1_1ReinitializationData.html

@@ -1,0 +1,14 @@
+.. meta::84a364717204287f3814963bf42f1240d42d014f0202c10880147c53b438558016a7a52f6f99cc437e10502b04a0cdd00d6958d3be4ab6d7b015c057a6738c36
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::LevelSet::OlssonOperator&lt; dim, number &gt; Class Template Reference
+
+OlssonOperator&lt; dim, number &gt; Class Template Reference
+============================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: classMeltPoolDG_1_1LevelSet_1_1OlssonOperator.html

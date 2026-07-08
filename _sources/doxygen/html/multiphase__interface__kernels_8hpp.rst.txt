@@ -1,0 +1,14 @@
+.. meta::3882a15fd4e2d555c690b1dbbe844941432bfa577e1c4497a7273fc09e78a4a7905a56cf33ce505e9f5cc025a2e92367598302f5e6c24ac251101a0e6b409f15
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/compressible_flow/multiphase_interface_kernels.hpp File Reference
+
+include/meltpooldg/compressible\_flow/multiphase\_interface\_kernels.hpp File Reference
+=======================================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: multiphase__interface__kernels_8hpp.html

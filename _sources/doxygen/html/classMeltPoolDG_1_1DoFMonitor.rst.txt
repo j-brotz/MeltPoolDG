@@ -1,0 +1,14 @@
+.. meta::1d84592dec3aa0519fca977688fbccec4e3a73d3f21efa090f6919f218b1a59fe34f2ab016bb6f8285e86ed899d196dbcd8c41d2945ad238658c94301664e414
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::DoFMonitor&lt; number &gt; Class Template Reference
+
+DoFMonitor&lt; number &gt; Class Template Reference
+===================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: classMeltPoolDG_1_1DoFMonitor.html

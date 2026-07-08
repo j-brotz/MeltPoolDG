@@ -1,0 +1,14 @@
+.. meta::25fb58cdc1a849d597581201a6d9e977f2a18a636593cc0e45810843da5bbf64326276a38f8487862ffc376d4e2aa899dfefc029857a99e1f95af54f90eb533f
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::SphericalParticleContactForce&lt; dim, number, ObstacleType &gt; Class Template Reference
+
+SphericalParticleContactForce&lt; dim, number, ObstacleType &gt; Class Template Reference
+=========================================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: classMeltPoolDG_1_1SphericalParticleContactForce.html

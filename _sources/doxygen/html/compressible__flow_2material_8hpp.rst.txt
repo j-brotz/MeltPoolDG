@@ -1,0 +1,14 @@
+.. meta::62035294a33e9f31d3643870d52cb703267b005be85d5433875bd0a0e44a7909860b6e35953906d06a2d5341359c32e493f1bdc3ac337a0ae3e12f2374c93c83
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/compressible_flow/material.hpp File Reference
+
+include/meltpooldg/compressible\_flow/material.hpp File Reference
+=================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: compressible__flow_2material_8hpp.html

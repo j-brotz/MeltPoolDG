@@ -1,0 +1,14 @@
+.. meta::b91c4b85bae84cc0a328688bb39a8a438d8e39b7f5bcab522b9629e8c8569f9aaa21cc8859a40536b30f0f3583bada2dfa21724758433e45b816376c04c33f3c
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::SphericalParticleContactForce&lt; dim, number, ObstacleType &gt;::ContactConfiguration Struct Reference
+
+ContactConfiguration Struct Reference
+=====================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structMeltPoolDG_1_1SphericalParticleContactForce_1_1ContactConfiguration.html

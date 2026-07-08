@@ -1,0 +1,14 @@
+.. meta::57a6058749ea348d9624989aff8e8699440fef63de8407a19e1dbcca5800a8ee98d8260c5a54c21386bec8d50bb7d10da8717b8f6458cf295241f32acdbee8f9
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/heat/laser_data.hpp Source File
+
+include/meltpooldg/heat/laser\_data.hpp Source File
+===================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: laser__data_8hpp_source.html

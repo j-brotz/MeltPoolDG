@@ -1,0 +1,14 @@
+.. meta::a74bb2dce725bfe14b6faab540c9f6f301e7b9e8fe48f37a963b5bad5d3c245d5db48d87770ce2cf48c5fe7630987529c0560b852428ccbe3d52e8f1232bf269
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/phase_change/recoil_pressure_operation.hpp Source File
+
+include/meltpooldg/phase\_change/recoil\_pressure\_operation.hpp Source File
+============================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: recoil__pressure__operation_8hpp_source.html

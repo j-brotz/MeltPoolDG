@@ -1,0 +1,14 @@
+.. meta::860a52d9907efd56e02aee688bf798e6ad31fc56dde7cfdf8200528cdcfadbf808caf9cba5dcb14fdfe92fbe866c0cde5da685ee7fbe39c1f4fd0e6144fdcbfc
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/linear_algebra/nonlinear_solver_data.hpp Source File
+
+include/meltpooldg/linear\_algebra/nonlinear\_solver\_data.hpp Source File
+==========================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: nonlinear__solver__data_8hpp_source.html

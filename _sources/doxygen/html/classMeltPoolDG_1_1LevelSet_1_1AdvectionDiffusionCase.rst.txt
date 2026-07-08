@@ -1,0 +1,14 @@
+.. meta::b943a0cfaa5a7a28b907034f6c22140e27918f38acac721f9c2cbc3d765bf7d83822e843ed5dbe0592074690b9f3b082edf4190aa127eec8c0a5c4be275f3fcb
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::LevelSet::AdvectionDiffusionCase&lt; dim, number &gt; Class Template Reference
+
+AdvectionDiffusionCase&lt; dim, number &gt; Class Template Reference
+====================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: classMeltPoolDG_1_1LevelSet_1_1AdvectionDiffusionCase.html

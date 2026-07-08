@@ -1,0 +1,14 @@
+.. meta::49d387af9bc2b3ce801d04cb99dfe4e71f3fb9fa78de8c89a4406f515c2cc25022c8ddc612c2dedc0304525ca16949e4bd21217c1fdcba86ea0896d2980055f9
+
+:orphan:
+
+.. title:: Developer Documentation: applications/mp-melt-pool/melt_pool_case.hpp File Reference
+
+applications/mp-melt-pool/melt\_pool\_case.hpp File Reference
+=============================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: melt__pool__case_8hpp.html

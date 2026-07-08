@@ -1,0 +1,14 @@
+.. meta::496a9227a367ec9e4337fd7bf79501358bcab028d9bf66edc678a2735a8bc95e10feb02107e6050afcb81b34bee092fcf93c15406d68a9f12a52da51c8b8759b
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/heat/laser_intensity_profiles.hpp Source File
+
+include/meltpooldg/heat/laser\_intensity\_profiles.hpp Source File
+==================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: laser__intensity__profiles_8hpp_source.html

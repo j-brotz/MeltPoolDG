@@ -1,0 +1,14 @@
+.. meta::8599b209b4c7ed52bf606db399b254021ce51782818cd145869755a7607419af83a3159de6809e6af1a131e1b620aef8820e2a3dc08f58e72465ef8c7e773523
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::Simulation::LaserMeltingSimonds::SimulationLaserMeltingSimonds&lt; dim, Number, CaseClass &gt; Class Template Reference
+
+SimulationLaserMeltingSimonds&lt; dim, Number, CaseClass &gt; Class Template Reference
+======================================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: classMeltPoolDG_1_1Simulation_1_1LaserMeltingSimonds_1_1SimulationLaserMeltingSimonds.html

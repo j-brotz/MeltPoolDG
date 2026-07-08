@@ -1,0 +1,14 @@
+.. meta::f72e93d4eacfd24837c4f7a694d006d8d8f8b5a4241d3db02443e4a8ef2d611e3b018a83c20cd544f86c9c346fa4e9682b403c13f8859de5d983b56bc0ba500d
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::Multiphase::CompressibleFlowPhaseCouplingData&lt; number &gt;::HLLP0_penalty Struct Reference
+
+HLLP0\_penalty Struct Reference
+===============================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structMeltPoolDG_1_1Multiphase_1_1CompressibleFlowPhaseCouplingData_1_1HLLP0__penalty.html

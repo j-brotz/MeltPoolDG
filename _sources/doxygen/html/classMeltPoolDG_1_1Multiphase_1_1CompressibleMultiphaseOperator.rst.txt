@@ -1,0 +1,14 @@
+.. meta::130ef56bcbfe7146cab915418d4211a8241224cc0ce7f78c6cf6d91e07f0fc9ced7f646876538249801677882a8d0f7f65d277bf46fd7a7abd8f7858aa3126a3
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::Multiphase::CompressibleMultiphaseOperator&lt; dim, number, is_viscous_gas, is_viscous_liquid &gt; Class Template Reference
+
+CompressibleMultiphaseOperator&lt; dim, number, is\_viscous\_gas, is\_viscous\_liquid &gt; Class Template Reference
+===================================================================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: classMeltPoolDG_1_1Multiphase_1_1CompressibleMultiphaseOperator.html

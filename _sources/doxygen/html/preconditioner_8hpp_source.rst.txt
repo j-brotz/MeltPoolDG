@@ -1,0 +1,14 @@
+.. meta::38d277ec2f546ea9259436dd52c72f423a9f65b6c6768957e6ce5ccc4d4d7845b751a3098f2d50d475e9d1706740e489f2b0caee3023d701615791cb2b84c21e
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/linear_algebra/preconditioner.hpp Source File
+
+include/meltpooldg/linear\_algebra/preconditioner.hpp Source File
+=================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: preconditioner_8hpp_source.html

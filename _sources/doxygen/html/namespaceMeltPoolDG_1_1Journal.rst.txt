@@ -1,0 +1,14 @@
+.. meta::3c8b34fbc482662740170be8116f90089138c066391573144de84d8a353ac5867266227149316487ad242b973d916fbb14160e840489b28afd496c3890c61a5f
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::Journal Namespace Reference
+
+Journal Namespace Reference
+===========================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: namespaceMeltPoolDG_1_1Journal.html

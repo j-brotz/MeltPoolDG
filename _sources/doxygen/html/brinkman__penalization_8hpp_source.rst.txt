@@ -1,0 +1,14 @@
+.. meta::f0283a9305a897ee5639f2dfbe9ac18fae88b23c50796ef212575cae3c1006a3152e720b654edac5867ce17275b12c5d9446eb8313bf1ea60247026eb399920f
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/fluid_structure_interaction/brinkman_penalization.hpp Source File
+
+include/meltpooldg/fluid\_structure\_interaction/brinkman\_penalization.hpp Source File
+=======================================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: brinkman__penalization_8hpp_source.html

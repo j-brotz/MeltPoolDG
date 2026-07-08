@@ -1,0 +1,14 @@
+.. meta::833aef97108a86ce699ffd78c4edb2cde094d70df5aa3ea924ecc48405cce4529d8cc984b8f6be61ec7cd26c3a00d93b2b3e0c3328fd9dc0c5c5ed2474da6b10
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/level_set/olsson_CG_operator.hpp File Reference
+
+include/meltpooldg/level\_set/olsson\_CG\_operator.hpp File Reference
+=====================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: olsson__CG__operator_8hpp.html

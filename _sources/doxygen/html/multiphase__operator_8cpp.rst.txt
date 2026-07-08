@@ -1,0 +1,14 @@
+.. meta::cf5aaa73c04cc249260e06f8fa08ad68d9de96748cfcf43b3abcfc5dd7d4ac350120bb18b00a95d9b74b84787b5d1bc3bf8786386e6f0aae3eee201d61ef32e3
+
+:orphan:
+
+.. title:: Developer Documentation: source/compressible_flow/multiphase_operator.cpp File Reference
+
+source/compressible\_flow/multiphase\_operator.cpp File Reference
+=================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: multiphase__operator_8cpp.html

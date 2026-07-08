@@ -1,0 +1,14 @@
+.. meta::71862d7617574c679115081a7c6416a1d5c3d1b1326993b49cf978215ac0185f615dd9ab39e08dfb041c782d1ea44455252c7a8c7b8106714118e5fbb1957149
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/radiative_transport/rte_operator.hpp Source File
+
+include/meltpooldg/radiative\_transport/rte\_operator.hpp Source File
+=====================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: rte__operator_8hpp_source.html

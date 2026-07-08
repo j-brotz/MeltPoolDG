@@ -1,0 +1,14 @@
+.. meta::12c1933c6d12654cd34cb986452a0257020e1ef925661f9c0775cc81d7923e5753c98fa8c022f3c63692fe21b5badadd9c585634e5c3f9112ebb2387f27bdc64
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::HasJacobianQuadraturePointKernels Concept Reference
+
+HasJacobianQuadraturePointKernels Concept Reference
+===================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: conceptMeltPoolDG_1_1HasJacobianQuadraturePointKernels.html

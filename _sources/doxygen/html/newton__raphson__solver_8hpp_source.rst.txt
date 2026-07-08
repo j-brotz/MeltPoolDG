@@ -1,0 +1,14 @@
+.. meta::4a7dd6e5cff5f01831a53da13b3bc8cccc4931e53baf7f7aab26e64a3821dc2bba6abecfc9e67f8a39e5ba3bfe371c820f4c43a5823a774c417d3cae3017e700
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/linear_algebra/newton_raphson_solver.hpp Source File
+
+include/meltpooldg/linear\_algebra/newton\_raphson\_solver.hpp Source File
+==========================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: newton__raphson__solver_8hpp_source.html

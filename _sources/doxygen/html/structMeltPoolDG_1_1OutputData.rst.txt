@@ -1,0 +1,14 @@
+.. meta::c65611ed481f6a67326bcc8bbe15a1be121fd7d0f7cb65b82cdc611abc34a2be7731760418b6a85f8a848c93b61c6a6473fbc49b4fec383dc22216ed9206ac04
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::OutputData&lt; number &gt; Struct Template Reference
+
+OutputData&lt; number &gt; Struct Template Reference
+====================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structMeltPoolDG_1_1OutputData.html

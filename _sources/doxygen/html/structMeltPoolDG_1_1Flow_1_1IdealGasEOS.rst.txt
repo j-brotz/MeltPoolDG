@@ -1,0 +1,14 @@
+.. meta::0a96a8c351427fd14d40ebffcddf3d651b8ebc2db7aa585090c5923e7b9a46d82c8345799ed099d796b18eb15dba1b88f6d8c17ef57cc0ea65d7ed1443f71528
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::Flow::IdealGasEOS Struct Reference
+
+IdealGasEOS Struct Reference
+============================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structMeltPoolDG_1_1Flow_1_1IdealGasEOS.html

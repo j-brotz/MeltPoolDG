@@ -1,0 +1,14 @@
+.. meta::658c1405c091fd62f97516f522f6bba705c58d2e6267677d4cdd453ac0a7a06769c5ae26ad0e698ddec042b92781d689ef2d4df709d6c08a8a18ea983bf6cb40
+
+:orphan:
+
+.. title:: Developer Documentation: Class Members - Variables
+
+Class Members - Variables
+=========================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: functions_vars_w.html

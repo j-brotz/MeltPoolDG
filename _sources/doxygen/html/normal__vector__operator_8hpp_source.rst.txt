@@ -1,0 +1,14 @@
+.. meta::86eb98735702d12498586364ffafad2b82b1f915afb559b1bba2be3fb9978838da8b34fa1d4d2b404352865159bc60f3ee512d6fc7c5e4ee7589112d88bbe45f
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/level_set/normal_vector_operator.hpp Source File
+
+include/meltpooldg/level\_set/normal\_vector\_operator.hpp Source File
+======================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: normal__vector__operator_8hpp_source.html

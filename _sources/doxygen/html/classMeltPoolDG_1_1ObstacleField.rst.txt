@@ -1,0 +1,14 @@
+.. meta::bb8e0a0e3dfef901c6bb795474a35fb6f6abba112ad5301309458085984d3bb618bc44d3dbcc9e99caec2dac88d9b434fb78d7e4268f6ef14b71b9fb9ae31379
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::ObstacleField&lt; dim, number, ObstacleType &gt; Class Template Reference
+
+ObstacleField&lt; dim, number, ObstacleType &gt; Class Template Reference
+=========================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: classMeltPoolDG_1_1ObstacleField.html

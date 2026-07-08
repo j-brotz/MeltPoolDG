@@ -1,0 +1,14 @@
+.. meta::0ff991672bd94da34f3512de30222edcafa88b8c27069c8a29edf5befbcf076700e06f901847debb6a7e416fd0a1d395a0feb4593a843fff045dbc46f650607c
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::OperatorBase&lt; number &gt; Class Template Reference
+
+OperatorBase&lt; number &gt; Class Template Reference
+=====================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: classMeltPoolDG_1_1OperatorBase.html

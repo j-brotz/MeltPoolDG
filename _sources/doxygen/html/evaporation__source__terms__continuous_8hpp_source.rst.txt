@@ -1,0 +1,14 @@
+.. meta::8b8716c60bba5944a5c94da0183eefc5a8e7d3e29ada24540aceb6b5af9569f1f8a63ae9776528a62d7f74a832efbe720ce97736604d14801636992befd2518d
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/phase_change/evaporation_source_terms_continuous.hpp Source File
+
+include/meltpooldg/phase\_change/evaporation\_source\_terms\_continuous.hpp Source File
+=======================================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: evaporation__source__terms__continuous_8hpp_source.html

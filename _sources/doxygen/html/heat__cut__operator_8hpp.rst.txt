@@ -1,0 +1,14 @@
+.. meta::d47856dfa945233bfd059a5195c44d49713c41f1677938bed8d3f1ee961003433a8570b4e687d938bdb328cb3889af54c45ee4bfa9e1c06d795d60f3159b7624
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/heat/heat_cut_operator.hpp File Reference
+
+include/meltpooldg/heat/heat\_cut\_operator.hpp File Reference
+==============================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: heat__cut__operator_8hpp.html

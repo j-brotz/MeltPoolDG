@@ -1,0 +1,14 @@
+.. meta::d6abfc3cb017219cab1faf787e50e5e4afa97fca18899ecf7c4e413f83f5dde91572c6a4f0acae7cd372d229e169cc92cb1477a43ec959a16a735cba64d1cc92
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::CompressibleFlow::MaterialPhaseData&lt; number &gt; Struct Template Reference
+
+MaterialPhaseData&lt; number &gt; Struct Template Reference
+===========================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structMeltPoolDG_1_1CompressibleFlow_1_1MaterialPhaseData.html

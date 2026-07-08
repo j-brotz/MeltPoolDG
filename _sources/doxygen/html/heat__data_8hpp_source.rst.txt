@@ -1,0 +1,14 @@
+.. meta::2c6743cc3ebee1658da3d0a8b8968d124db631dbfec3695ea7e2889a9b53e731a54a1b7befd0a52ba5237dbcf3e725671d7ad803cd7330aa0e22926fc96f032c
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/heat/heat_data.hpp Source File
+
+include/meltpooldg/heat/heat\_data.hpp Source File
+==================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: heat__data_8hpp_source.html

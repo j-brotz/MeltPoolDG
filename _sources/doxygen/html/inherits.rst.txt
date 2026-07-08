@@ -1,0 +1,14 @@
+.. meta::f89c54affae8ef90057aee16f0340ad71bdc2f5d2dd4e5fa50dc2672a008e63e58e3564da77a1f1d9fda46e2c0e280f0b39ec90a45739816bd0fc5965b1ba4a2
+
+:orphan:
+
+.. title:: Developer Documentation: Class Hierarchy
+
+Class Hierarchy
+===============
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: inherits.html

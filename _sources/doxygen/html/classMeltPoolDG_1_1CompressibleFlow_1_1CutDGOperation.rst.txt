@@ -1,0 +1,14 @@
+.. meta::e6b361f7ef800cee5410806ee03409fe7d38600014bc1bbe5e3497b4833110ef529a7c4ee3f99b6cf29328409e8b010d6b6c687296fa1dea2cfafb1f87d8ef42
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::CompressibleFlow::CutDGOperation&lt; dim, number &gt; Class Template Reference
+
+CutDGOperation&lt; dim, number &gt; Class Template Reference
+============================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: classMeltPoolDG_1_1CompressibleFlow_1_1CutDGOperation.html

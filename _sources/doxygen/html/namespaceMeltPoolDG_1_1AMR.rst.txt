@@ -1,0 +1,14 @@
+.. meta::af31fb3643eaf0eb3fd0230e53e8ff0ae5ec9b8c47336fcf4a61b1e0c105a17976faaef3c2f519ca359d2ffd14661b9ce1ca2a7b1b02b41112b64afe392cec7a
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::AMR Namespace Reference
+
+AMR Namespace Reference
+=======================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: namespaceMeltPoolDG_1_1AMR.html

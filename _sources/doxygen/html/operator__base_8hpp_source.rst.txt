@@ -1,0 +1,14 @@
+.. meta::82c0568affb5ade31cb145acbf4cbbd594f39379618404686f61be3c778959c87b4829f98d0e0bbd6eb25ef7d68abcc0fee7dd4c0949605b8c4ba094755be463
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/core/operator_base.hpp Source File
+
+include/meltpooldg/core/operator\_base.hpp Source File
+======================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: operator__base_8hpp_source.html

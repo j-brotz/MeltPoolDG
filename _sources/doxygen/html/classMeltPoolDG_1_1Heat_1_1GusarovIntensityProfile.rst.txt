@@ -1,0 +1,14 @@
+.. meta::2521f8ac34859f9d4b6fc97a602b86d45df713f15260c7513261822bf108add3f1134b6e6d898f50517819ee07f2cf2d5ece58e78dbf12437bb56b918c817167
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::Heat::GusarovIntensityProfile&lt; dim, number &gt; Class Template Reference
+
+GusarovIntensityProfile&lt; dim, number &gt; Class Template Reference
+=====================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: classMeltPoolDG_1_1Heat_1_1GusarovIntensityProfile.html

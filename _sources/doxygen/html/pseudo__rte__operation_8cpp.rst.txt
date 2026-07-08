@@ -1,0 +1,14 @@
+.. meta::0b52c8b618dbdce3f425ee9fe63ffe2d372972d6e8e19d76e718dd8b40f3cd73e369fac1e9da5f12e8539f736a67279ff60f476024a55a856f85421f6a5d9aa5
+
+:orphan:
+
+.. title:: Developer Documentation: source/radiative_transport/pseudo_rte_operation.cpp File Reference
+
+source/radiative\_transport/pseudo\_rte\_operation.cpp File Reference
+=====================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: pseudo__rte__operation_8cpp.html

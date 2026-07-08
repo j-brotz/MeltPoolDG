@@ -1,0 +1,14 @@
+.. meta::94890df8b887eeb20163cc8e3eb99907f201813f578c73c3a55e6165b7973c5d7c26a90fa768bdf24a7e43be96639cf7524f5e675d8aea3f76ae49c0392e1e5e
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/compressible_flow/convective_kernels.hpp Source File
+
+include/meltpooldg/compressible\_flow/convective\_kernels.hpp Source File
+=========================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: convective__kernels_8hpp_source.html

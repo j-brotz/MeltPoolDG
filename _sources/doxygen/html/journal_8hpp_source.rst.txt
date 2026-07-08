@@ -1,0 +1,14 @@
+.. meta::9ccc7a2b1ae8626e914435229487c17d46de214ceb7783abc3c71f649462f2a4e5ca04cc2a156a8543c299422a50769239a6337f4b777bc9faaedcd1cab4c675
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/utilities/journal.hpp Source File
+
+include/meltpooldg/utilities/journal.hpp Source File
+====================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: journal_8hpp_source.html

@@ -1,0 +1,14 @@
+.. meta::457740a286b277b438a68d2d037377d9219ce2b0510dad6d209ad0a6ac786c953ffa6d24dc0cfef22b0de106581e15083759f5fc57b08097b7497771b8efbafe
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/utilities/amr_indicators.hpp Source File
+
+include/meltpooldg/utilities/amr\_indicators.hpp Source File
+============================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: amr__indicators_8hpp_source.html

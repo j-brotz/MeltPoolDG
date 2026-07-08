@@ -1,0 +1,14 @@
+.. meta::9132385becff085774be557235c235c9c8288eb9192db1b19d47b86d0093b2df856d69e2460f3fda7ca4b0db072a9caef4f262495d7e808dd563957535f86033
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::Heat::LaserData&lt; number &gt; Struct Template Reference
+
+LaserData&lt; number &gt; Struct Template Reference
+===================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structMeltPoolDG_1_1Heat_1_1LaserData.html

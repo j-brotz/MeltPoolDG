@@ -1,0 +1,14 @@
+.. meta::52e1a27d6c5a8013f0d1c8b6cbbdc05e421926cb58b7c05398e3aa5a2f73c3be7e62f52ddb2bccd8e541988064a2ec998d14328ac04c8b7bcf411ec06eda9548
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/level_set/advection_diffusion_data.hpp Source File
+
+include/meltpooldg/level\_set/advection\_diffusion\_data.hpp Source File
+========================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: advection__diffusion__data_8hpp_source.html

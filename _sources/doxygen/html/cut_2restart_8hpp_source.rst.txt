@@ -1,0 +1,14 @@
+.. meta::f2ef685b3a2a1eab84b8cec5034c411a557b49863535472591dcc5d6c469ccef61800d63ec7724957247b53722553a913cfa0cbf41c3ff643e671ae13e46d5e2
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/cut/restart.hpp Source File
+
+include/meltpooldg/cut/restart.hpp Source File
+==============================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: cut_2restart_8hpp_source.html

@@ -1,0 +1,14 @@
+.. meta::618f730ea1f5dfb6a93ddc2356f3281edf007a71f3900dc80ccad2a716ee2037c80690ca33a0d76a2e7b61a5d3748e1782d6f06da65341de8b8fb884b09c2570
+
+:orphan:
+
+.. title:: Developer Documentation: source/core/material_data.cpp File Reference
+
+source/core/material\_data.cpp File Reference
+=============================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: material__data_8cpp.html

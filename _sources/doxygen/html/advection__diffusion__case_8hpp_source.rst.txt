@@ -1,0 +1,14 @@
+.. meta::9ab756e3455d493542e377b279f4e7261327c8874e2dcde91d3cf7f90ee7f52c79779a7e3421edc6776a0b34e2ce4d95ea46b6879f7057cc6448eeaf668cd0c4
+
+:orphan:
+
+.. title:: Developer Documentation: applications/mp-advec-diff/advection_diffusion_case.hpp Source File
+
+applications/mp-advec-diff/advection\_diffusion\_case.hpp Source File
+=====================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: advection__diffusion__case_8hpp_source.html

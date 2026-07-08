@@ -1,0 +1,14 @@
+.. meta::8c8ec475588309667a1f5464106db7f506a418bde1d125b101b5ac97780343b7fa4e09390b5486621e34aa5cbc81ce2928c0d0ef064b39a2b42c3b92c6b02630
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/flow/darcy_damping_operation.hpp File Reference
+
+include/meltpooldg/flow/darcy\_damping\_operation.hpp File Reference
+====================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: darcy__damping__operation_8hpp.html

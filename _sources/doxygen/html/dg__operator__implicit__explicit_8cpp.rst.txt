@@ -1,0 +1,14 @@
+.. meta::ba268ceefc8625aab915c4f1880da0f01543c18c953cf60b89992a0c46ef2dceefa05ff18733575768c04332e2f62c781c443a2348776ef5ed74f19a62a14c4e
+
+:orphan:
+
+.. title:: Developer Documentation: source/compressible_flow/dg_operator_implicit_explicit.cpp File Reference
+
+source/compressible\_flow/dg\_operator\_implicit\_explicit.cpp File Reference
+=============================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: dg__operator__implicit__explicit_8cpp.html

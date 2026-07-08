@@ -1,0 +1,14 @@
+.. meta::b9395b138ba2438dba9cb2a09dbb03714f266739d2b9f7ec8c20cbaa3a1d1784c05e6d669feb933b27c11f1bc60188e8c6cf030febef65edb78545aac81962e4
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/compressible_flow/kernels_multi_species.hpp File Reference
+
+include/meltpooldg/compressible\_flow/kernels\_multi\_species.hpp File Reference
+================================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: kernels__multi__species_8hpp.html

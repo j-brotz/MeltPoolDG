@@ -1,0 +1,14 @@
+.. meta::5bdc48aa8821c4819d83cfb621e5c92206142f6a51bc70836a82e2663fc45fe4c223a627e3b7133c947f2c1ef1b9f4542ea37844acf5c88c19c7d0ec41dc5181
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::Multiphase::CompressibleFlowPhaseCouplingData&lt; number &gt;::HLLP0_SIPG Struct Reference
+
+HLLP0\_SIPG Struct Reference
+============================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structMeltPoolDG_1_1Multiphase_1_1CompressibleFlowPhaseCouplingData_1_1HLLP0__SIPG.html

@@ -1,0 +1,14 @@
+.. meta::87535b4b97032bd5b18e89fe07b0dc994ba85947b23400bf137024847702cccd7635def9a7ba095e8f17a4114d1fa64bd89a30fb20ae75127db41d8c974b77ca
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::CompressibleFlow::BoundaryConditions&lt; dim, number &gt; Class Template Reference
+
+BoundaryConditions&lt; dim, number &gt; Class Template Reference
+================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: classMeltPoolDG_1_1CompressibleFlow_1_1BoundaryConditions.html

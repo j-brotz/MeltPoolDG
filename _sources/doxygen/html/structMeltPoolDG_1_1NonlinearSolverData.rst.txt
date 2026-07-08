@@ -1,0 +1,14 @@
+.. meta::d3ed683e16133ddd994927e5b2669b085e0376bcf93805165208d95fe32ddc3b10b69b8e6d4bfcc6daa35e07e8ddcb36e5d21abceda4686078a975ca237c3d7b
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::NonlinearSolverData&lt; number &gt; Struct Template Reference
+
+NonlinearSolverData&lt; number &gt; Struct Template Reference
+=============================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structMeltPoolDG_1_1NonlinearSolverData.html

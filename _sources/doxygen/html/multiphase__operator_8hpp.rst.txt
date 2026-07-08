@@ -1,0 +1,14 @@
+.. meta::3c1a5c4d0161eb30f9c0e76c676103b9f21029def6b953cce35adce96e4abaaea5192747765a87d4c5178edebc60cbc6fea549ad4af47780c6c3fea981d208e1
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/compressible_flow/multiphase_operator.hpp File Reference
+
+include/meltpooldg/compressible\_flow/multiphase\_operator.hpp File Reference
+=============================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: multiphase__operator_8hpp.html

@@ -1,0 +1,14 @@
+.. meta::852df9c7ebe65f2886f5ef8179ba5e43047e2ec366f13761d831c887af029b6064e91bdc7dfad44ea4a2ad1a951458412a0feea52a25c9cb6001107916651b61
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::Heat Namespace Reference
+
+Heat Namespace Reference
+========================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: namespaceMeltPoolDG_1_1Heat.html

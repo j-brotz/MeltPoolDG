@@ -1,0 +1,14 @@
+.. meta::75d6eb05098f44a1ebb8e6b56a706c121c740575d005841d3521b3704a3cdb176eaf7c61e2ce94baa19545ef3582f7bc73e8b3ff81ffe928fc08420f4fe3e74d
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::Profiling::ProfilingData&lt; number &gt; Struct Template Reference
+
+ProfilingData&lt; number &gt; Struct Template Reference
+=======================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structMeltPoolDG_1_1Profiling_1_1ProfilingData.html

@@ -1,0 +1,14 @@
+.. meta::63c5b0598266ee5b8dae4d35483b6e1455ad7f9761a9455394de23f462f0cf419165a361826c0041ab67ecd7c09641bfc5648150dfb6d1fea127635017862677
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::Heat::LaserOperation&lt; dim, number &gt; Class Template Reference
+
+LaserOperation&lt; dim, number &gt; Class Template Reference
+============================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: classMeltPoolDG_1_1Heat_1_1LaserOperation.html

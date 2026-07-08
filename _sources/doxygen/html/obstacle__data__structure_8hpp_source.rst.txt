@@ -1,0 +1,14 @@
+.. meta::a4e081bd3dafeb25459a0b59b770696f1705bb38a7c93e4af30558bc145968dfb56274b3e3c1772fdcec3f465c4e5c605323d3b9352833de5d59468a141db95c
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/particles/obstacle_data_structure.hpp Source File
+
+include/meltpooldg/particles/obstacle\_data\_structure.hpp Source File
+======================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: obstacle__data__structure_8hpp_source.html

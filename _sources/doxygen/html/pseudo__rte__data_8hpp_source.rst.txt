@@ -1,0 +1,14 @@
+.. meta::50f883e99102feedae852a92533777fcebebe9b8fe233d7e03738cea67238ee5b1e6fa629ae926c9712b0bf075dfdc51f7ae43b5ea27770b6b5140257daba4e8
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/radiative_transport/pseudo_rte_data.hpp Source File
+
+include/meltpooldg/radiative\_transport/pseudo\_rte\_data.hpp Source File
+=========================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: pseudo__rte__data_8hpp_source.html

@@ -1,0 +1,14 @@
+.. meta::408e95bfcc70ad985489d9c25b8d97e6f7ef31b18a50d43ae0342944512e63b7668cef359a18e97f4b9155488425a264512ea3605f1f19240354ff6f893763bb
+
+:orphan:
+
+.. title:: Developer Documentation: Class Members - Typedefs
+
+Class Members - Typedefs
+========================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: functions_type_c.html

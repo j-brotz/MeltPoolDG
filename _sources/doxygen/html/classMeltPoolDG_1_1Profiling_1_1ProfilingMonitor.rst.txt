@@ -1,0 +1,14 @@
+.. meta::d1ab8e6720235c691811746cef49177f17e021fbba30df127ce2fc2ba0566484d69bde041794f8fc2412f8b97c44d8f6dffc74f1615775054a46f87c0cc7f5a5
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::Profiling::ProfilingMonitor&lt; number &gt; Class Template Reference
+
+ProfilingMonitor&lt; number &gt; Class Template Reference
+=========================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: classMeltPoolDG_1_1Profiling_1_1ProfilingMonitor.html

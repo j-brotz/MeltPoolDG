@@ -1,0 +1,14 @@
+.. meta::53c25469d31feb263ae1f9aa3072883249b1424da1f9ed8a6639b7457db32131f5f266791c9d073f4d6286adca46b31b4a2e3a4ed9485add065578306f9626b7
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::Heat::HeatTransferCaseParameters&lt; number &gt; Struct Template Reference
+
+HeatTransferCaseParameters&lt; number &gt; Struct Template Reference
+====================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structMeltPoolDG_1_1Heat_1_1HeatTransferCaseParameters.html

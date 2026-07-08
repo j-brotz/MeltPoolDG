@@ -1,0 +1,14 @@
+.. meta::5bf2eeb76898d2ce41adb204b2f57b5ac1ac77828996bee885e52797ba84a53da2fe7e9447e8478e508011937998c7fbad3f0c811cbb44ba24e49dd177923158
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/compressible_flow/viscous_kernels.hpp Source File
+
+include/meltpooldg/compressible\_flow/viscous\_kernels.hpp Source File
+======================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: viscous__kernels_8hpp_source.html

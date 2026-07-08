@@ -1,0 +1,14 @@
+.. meta::ba74df7c1144252d529a4879221ba41eaee33254c5d56aa13eadc98eeae8ae7b915f33841f3af710c57eb589572c9b720f4a53e78d5e253bdc06c586f7a8c2a7
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::CompressibleFlow::DofStateView&lt; dim, number, Value &gt; Struct Template Reference
+
+DofStateView&lt; dim, number, Value &gt; Struct Template Reference
+==================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structMeltPoolDG_1_1CompressibleFlow_1_1DofStateView.html

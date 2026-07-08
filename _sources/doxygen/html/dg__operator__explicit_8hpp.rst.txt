@@ -1,0 +1,14 @@
+.. meta::c59d3a58d2a02b2fa63347a0f1e8e43f961c3e92b88d96dcb1b238ef554ef77c19c41fddc62189112f0e87a2cf50a6f85eccdfb551b8300b02393d459ff0495f
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/compressible_flow/dg_operator_explicit.hpp File Reference
+
+include/meltpooldg/compressible\_flow/dg\_operator\_explicit.hpp File Reference
+===============================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: dg__operator__explicit_8hpp.html

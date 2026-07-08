@@ -1,0 +1,14 @@
+.. meta::c6dc25ca069a1c8a5041387882372e99b2b52f8b4982ce342b0f1e679df1ae0edeed5fc2ea7c4f1368fd374b757707a704c1deddfc82295eae37f2991c61203e
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::MaterialData&lt; number &gt; Struct Template Reference
+
+MaterialData&lt; number &gt; Struct Template Reference
+======================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structMeltPoolDG_1_1MaterialData.html

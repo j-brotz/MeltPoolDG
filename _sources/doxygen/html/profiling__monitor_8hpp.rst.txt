@@ -1,0 +1,14 @@
+.. meta::a0d41293ee34fc9200a0d9c91f7f939fb78dc30c516f55239ac44e5268b86a5c5b268227f40a4f975d4ce302e47fa3837da1d1a59c54363597941201a2430e28
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/utilities/profiling_monitor.hpp File Reference
+
+include/meltpooldg/utilities/profiling\_monitor.hpp File Reference
+==================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: profiling__monitor_8hpp.html

@@ -1,0 +1,14 @@
+.. meta::182c8238c1ac381814f1d57c83ef9ba2b5740b22fb3e2b9f93400e79011443c1e84665692da6683f896c937012c6be9a311b6e063a86affe93e209cec857cf34
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::MeltPoolCaseParameters&lt; number &gt; Struct Template Reference
+
+MeltPoolCaseParameters&lt; number &gt; Struct Template Reference
+================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structMeltPoolDG_1_1MeltPoolCaseParameters.html

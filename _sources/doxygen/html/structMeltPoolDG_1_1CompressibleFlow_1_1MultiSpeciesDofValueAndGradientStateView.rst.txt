@@ -1,0 +1,14 @@
+.. meta::436246a87f3681e1a6890398779fc9f58a7fb411cfea99b08e630bc49c7e8104b414412492545cd7c3071b831d88dfdeab57dfa1d8624e143c534787d6ff23fe
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::CompressibleFlow::MultiSpeciesDofValueAndGradientStateView&lt; dim, n_species, number, Value, Gradient &gt; Struct Template Reference
+
+MultiSpeciesDofValueAndGradientStateView&lt; dim, n\_species, number, Value, Gradient &gt; Struct Template Reference
+====================================================================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structMeltPoolDG_1_1CompressibleFlow_1_1MultiSpeciesDofValueAndGradientStateView.html

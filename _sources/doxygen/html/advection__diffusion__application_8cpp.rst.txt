@@ -1,0 +1,14 @@
+.. meta::2d310657a74d862a4b8131ac408ca5c6cdc67367f872c36a1ccc7b9ed056de930e1b56502ddedc10512ec04583a522bdb6a21b9abb01074d8c60a2a3b571bb7d
+
+:orphan:
+
+.. title:: Developer Documentation: applications/mp-advec-diff/advection_diffusion_application.cpp File Reference
+
+applications/mp-advec-diff/advection\_diffusion\_application.cpp File Reference
+===============================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: advection__diffusion__application_8cpp.html

@@ -1,0 +1,14 @@
+.. meta::29bf21566cb01ecd20b076bbc49c619d47b4383e83f3ca9b0877d55cf518928f56e30dd98cf9f3a4ce1a05fa8d013b2b44003ec0ae9cc46a3c4788f56cecc72f
+
+:orphan:
+
+.. title:: Developer Documentation: MeltPoolDG::Flow::EOSGradientMixin&lt; dim, Derived &gt; Struct Template Reference
+
+EOSGradientMixin&lt; dim, Derived &gt; Struct Template Reference
+================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: structMeltPoolDG_1_1Flow_1_1EOSGradientMixin.html

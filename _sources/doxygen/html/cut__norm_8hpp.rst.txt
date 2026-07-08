@@ -1,0 +1,14 @@
+.. meta::c647ae456e0485c4d8a1558cf26e3978c49aa982d867993ba49faa28a846e5c1608148bf1f1b81e01bcd8aa72f550c0c81c1f315e74580fd6d4da12f342b7a00
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/cut/cut_norm.hpp File Reference
+
+include/meltpooldg/cut/cut\_norm.hpp File Reference
+===================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: cut__norm_8hpp.html

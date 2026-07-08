@@ -1,0 +1,14 @@
+.. meta::8b4441dc58618e32b74faf708f729d80c5a58cc162769b9f3969cddaee35bfcdc523c8abda646ea63f32343dd5dbd6a0023f4692f589792f3a0b2344e2365587
+
+:orphan:
+
+.. title:: Developer Documentation: include/meltpooldg/radiative_transport/radiative_transport_operation.hpp File Reference
+
+include/meltpooldg/radiative\_transport/radiative\_transport\_operation.hpp File Reference
+==========================================================================================
+
+.. container:: doxygen-content
+
+   
+   .. raw:: html
+     :file: radiative__transport__operation_8hpp.html
