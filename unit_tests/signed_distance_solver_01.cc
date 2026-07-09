@@ -150,6 +150,7 @@ test()
 
   signed_distance_solver->setup_dofs();
 
+  background_level_set.update_ghost_values();
   signed_distance_solver->set_level_set_from_background_mesh(background_dof_handler,
                                                              background_level_set);
 
