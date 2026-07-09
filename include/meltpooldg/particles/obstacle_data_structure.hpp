@@ -156,7 +156,7 @@ namespace MeltPoolDG
    * ### 1. Cache Maintenance & Synchronization
    * The class provides several functions to modify and update the internal caches:
    *
-   * - **`initialize()`**
+   * - `initialize()` <br>
    * Must be called once before using the class. It initializes all data structures and caches,
    * including those that only change if the triangulation changes. It automatically determines
    * the optimal cache level based on the maximum particle radius and the minimum vertex distance
@@ -165,26 +165,26 @@ namespace MeltPoolDG
    * use the function `prepare_for_coarsening_and_refinement()` before adaptation, and
    * unpack_after_coarsening_and_refinement()` afterward.
    *
-   * - **`sort_particles_into_subdomains_and_cells()`**
+   * - `sort_particles_into_subdomains_and_cells()` <br>
    * Performs a complete, expensive update of the particle structures. It uses the deal.II
    * `ParticleHandler` functionality to determine the active cell and subdomain for each particle,
    * moving them across MPI ranks as needed. Afterward, it rebuilds the coarse-level cell-list
    * cache, identifies ghost particles on that level needed by each process, and distributes them
    * accordingly.
    *
-   * - **`update_ghost_particle_properties()`**
+   * - `update_ghost_particle_properties()` <br>
    * A lightweight alternative to a full rebuild. It synchronizes the properties of ghost particles
    * with their locally owned counterparts without resort-sorting particles into subdomains/active
    * cells or rebuilding the coarse cache. You can use this function when particles have moved, but
    * not enough to invalidate the existing cache structure.
    *
-   * - **`auto_update_ghost_particle_properties()`**
+   * - `auto_update_particle_cache()` <br>
    * Automatically decides whether a lightweight ghost update suffices or if a full
    * `sort_particles_into_subdomains_and_cells()` is required. It tracks particle displacements
    * since the last full sorting to make this decision. See teh documentation of the class
    * `NeighborListUpdateTracker` for details.
    *
-   * - **`compress()`**
+   * - `compress()` <br>
    * Accumulates rank-local force or torque contributions computed on ghost particles back to their
    * locally owned counterparts by summing the values across ranks. Be aware that after calling this
    * function, the force and torque values on ghost particles are invalidated and should not before
@@ -194,13 +194,13 @@ namespace MeltPoolDG
    * ### 2. Particle Querying
    * Once the cache is up to date, particles can be retrieved efficiently via the following methods:
    *
-   * - **`get_obstacles_in_cell()`**
+   * - `get_obstacles_in_cell()` <br>
    * Takes an active cell iterator and returns all particles relevant to that cell (i.e., particles
    * overlapping or in the immediate vicinity of the cell). It basically just looks up the
    * coarse-level cell-list cache for the cell and its neighbors, making it a very cheap call
    * independent of the total number of particles in the global domain.
    *
-   * - **`find_particles_in_neighborhood()`**
+   * - `find_particles_in_neighborhood()` <br>
    * Takes a particle and returnins all particles within a certain distance. Like the cell query,
    * this leverages the coarse-level cell-list cache making the function very cheap and independent
    * of the total number of particles in the global domain.
