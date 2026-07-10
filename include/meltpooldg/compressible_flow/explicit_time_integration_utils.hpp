@@ -90,14 +90,14 @@ namespace MeltPoolDG::CompressibleFlow
    * @param convective_terms Collection of convective term computations for the compressible Navier-Stokes equations.
    * @param viscous_terms Collection of viscous term computations for the compressible Navier-Stokes equations.
    * @param body_force Pointer to a body force function.
+   * @param is_viscous Boolean flag indicating whether the flow is viscous or not.
    *
    * @return Tuple, containing the flux, weighted with the value of the test function, as first
    * argument, and the flux, weighted with the gradient of the test function, as second argument.
    */
   template <int dim,
             typename number,
-            CellEvaluatorType<dim, dim + 2, number, dealii::VectorizedArray<number>> Integrator,
-            bool is_viscous = true>
+            CellEvaluatorType<dim, dim + 2, number, dealii::VectorizedArray<number>> Integrator>
   inline DEAL_II_ALWAYS_INLINE //
     std::tuple<ConservedVariablesType<dim, number>, ConservedVariablesGradientType<dim, number>>
     rhs_cell_integral_kernel(
@@ -106,7 +106,8 @@ namespace MeltPoolDG::CompressibleFlow
       const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> *constant_body_force,
       const ConvectiveKernels<dim, number>                          &convective_terms,
       const ViscousKernels<dim, number>                             &viscous_terms,
-      const std::unique_ptr<dealii::Function<dim>>                  &body_force)
+      const std::unique_ptr<dealii::Function<dim>>                  &body_force,
+      const bool                                                     is_viscous)
   {
     const auto w_q = evaluator.get_value(q);
 
@@ -151,6 +152,7 @@ namespace MeltPoolDG::CompressibleFlow
    * Navier-Stokes equations.
    * @param viscous_terms Collection of viscous term computations for the compressible Navier-Stokes
    * equations.
+   * @param is_viscous Boolean flag indicating whether the flow is viscous or not.
    *
    * @return Tuple, which containing the fluxes for the inside and outside faces, weighted with
    * the value of the test functions, as first two arguments, and the fluxes for the inside and
@@ -159,8 +161,7 @@ namespace MeltPoolDG::CompressibleFlow
    */
   template <int dim,
             typename number,
-            FaceEvaluatorType<dim, dim + 2, number, dealii::VectorizedArray<number>> Integrator,
-            bool is_viscous = true>
+            FaceEvaluatorType<dim, dim + 2, number, dealii::VectorizedArray<number>> Integrator>
   inline DEAL_II_ALWAYS_INLINE //
     std::tuple<ConservedVariablesType<dim, number>,
                ConservedVariablesType<dim, number>,
@@ -171,7 +172,8 @@ namespace MeltPoolDG::CompressibleFlow
                              const unsigned int                    q,
                              dealii::VectorizedArray<number>       penalty_parameter,
                              const ConvectiveKernels<dim, number> &convective_terms,
-                             const ViscousKernels<dim, number>    &viscous_terms)
+                             const ViscousKernels<dim, number>    &viscous_terms,
+                             const bool                            is_viscous)
   {
     auto numerical_flux =
       convective_terms.calculate_convective_numerical_flux(evaluator_m.get_value(q),
@@ -222,6 +224,7 @@ namespace MeltPoolDG::CompressibleFlow
    * @param material Class providing material data and calculations of thermodynamic relations.
    * @param boundary_conditions Class providing boundary condition related computations for the
    * compressible flow solver
+   * @param is_viscous Boolean flag indicating whether the flow is viscous or not.
    *
    * @return Tuple, containing the flux for the boundary face, weighted with the value of the test
    * function, as first argument, and the flux for the boundary face, weighted with the gradient
@@ -230,7 +233,6 @@ namespace MeltPoolDG::CompressibleFlow
   template <int dim,
             typename number,
             FaceEvaluatorType<dim, dim + 2, number, dealii::VectorizedArray<number>> Integrator,
-            bool is_viscous   = true,
             bool is_gas_phase = true>
   inline DEAL_II_ALWAYS_INLINE //
     std::tuple<ConservedVariablesType<dim, number>, ConservedVariablesGradientType<dim, number>>
@@ -241,7 +243,8 @@ namespace MeltPoolDG::CompressibleFlow
                                       const ConvectiveKernels<dim, number>  &convective_terms,
                                       const ViscousKernels<dim, number>     &viscous_terms,
                                       const Material<dim, number>           &material,
-                                      const BoundaryConditions<dim, number> &boundary_conditions)
+                                      const BoundaryConditions<dim, number> &boundary_conditions,
+                                      const bool                             is_viscous)
   {
     const auto w_m      = evaluator_m.get_value(q);
     const auto normal   = evaluator_m.normal_vector(q);

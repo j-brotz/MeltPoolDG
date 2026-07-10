@@ -5,6 +5,7 @@
 #include <meltpooldg/compressible_flow/kernels.hpp>
 #include <meltpooldg/compressible_flow/operation_scratch_data.hpp>
 #include <meltpooldg/compressible_flow/state_views_n_species.hpp>
+#include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/linear_algebra/utilities_matrixfree.hpp>
 #include <meltpooldg/time_integration/time_integrator_util.hpp>
 #include <meltpooldg/utilities/dg_generic_convection_diffusion_worker.hpp>
@@ -56,16 +57,6 @@ namespace MeltPoolDG::CompressibleFlow
 
     time_integrator.perform_time_step(
       time, time_step, flow_scratch_data.solution_history, pre_processing, post_processing);
-  }
-
-  template <int dim, typename number, int n_species>
-  bool
-  DGOperatorExplicit<dim, number, n_species>::is_viscous() const
-  {
-    for (unsigned int species = 0; species < n_species; ++species)
-      if (flow_scratch_data.material.data.species_data[species].dynamic_viscosity > 0.0)
-        return true;
-    return false;
   }
 
   template <int dim, typename number, int n_species>
@@ -130,15 +121,17 @@ namespace MeltPoolDG::CompressibleFlow
       {
         phi.reinit(cell);
         phi.gather_evaluate(src,
-                            EvaluationFlags::values | (is_viscous() ? EvaluationFlags::gradients :
-                                                                      EvaluationFlags::nothing));
+                            EvaluationFlags::values |
+                              (is_viscous_flow<number, n_species>(flow_scratch_data.material.data) ?
+                                 EvaluationFlags::gradients :
+                                 EvaluationFlags::nothing));
 
         for (const unsigned int q : phi.quadrature_point_indices())
           {
             FlowSourceType source;
             FlowFluxType   flux;
 
-            if (is_viscous())
+            if (is_viscous_flow<number, n_species>(flow_scratch_data.material.data))
               flux =
                 ConvectionDiffusionOperator::cell(phi.get_value(q),
                                                   phi.get_gradient(q),
@@ -183,16 +176,20 @@ namespace MeltPoolDG::CompressibleFlow
       {
         phi_p.reinit(face);
         phi_p.gather_evaluate(src,
-                              EvaluationFlags::values | (is_viscous() ? EvaluationFlags::gradients :
-                                                                        EvaluationFlags::nothing));
+                              EvaluationFlags::values | (is_viscous_flow<number, n_species>(
+                                                           flow_scratch_data.material.data) ?
+                                                           EvaluationFlags::gradients :
+                                                           EvaluationFlags::nothing));
 
         phi_m.reinit(face);
         phi_m.gather_evaluate(src,
-                              EvaluationFlags::values | (is_viscous() ? EvaluationFlags::gradients :
-                                                                        EvaluationFlags::nothing));
+                              EvaluationFlags::values | ((is_viscous_flow<number, n_species>(
+                                                            flow_scratch_data.material.data) ?
+                                                            EvaluationFlags::gradients :
+                                                            EvaluationFlags::nothing)));
 
         const VectorizedArray<number> interior_penalty_parameter =
-          is_viscous() ?
+          is_viscous_flow<number, n_species>(flow_scratch_data.material.data) ?
             flow_scratch_data.material.data.reference_dynamic_viscosity /
               flow_scratch_data.material.data.reference_density *
               std::max(phi_m.read_cell_data(flow_scratch_data.interior_penalty_parameter),
@@ -204,7 +201,7 @@ namespace MeltPoolDG::CompressibleFlow
             FaceFluxType<dim, number, n_species> flux_m;
             FaceFluxType<dim, number, n_species> flux_p;
 
-            if (is_viscous())
+            if (is_viscous_flow<number, n_species>(flow_scratch_data.material.data))
               {
                 const auto flux = ConvectionDiffusionOperator::face(
                   phi_m.get_value(q),
@@ -238,13 +235,15 @@ namespace MeltPoolDG::CompressibleFlow
             phi_p.submit_value(flux_p, q);
           }
 
-        phi_p.integrate_scatter(EvaluationFlags::values |
-                                  (is_viscous() ? EvaluationFlags::gradients :
-                                                  EvaluationFlags::nothing),
+        phi_p.integrate_scatter(EvaluationFlags::values | (is_viscous_flow<number, n_species>(
+                                                             flow_scratch_data.material.data) ?
+                                                             EvaluationFlags::gradients :
+                                                             EvaluationFlags::nothing),
                                 dst);
-        phi_m.integrate_scatter(EvaluationFlags::values |
-                                  (is_viscous() ? EvaluationFlags::gradients :
-                                                  EvaluationFlags::nothing),
+        phi_m.integrate_scatter(EvaluationFlags::values | (is_viscous_flow<number, n_species>(
+                                                             flow_scratch_data.material.data) ?
+                                                             EvaluationFlags::gradients :
+                                                             EvaluationFlags::nothing),
                                 dst);
       }
   }
@@ -281,10 +280,11 @@ namespace MeltPoolDG::CompressibleFlow
         phi_m.gather_evaluate(src, EvaluationFlags::values | EvaluationFlags::gradients);
 
         const VectorizedArray<number> interior_penalty_parameter =
-          is_viscous() ? flow_scratch_data.material.data.reference_dynamic_viscosity /
-                           flow_scratch_data.material.data.reference_density *
-                           phi_m.read_cell_data(flow_scratch_data.interior_penalty_parameter) :
-                         0.;
+          is_viscous_flow<number, n_species>(flow_scratch_data.material.data) ?
+            flow_scratch_data.material.data.reference_dynamic_viscosity /
+              flow_scratch_data.material.data.reference_density *
+              phi_m.read_cell_data(flow_scratch_data.interior_penalty_parameter) :
+            0.;
 
         for (const unsigned int q : phi_m.quadrature_point_indices())
           {
@@ -315,7 +315,7 @@ namespace MeltPoolDG::CompressibleFlow
               }
 
             FaceFluxType<dim, number, n_species> flux_m;
-            if (is_viscous())
+            if (is_viscous_flow<number, n_species>(flow_scratch_data.material.data))
               {
                 const auto flux = ConvectionDiffusionOperator::face(
                   phi_m.get_value(q),
@@ -345,9 +345,10 @@ namespace MeltPoolDG::CompressibleFlow
             phi_m.submit_value(flux_m, q);
           }
 
-        phi_m.integrate_scatter(EvaluationFlags::values |
-                                  (is_viscous() ? EvaluationFlags::gradients :
-                                                  EvaluationFlags::nothing),
+        phi_m.integrate_scatter(EvaluationFlags::values | (is_viscous_flow<number, n_species>(
+                                                             flow_scratch_data.material.data) ?
+                                                             EvaluationFlags::gradients :
+                                                             EvaluationFlags::nothing),
                                 dst);
       }
   }

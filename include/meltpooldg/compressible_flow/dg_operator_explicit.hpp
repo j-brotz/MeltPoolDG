@@ -129,15 +129,6 @@ namespace MeltPoolDG::CompressibleFlow
     mutable number current_time_step;
 
     /**
-     * Return true if the flow is viscous, false otherwise. In single component flows, this is
-     * determined by the value of the dynamic viscosity in the material data. In multi-component
-     * flows, a flow is considered viscous if the dynamic viscosity is greater than zero for at
-     * least one of the components.
-     */
-    bool
-    is_viscous() const;
-
-    /**
      * @brief Local cell applier.
      *
      * Computes the cell contribution to the rhs if the compressible Navier-Stokes equations are

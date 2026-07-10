@@ -337,27 +337,18 @@ namespace MeltPoolDG::CompressibleFlow
       }
     if constexpr (n_species == 1)
       {
-        const bool is_viscous = flow_scratch_data.material.data.dynamic_viscosity > 0.;
         if (time_integrator_scheme_is_implicit(
               flow_scratch_data.flow_data.time_integrator.integrator_type))
           {
-            if (is_viscous)
-              comp_flow_operator =
-                std::make_unique<DGOperatorImplicit<dim, number, true>>(flow_scratch_data);
-            else
-              comp_flow_operator =
-                std::make_unique<DGOperatorImplicit<dim, number, false>>(flow_scratch_data);
+            comp_flow_operator =
+              std::make_unique<DGOperatorImplicit<dim, number>>(flow_scratch_data);
             return;
           }
         else if (flow_scratch_data.flow_data.time_integrator.integrator_type ==
                  TimeIntegration::TimeIntegratorSchemes::imex)
           {
-            if (is_viscous)
-              comp_flow_operator =
-                std::make_unique<DGOperatorImplicitExplicit<dim, number, true>>(flow_scratch_data);
-            else
-              comp_flow_operator =
-                std::make_unique<DGOperatorImplicitExplicit<dim, number, false>>(flow_scratch_data);
+            comp_flow_operator =
+              std::make_unique<DGOperatorImplicitExplicit<dim, number>>(flow_scratch_data);
             return;
           }
         else

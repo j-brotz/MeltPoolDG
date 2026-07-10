@@ -18,7 +18,7 @@ namespace MeltPoolDG::CompressibleFlow
    * @tparam number Floating point format type.
    * @tparam is_viscous Indicates whether the flow is viscous.
    */
-  template <int dim, typename number, bool is_viscous = true>
+  template <int dim, typename number>
   class DGOperatorImplicitExplicit final : public DGOperatorBase<dim, number>
   {
   public:

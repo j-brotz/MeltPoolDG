@@ -78,11 +78,8 @@ namespace
    * A fixture class providing everything required to set up the (non-cut) compressible flow
    * operator for explicit, implicit and imex time integration.
    */
-  template <typename is_viscous_bool>
   class CompressibleFlowOperatorFixture : public benchmark::Fixture
   {
-    static const bool is_viscous = is_viscous_bool::value;
-
   public:
     /**
      * @brief Holds all operator-specific objects and functions.
@@ -130,10 +127,9 @@ namespace
 
       std::unique_ptr<MeltPoolDG::CompressibleFlow::DGOperatorExplicit<dim, number, 1>>
         explicit_flow_operator;
-      std::unique_ptr<MeltPoolDG::CompressibleFlow::DGOperatorImplicit<dim, number, is_viscous>>
+      std::unique_ptr<MeltPoolDG::CompressibleFlow::DGOperatorImplicit<dim, number>>
         implicit_flow_operator;
-      std::unique_ptr<
-        MeltPoolDG::CompressibleFlow::DGOperatorImplicitExplicit<dim, number, is_viscous>>
+      std::unique_ptr<MeltPoolDG::CompressibleFlow::DGOperatorImplicitExplicit<dim, number>>
         imex_flow_operator;
 
     private:
@@ -246,14 +242,14 @@ namespace
               break;
             }
             case OperatorType::Implicit: {
-              data->implicit_flow_operator = std::make_unique<
-                MeltPoolDG::CompressibleFlow::DGOperatorImplicit<dim, number, is_viscous>>(
-                *data->flow_scratch_data);
+              data->implicit_flow_operator =
+                std::make_unique<MeltPoolDG::CompressibleFlow::DGOperatorImplicit<dim, number>>(
+                  *data->flow_scratch_data);
               break;
             }
             case OperatorType::ImEx: {
               data->imex_flow_operator = std::make_unique<
-                MeltPoolDG::CompressibleFlow::DGOperatorImplicitExplicit<dim, number, is_viscous>>(
+                MeltPoolDG::CompressibleFlow::DGOperatorImplicitExplicit<dim, number>>(
                 *data->flow_scratch_data);
               break;
             }
@@ -294,7 +290,7 @@ namespace
     std::unique_ptr<Data> data;
   };
 
-  BENCHMARK_TEMPLATE_METHOD_F(CompressibleFlowOperatorFixture, ExplicitOperator)
+  BENCHMARK_DEFINE_F(CompressibleFlowOperatorFixture, ExplicitOperator)
   (benchmark::State &state)
   {
     constexpr number current_time = 0.1;
@@ -311,14 +307,12 @@ namespace
     });
   }
 
-  BENCHMARK_TEMPLATE_INSTANTIATE_F(CompressibleFlowOperatorFixture,
-                                   ExplicitOperator,
-                                   std::integral_constant<bool, true>)
+  BENCHMARK_REGISTER_F(CompressibleFlowOperatorFixture, ExplicitOperator)
     ->DenseRange(10, 20, 10)
     ->Name("explicit operator, viscid");
 
 
-  BENCHMARK_TEMPLATE_METHOD_F(CompressibleFlowOperatorFixture, ImplicitOperatorResidual)
+  BENCHMARK_DEFINE_F(CompressibleFlowOperatorFixture, ImplicitOperatorResidual)
   (benchmark::State &state)
   {
     constexpr number current_time = 0.1;
@@ -337,19 +331,12 @@ namespace
     state.counters["DoFs"] = this->data->dof_handler.n_dofs();
   }
 
-  BENCHMARK_TEMPLATE_INSTANTIATE_F(CompressibleFlowOperatorFixture,
-                                   ImplicitOperatorResidual,
-                                   std::integral_constant<bool, true>)
+  BENCHMARK_REGISTER_F(CompressibleFlowOperatorFixture, ImplicitOperatorResidual)
     ->DenseRange(10, 20, 10)
     ->Name("implicit operator, viscid: residual");
 
-  BENCHMARK_TEMPLATE_INSTANTIATE_F(CompressibleFlowOperatorFixture,
-                                   ImplicitOperatorResidual,
-                                   std::integral_constant<bool, false>)
-    ->DenseRange(10, 20, 10)
-    ->Name("implicit operator, in-viscid: residual");
 
-  BENCHMARK_TEMPLATE_METHOD_F(CompressibleFlowOperatorFixture, ImplicitOperatorJacobian)
+  BENCHMARK_DEFINE_F(CompressibleFlowOperatorFixture, ImplicitOperatorJacobian)
   (benchmark::State &state)
   {
     constexpr number time_step = 1e-4;
@@ -365,19 +352,11 @@ namespace
     state.counters["DoFs"] = this->data->dof_handler.n_dofs();
   }
 
-  BENCHMARK_TEMPLATE_INSTANTIATE_F(CompressibleFlowOperatorFixture,
-                                   ImplicitOperatorJacobian,
-                                   std::integral_constant<bool, true>)
+  BENCHMARK_REGISTER_F(CompressibleFlowOperatorFixture, ImplicitOperatorJacobian)
     ->DenseRange(10, 20, 10)
     ->Name("implicit operator, viscid: jacobian");
 
-  BENCHMARK_TEMPLATE_INSTANTIATE_F(CompressibleFlowOperatorFixture,
-                                   ImplicitOperatorJacobian,
-                                   std::integral_constant<bool, false>)
-    ->DenseRange(10, 20, 10)
-    ->Name("implicit operator, in-viscid: jacobian");
-
-  BENCHMARK_TEMPLATE_METHOD_F(CompressibleFlowOperatorFixture, ImExOperatorResidual)
+  BENCHMARK_DEFINE_F(CompressibleFlowOperatorFixture, ImExOperatorResidual)
   (benchmark::State &state)
   {
     constexpr number current_time = 0.1;
@@ -396,14 +375,12 @@ namespace
     state.counters["DoFs"] = this->data->dof_handler.n_dofs();
   }
 
-  BENCHMARK_TEMPLATE_INSTANTIATE_F(CompressibleFlowOperatorFixture,
-                                   ImExOperatorResidual,
-                                   std::integral_constant<bool, true>)
+  BENCHMARK_REGISTER_F(CompressibleFlowOperatorFixture, ImExOperatorResidual)
     ->DenseRange(10, 20, 10)
     ->Name("imex operator, viscid: residual");
 
 
-  BENCHMARK_TEMPLATE_METHOD_F(CompressibleFlowOperatorFixture, ImExOperatorJacobian)
+  BENCHMARK_DEFINE_F(CompressibleFlowOperatorFixture, ImExOperatorJacobian)
   (benchmark::State &state)
   {
     constexpr number current_time = 0.1;
@@ -421,13 +398,11 @@ namespace
     state.counters["DoFs"] = this->data->dof_handler.n_dofs();
   }
 
-  BENCHMARK_TEMPLATE_INSTANTIATE_F(CompressibleFlowOperatorFixture,
-                                   ImExOperatorJacobian,
-                                   std::integral_constant<bool, true>)
+  BENCHMARK_REGISTER_F(CompressibleFlowOperatorFixture, ImExOperatorJacobian)
     ->DenseRange(10, 20, 10)
     ->Name("imex operator, viscid: jacobian");
 
-  BENCHMARK_TEMPLATE_METHOD_F(CompressibleFlowOperatorFixture, ImExOperatorExplicitStage)
+  BENCHMARK_DEFINE_F(CompressibleFlowOperatorFixture, ImExOperatorExplicitStage)
   (benchmark::State &state)
   {
     constexpr number current_time = 0.1;
@@ -446,9 +421,7 @@ namespace
     state.counters["DoFs"] = this->data->dof_handler.n_dofs();
   }
 
-  BENCHMARK_TEMPLATE_INSTANTIATE_F(CompressibleFlowOperatorFixture,
-                                   ImExOperatorExplicitStage,
-                                   std::integral_constant<bool, true>)
+  BENCHMARK_REGISTER_F(CompressibleFlowOperatorFixture, ImExOperatorExplicitStage)
     ->DenseRange(10, 20, 10)
     ->Name("imex operator, viscid: explicit stage");
 } // namespace
