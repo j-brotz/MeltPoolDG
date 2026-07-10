@@ -1,5 +1,8 @@
 #pragma once
 
+#include <cmath>
+#include <numbers>
+
 namespace MeltPoolDG::numbers
 {
   // @note We did not use std::numeric_limits<double>::lowest() on purpose.
@@ -33,9 +36,9 @@ namespace MeltPoolDG::numbers
   number
   compute_angle_in_radians(const number angle_deg)
   {
-    return angle_deg * number(dealii::numbers::PI / 180.0);
+    return angle_deg * number(std::numbers::pi_v<number> / 180.0);
   }
 
   /// Square root of pi
-  constexpr double sqrt_pi = std::sqrt(dealii::numbers::PI);
+  constexpr double sqrt_pi = std::numbers::pi_v<double> * std::numbers::inv_sqrtpi_v<double>;
 } // namespace MeltPoolDG::numbers
