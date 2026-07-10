@@ -11,38 +11,18 @@
 namespace MeltPoolDG::TimeIntegration
 {
   template <int dim, typename number>
-  BDFIntegrator<dim, number>::BDFIntegrator(const TimeIntegratorData<number> &time_integrator_data)
+  BDFIntegrator<dim, number>::BDFIntegrator(
+    const TimeIntegratorData<number>         &time_integrator_data,
+    const SolverFunctions                    &solver_functions,
+    Preconditioner<dim, VectorType, number> &&preconditioner_in)
     : TimeIntegratorBase<number>(time_integrator_data)
+    , compute_residual(solver_functions.compute_residual)
+    , compute_jacobian(solver_functions.compute_jacobian)
+    , distribute_constraints(solver_functions.distribute_constraints)
     , solver(std::make_unique<NewtonRaphsonSolver<number, VectorType>>(
         this->time_integrator_data.nlsolver_data))
-  {}
-
-  template <int dim, typename number>
-  void
-  BDFIntegrator<dim, number>::configure_solver_functions(JacobianType              jacobian,
-                                                         ResidualType              residual,
-                                                         DistributeConstraintsType constraints)
+    , preconditioner(std::move(preconditioner_in))
   {
-    compute_jacobian       = std::move(jacobian);
-    compute_residual       = std::move(residual);
-    distribute_constraints = std::move(constraints);
-
-    // Ensure that a preconditioner is set. If not set previously it is set to identity but can be
-    // changed by the user anytime by calling set_preconditioner().
-    if (!preconditioner.is_initialized())
-      {
-        preconditioner = Preconditioner<dim, VectorType, number>(
-          IdentityPreconditioner<dim, VectorType, number>());
-      }
-    preconditioner_update_flag = true;
-  }
-
-  template <int dim, typename number>
-  void
-  BDFIntegrator<dim, number>::set_preconditioner(
-    Preconditioner<dim, VectorType, number> &&preconditioner_in)
-  {
-    preconditioner             = std::move(preconditioner_in);
     preconditioner_update_flag = true;
   }
 

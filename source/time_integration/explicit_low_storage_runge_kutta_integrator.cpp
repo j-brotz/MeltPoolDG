@@ -2,14 +2,16 @@
 
 #include <meltpooldg/time_integration/explicit_low_storage_runge_kutta_integrator.hpp>
 
-#include <utility>
+#include <functional>
 
 namespace MeltPoolDG::TimeIntegration
 {
   template <typename number>
   LowStorageExplicitRungeKuttaIntegrator<number>::LowStorageExplicitRungeKuttaIntegrator(
-    const TimeIntegratorData<number> &time_integrator_data)
+    const TimeIntegratorData<number> &time_integrator_data,
+    const RhsFunctionType            &compute_rhs)
     : TimeIntegratorBase<number>(time_integrator_data)
+    , compute_rhs(compute_rhs)
   {
     switch (time_integrator_data.integrator_type)
       {
@@ -105,14 +107,6 @@ namespace MeltPoolDG::TimeIntegration
   LowStorageExplicitRungeKuttaIntegrator<number>::required_solution_history_size() const
   {
     return 1;
-  }
-
-  template <typename number>
-  void
-  LowStorageExplicitRungeKuttaIntegrator<number>::configure_rhs(
-    const RhsFunctionType &compute_rhs_in)
-  {
-    compute_rhs = std::move(compute_rhs_in);
   }
 
 

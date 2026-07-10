@@ -12,9 +12,19 @@ namespace MeltPoolDG::TimeIntegration
 {
   template <unsigned int dim, typename number>
   ImplicitExplicitIntegrator<dim, number>::ImplicitExplicitIntegrator(
-    const TimeIntegratorData<number> &time_integrator_data)
+    const TimeIntegratorData<number>         &time_integrator_data,
+    const SolverFunctions                     solver_functions,
+    Preconditioner<dim, VectorType, number> &&preconditioner_in)
     : TimeIntegratorBase<number>(time_integrator_data)
-  {}
+    , compute_residual(solver_functions.compute_residual)
+    , compute_jacobian(solver_functions.compute_jacobian)
+    , distribute_constraints(solver_functions.distribute_constraints)
+    , explicit_compute_rhs(solver_functions.compute_explicit_rhs)
+    , solver(time_integrator_data.nlsolver_data)
+    , preconditioner(std::move(preconditioner_in))
+  {
+    preconditioner_update_flag = true;
+  }
 
   template <unsigned int dim, typename number>
   unsigned
@@ -38,55 +48,6 @@ namespace MeltPoolDG::TimeIntegration
     const SolutionHistory<VectorType> &solution_history)
   {
     reinit(solution_history.get_current_solution());
-  }
-
-  template <unsigned int dim, typename number>
-  void
-  ImplicitExplicitIntegrator<dim, number>::configure_explicit_step(
-    ExplicitRhsFunctionType explicit_rhs)
-  {
-    explicit_compute_rhs = std::move(explicit_rhs);
-  }
-
-  template <unsigned int dim, typename number>
-  void
-  ImplicitExplicitIntegrator<dim, number>::configure_implicit_step_wo_internal_nonlinear_solver(
-    CustomSolverType custom_solver_in)
-  {
-    custom_solver = std::move(custom_solver_in);
-  }
-
-  template <unsigned int dim, typename number>
-  void
-  ImplicitExplicitIntegrator<dim, number>::configure_implicit_step(
-    JacobianType              jacobian,
-    ResidualType              residual,
-    DistributeConstraintsType constraints)
-  {
-    compute_jacobian       = std::move(jacobian);
-    compute_residual       = std::move(residual);
-    distribute_constraints = std::move(constraints);
-
-    solver.emplace(
-      NewtonRaphsonSolver<number, VectorType>(this->time_integrator_data.nlsolver_data));
-
-    // Ensure that a preconditioner is set. If not set previously it is set to identity but can be
-    // changed by the user anytime by calling set_preconditioner().
-    if (!preconditioner.is_initialized())
-      {
-        preconditioner = Preconditioner<dim, VectorType, number>(
-          IdentityPreconditioner<dim, VectorType, number>());
-      }
-    preconditioner_update_flag = true;
-  }
-
-  template <unsigned int dim, typename number>
-  void
-  ImplicitExplicitIntegrator<dim, number>::set_preconditioner(
-    Preconditioner<dim, VectorType, number> &&preconditioner_in)
-  {
-    preconditioner             = std::move(preconditioner_in);
-    preconditioner_update_flag = true;
   }
 
   template <unsigned int dim, typename number>
@@ -157,65 +118,54 @@ namespace MeltPoolDG::TimeIntegration
                                                                VectorType &explicit_solution,
                                                                VectorType &solution)
   {
-    if (custom_solver)
+    Assert(compute_residual,
+           dealii::ExcMessage(
+             "No function has been set for computing the residual in the implicit step!"));
+
+    Assert(compute_jacobian,
+           dealii::ExcMessage(
+             "No function has been set for computing the jacobian in the implicit step!"));
+
+    // update preconditioner if required
+    if (n_steps_performed % this->time_integrator_data.preconditioner_update_frequency == 0 or
+        preconditioner_update_flag)
       {
-        custom_solver(time, time_step, explicit_solution, solution);
+        preconditioner.update();
+        preconditioner_update_flag = false;
       }
-    else
-      {
-        Assert(
-          compute_residual,
-          dealii::ExcMessage(
-            "No function has been set for computing the computing the residual in the implicit step!"));
-        Assert(
-          compute_jacobian,
-          dealii::ExcMessage(
-            "No function has been set for computing the computing the jacobian in the implicit step!"));
-        Assert(solver.has_value(), dealii::ExcInternalError());
+    solver.norm_of_solution_vector = [&solution = solution]() -> number {
+      return solution.l2_norm();
+    };
 
-        // update preconditioner if required
-        if (n_steps_performed % this->time_integrator_data.preconditioner_update_frequency == 0 or
-            preconditioner_update_flag)
-          {
-            preconditioner.update();
-            preconditioner_update_flag = false;
-          }
-        solver->norm_of_solution_vector = [&solution = solution]() -> number {
-          return solution.l2_norm();
-        };
+    // setup solver
+    solver.distribute_constraints = [&](VectorType &solution) -> void {
+      if (distribute_constraints)
+        distribute_constraints(solution);
+    };
 
-        // setup solver
-        solver->distribute_constraints = [&](VectorType &solution) -> void {
-          if (distribute_constraints)
-            distribute_constraints(solution);
-        };
+    solver.reinit_vector = [&solution = solution](VectorType &vec) -> void {
+      vec.reinit(solution);
+    };
 
-        solver->reinit_vector = [&solution = solution](VectorType &vec) -> void {
-          vec.reinit(solution);
-        };
+    solver.residual = [&](const VectorType &src, VectorType &dst) {
+      compute_residual(time, time_step, src, dst, intermediate_explicit_solution);
+    };
 
-        solver->residual = [&](const VectorType &src, VectorType &dst) {
-          compute_residual(time, time_step, src, dst, intermediate_explicit_solution);
-        };
+    std::function<void(VectorType &, const VectorType &)> jacobian_multiplication =
+      [&](VectorType &dst, const VectorType &src) { compute_jacobian(time, time_step, dst, src); };
 
-        std::function<void(VectorType &, const VectorType &)> jacobian_multiplication =
-          [&](VectorType &dst, const VectorType &src) {
-            compute_jacobian(time, time_step, dst, src);
-          };
+    MatrixTypeObject<VectorType> jacobian(jacobian_multiplication);
 
-        MatrixTypeObject<VectorType> jacobian(jacobian_multiplication);
+    solver.solve_with_jacobian = [&jacobian       = jacobian,
+                                  &data           = this->time_integrator_data.linear_solver_data,
+                                  &preconditioner = preconditioner](const VectorType &rhs,
+                                                                    VectorType       &dst) {
+      return LinearSolver::solve(jacobian, dst, rhs, data, preconditioner);
+    };
 
-        solver->solve_with_jacobian = [&jacobian = jacobian,
-                                       &data     = this->time_integrator_data.linear_solver_data,
-                                       &preconditioner = preconditioner](const VectorType &rhs,
-                                                                         VectorType       &dst) {
-          return LinearSolver::solve(jacobian, dst, rhs, data, preconditioner);
-        };
-
-        // use explicit solution as initial guess
-        solution = explicit_solution;
-        solver->solve(solution);
-      }
+    // use explicit solution as initial guess
+    solution = explicit_solution;
+    solver.solve(solution);
   }
 
   template class ImplicitExplicitIntegrator<1, double>;

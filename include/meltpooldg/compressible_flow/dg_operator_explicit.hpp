@@ -5,13 +5,10 @@
 #include <deal.II/matrix_free/matrix_free.h>
 
 #include <meltpooldg/compressible_flow/convective_kernels.hpp>
-#include <meltpooldg/compressible_flow/dg_operator_base.hpp>
 #include <meltpooldg/compressible_flow/kernels_n_species.hpp>
 #include <meltpooldg/compressible_flow/operation_scratch_data.hpp>
 #include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/compressible_flow/viscous_kernels.hpp>
-#include <meltpooldg/time_integration/explicit_low_storage_runge_kutta_integrator.hpp>
-#include <meltpooldg/time_integration/time_integrator_data.hpp>
 #include <meltpooldg/utilities/dg_generic_convection_diffusion_worker.hpp>
 
 #include <functional>
@@ -29,7 +26,7 @@ namespace MeltPoolDG::CompressibleFlow
    * @tparam n_species The number of species in a multi-component case. The default value is 1 for a single-component flow.
    */
   template <int dim, typename number, int n_species = 1>
-  class DGOperatorExplicit final : public DGOperatorBase<dim, number, n_species>
+  class DGOperatorExplicit final
   {
   public:
     using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
@@ -63,27 +60,13 @@ namespace MeltPoolDG::CompressibleFlow
     explicit DGOperatorExplicit(OperationScratchData<dim, number> &flow_scratch_data);
 
     /**
-     * @brief Advances solver by a single time step.
-     *
-     * This function performs a single explicit time step of size @p time_step starting from the
-     * solution at time @p time.
-     *
-     * @note The function does not take care about updating the solution history object or similar
-     * operations which are not directly related to the integration. It **only** advances the
-     * solution by a single time step starting from the current solution in the solution history
-     * object of the @ref flow_scratch_data object.
-     */
-    void
-    advance_time_step(number time, number time_step) override;
-
-    /**
      * @brief Reinitialize the internal data structures.
      *
      * The reinitialization includes setting a new required size for the solution history object
      * according to the demands of the used time integrator.
      */
     void
-    reinit() override;
+    reinit();
 
     /**
      * @brief Computes the value of the function f(y) for the compressible Navier-Stokes equations of the
@@ -106,20 +89,16 @@ namespace MeltPoolDG::CompressibleFlow
                    const std::function<void(unsigned int, unsigned int)> &func) const;
 
     /**
-     * @brief Add external fluid forces (e.g. gravity, ...).
+     * Add additional fluid forces provided by the user of the class (e.g. gravity, ...).
      *
      * @param external_force A provided shared pointer to an external force definition.
      */
     void
-    add_external_force(std::shared_ptr<ExternalFlowForce<dim, number, n_species>> external_force,
-                       std::shared_ptr<ExternalFlowForceJacobian<dim, number, n_species>>) override;
+    add_external_force(std::shared_ptr<ExternalFlowForce<dim, number, n_species>> external_force);
 
   private:
     /// Scratch data for compressible flows
     OperationScratchData<dim, number> &flow_scratch_data;
-
-    /// Time integrator class used for the time integration.
-    TimeIntegration::LowStorageExplicitRungeKuttaIntegrator<number> time_integrator;
 
     /// This pointer may hold an instance of an external fluid force contribution
     /// (e.g., gravity, body forces, or user - defined source terms)

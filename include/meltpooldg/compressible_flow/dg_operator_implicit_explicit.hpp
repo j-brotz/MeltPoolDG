@@ -2,11 +2,9 @@
 
 #include <meltpooldg/compressible_flow/convective_kernels.hpp>
 #include <meltpooldg/compressible_flow/data_types.hpp>
-#include <meltpooldg/compressible_flow/dg_operator_base.hpp>
 #include <meltpooldg/compressible_flow/operation_scratch_data.hpp>
 #include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/compressible_flow/viscous_kernels.hpp>
-#include <meltpooldg/time_integration/implicit_explicit_integrator.hpp>
 
 namespace MeltPoolDG::CompressibleFlow
 {
@@ -19,7 +17,7 @@ namespace MeltPoolDG::CompressibleFlow
    * @tparam is_viscous Indicates whether the flow is viscous.
    */
   template <int dim, typename number>
-  class DGOperatorImplicitExplicit final : public DGOperatorBase<dim, number>
+  class DGOperatorImplicitExplicit final
   {
   public:
     using VectorType                 = dealii::LinearAlgebra::distributed::Vector<number>;
@@ -33,10 +31,22 @@ namespace MeltPoolDG::CompressibleFlow
      */
     explicit DGOperatorImplicitExplicit(OperationScratchData<dim, number> &flow_scratch_data);
 
+    /**
+     * Add additional fluid forces provided by the user of the class (e.g. gravity, ...). The
+     * external force can either be added to the part treated explicitly or implicitly. For the
+     * former case, the external_force_residuum pointer must be provided, while the
+     * external_force_jacobian pointer must be set to a nulltpr. For the latter case, both pointers
+     * must be provided.
+     *
+     * @param external_force_residuum A provided shared pointer to the external force definition
+     * added to the residuum if treated implicitly or added to the rhs if treated explicitly.
+     * @param external_force_jacobian A provided shared pointer to the external force Jacobian
+     * definition.
+     */
     void
     add_external_force(
       std::shared_ptr<ExternalFlowForce<dim, number>>         external_force_residuum,
-      std::shared_ptr<ExternalFlowForceJacobian<dim, number>> external_force_jacobian) override;
+      std::shared_ptr<ExternalFlowForceJacobian<dim, number>> external_force_jacobian);
 
     /**
      * @brief Compute the matrix representation of the Jacobian.
@@ -46,6 +56,18 @@ namespace MeltPoolDG::CompressibleFlow
     void
     compute_system_matrix_from_matrixfree(
       dealii::TrilinosWrappers::SparseMatrix &sparse_matrix) const;
+
+    /**
+     * This function sets the current time step used in the preconditioner. It should be called
+     * before the preconditioner is applied to the system matrix.
+     *
+     * @param time_step The current time step size used by the preconditioner.
+     */
+    void
+    set_preconditioner_time_step(const number time_step)
+    {
+      current_time_increment = time_step;
+    }
 
     /**
      * @brief Compute the inverse elements of the diagonal of the Jacobian.
@@ -62,21 +84,7 @@ namespace MeltPoolDG::CompressibleFlow
      * according to the demands of the used time integrator.
      */
     void
-    reinit() override;
-
-    /**
-     * @brief Advances solver by a single time step.
-     *
-     * This function performs a single implicit-explicit time step of size @p time_step starting
-     * from the solution at time @p time.
-     *
-     * @note The function does not take care about updating the solution history object or similar
-     * operations which are not directly related to the integration. It **only** advances the
-     * solution by a single time step starting from the current solution in the solution history
-     * object of the @ref flow_scratch_data object.
-     */
-    void
-    advance_time_step(number time, number time_step) override;
+    reinit();
 
     /**
      * @brief Local cell operations at the given quadrature point for computing the Jacobian.
@@ -208,9 +216,6 @@ namespace MeltPoolDG::CompressibleFlow
 
     /// Scratch data for compressible flows
     OperationScratchData<dim, number> &flow_scratch_data;
-
-    /// Time integrator class used for the time integration.
-    TimeIntegration::ImplicitExplicitIntegrator<dim, number> time_integrator;
 
     /// Object for the convective term evaluations
     ConvectiveKernels<dim, number> convective_terms;
