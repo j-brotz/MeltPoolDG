@@ -16,6 +16,7 @@
 #include <deal.II/lac/affine_constraints.h>
 #include <deal.II/lac/la_parallel_vector.h>
 
+#include "meltpooldg/compressible_flow/material.hpp"
 #include <meltpooldg/compressible_flow/data_types.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/utilities/better_enum.hpp>
@@ -103,6 +104,19 @@ namespace MeltPoolDG::CompressibleFlow
     const unsigned int                                        quad_idx,
     const Material<dim, number>                              *material_liquid,
     const Material<dim, number>                              *material_gas = nullptr);
+
+
+  /**
+   * This function checks whether the flow is viscous or not. This is done by checking the dynamic
+   * viscosity of all species in the material data. If any species has a non-zero dynamic viscosity,
+   * the flow is considered viscous.
+   *
+   * @param material_data Material data struct containing the properties of the fluid.
+   * @return True if the flow is viscous, false otherwise.
+   */
+  template <typename number, int n_species>
+  inline bool
+  is_viscous_flow(const MaterialPhaseData<number> &material_data);
 
   /**
    * @brief An abstract interface for defining external forces acting on the fluid that must be
@@ -213,6 +227,17 @@ namespace MeltPoolDG::CompressibleFlow
           inverse_density * (grad_rho_velocity[d][e] - velocity[d] * grad_rho[e]);
 
     return grad_velocity;
+  }
+
+
+  template <typename number, int n_species>
+  inline bool
+  is_viscous_flow(const MaterialPhaseData<number> &material_data)
+  {
+    for (unsigned int species = 0; species < n_species; ++species)
+      if (material_data.species_data[species].dynamic_viscosity > 0.0)
+        return true;
+    return false;
   }
 
   template <int dim, typename Number>

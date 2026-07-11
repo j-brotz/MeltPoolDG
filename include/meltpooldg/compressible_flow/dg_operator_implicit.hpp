@@ -21,7 +21,7 @@ namespace MeltPoolDG::CompressibleFlow
    * @tparam number Floating point format type.
    * @tparam is_viscous Indicates whether the flow is viscous.
    */
-  template <int dim, typename number, bool is_viscous = true>
+  template <int dim, typename number>
   class DGOperatorImplicit final : public DGOperatorBase<dim, number>
   {
   public:
@@ -203,6 +203,10 @@ namespace MeltPoolDG::CompressibleFlow
     /// This set of pointers may hold a list of external fluid force contributions to the jacobian
     /// (e.g., gravity, or user-defined source terms)
     std::vector<std::shared_ptr<ExternalFlowForceJacobian<dim, number>>> external_forces_jacobian;
+
+    /// A boolean flag indicating whether the flow is viscous or not. This is determined by the
+    /// material data.
+    const bool is_viscous;
 
     /**
      * @brief Compute the result of J*x, where J is the Jacobian computed analytically.

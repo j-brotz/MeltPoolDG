@@ -11,15 +11,16 @@ namespace MeltPoolDG::CompressibleFlow
 {
   using namespace dealii;
 
-  template <int dim, typename number, bool is_viscous>
-  DGOperatorImplicit<dim, number, is_viscous>::DGOperatorImplicit(
+  template <int dim, typename number>
+  DGOperatorImplicit<dim, number>::DGOperatorImplicit(
     OperationScratchData<dim, number> &flow_scratch_data)
     : flow_scratch_data(flow_scratch_data)
     , time_integrator(flow_scratch_data.flow_data.time_integrator)
     , convective_terms(flow_scratch_data.flow_data, flow_scratch_data.material)
     , viscous_terms(flow_scratch_data.material)
+    , is_viscous(is_viscous_flow<number, 1>(flow_scratch_data.material.data))
   {
-    using Operator = DGOperatorImplicit<dim, number, is_viscous>;
+    using Operator = DGOperatorImplicit<dim, number>;
 
     auto preconditioner = make_preconditioner<dim, number, Operator, VectorType>(
       flow_scratch_data.flow_data.time_integrator.linear_solver_data.preconditioner_type,
@@ -32,9 +33,9 @@ namespace MeltPoolDG::CompressibleFlow
                                                std::bind_front(&Operator::compute_residual, this));
   }
 
-  template <int dim, typename number, bool is_viscous>
+  template <int dim, typename number>
   void
-  DGOperatorImplicit<dim, number, is_viscous>::reinit()
+  DGOperatorImplicit<dim, number>::reinit()
   {
     flow_scratch_data.reinit(time_integrator.required_solution_history_size());
     time_integrator.reinit(flow_scratch_data.solution_history.get_current_solution());
@@ -43,9 +44,9 @@ namespace MeltPoolDG::CompressibleFlow
                                                            flow_scratch_data.dof_idx);
   }
 
-  template <int dim, typename number, bool is_viscous>
+  template <int dim, typename number>
   void
-  DGOperatorImplicit<dim, number, is_viscous>::advance_time_step(number time, number time_step)
+  DGOperatorImplicit<dim, number>::advance_time_step(number time, number time_step)
   {
     std::function<void(number, number, VectorType &, const VectorType &)> pre_processing =
       [&](number time, number time_step, VectorType &, const VectorType &) -> void {
@@ -61,9 +62,9 @@ namespace MeltPoolDG::CompressibleFlow
       std::function<void(number, number, VectorType &, const VectorType &)>());
   }
 
-  template <int dim, typename number, bool is_viscous>
+  template <int dim, typename number>
   void
-  DGOperatorImplicit<dim, number, is_viscous>::add_external_force(
+  DGOperatorImplicit<dim, number>::add_external_force(
     std::shared_ptr<ExternalFlowForce<dim, number>>         external_force_residuum,
     std::shared_ptr<ExternalFlowForceJacobian<dim, number>> external_force_jacobian)
   {
@@ -74,9 +75,9 @@ namespace MeltPoolDG::CompressibleFlow
     external_forces_jacobian.push_back(external_force_jacobian);
   }
 
-  template <int dim, typename number, bool is_viscous>
+  template <int dim, typename number>
   void
-  DGOperatorImplicit<dim, number, is_viscous>::compute_system_matrix_from_matrixfree(
+  DGOperatorImplicit<dim, number>::compute_system_matrix_from_matrixfree(
     dealii::TrilinosWrappers::SparseMatrix &sparse_matrix) const
   {
     compute_jacobian_matrix_representation<dim, dim + 2, number>(
@@ -89,9 +90,9 @@ namespace MeltPoolDG::CompressibleFlow
       flow_scratch_data.quad_idx);
   }
 
-  template <int dim, typename number, bool is_viscous>
+  template <int dim, typename number>
   void
-  DGOperatorImplicit<dim, number, is_viscous>::compute_inverse_diagonal_from_matrixfree(
+  DGOperatorImplicit<dim, number>::compute_inverse_diagonal_from_matrixfree(
     VectorType &diagonal) const
   {
     diagonal = 0.;
@@ -111,14 +112,13 @@ namespace MeltPoolDG::CompressibleFlow
       i = (std::abs(i) > 1.0e-14 * linfty_norm) ? (1.0 / i) : 1.0;
   }
 
-  template <int dim, typename number, bool is_viscous>
+  template <int dim, typename number>
   void
-  DGOperatorImplicit<dim, number, is_viscous>::compute_residual(
-    number,
-    number            time_step,
-    const VectorType &src,
-    VectorType       &dst,
-    const VectorType &old_solution) const
+  DGOperatorImplicit<dim, number>::compute_residual(number,
+                                                    number            time_step,
+                                                    const VectorType &src,
+                                                    VectorType       &dst,
+                                                    const VectorType &old_solution) const
   {
     Assert(dst.partitioners_are_globally_compatible(*(src.get_partitioner())),
            typename VectorType::ExcVectorTypeNotCompatible());
@@ -136,12 +136,11 @@ namespace MeltPoolDG::CompressibleFlow
       true);
   }
 
-  template <int dim, typename number, bool is_viscous>
+  template <int dim, typename number>
   void
-  DGOperatorImplicit<dim, number, is_viscous>::apply_jacobian(
-    const number      time_step,
-    VectorType       &dst,
-    const VectorType &current_solution) const
+  DGOperatorImplicit<dim, number>::apply_jacobian(const number      time_step,
+                                                  VectorType       &dst,
+                                                  const VectorType &current_solution) const
   {
     Assert(dst.partitioners_are_globally_compatible(*(current_solution.get_partitioner())),
            typename VectorType::ExcVectorTypeNotCompatible());
@@ -162,10 +161,10 @@ namespace MeltPoolDG::CompressibleFlow
       }
   }
 
-  template <int dim, typename number, bool is_viscous>
+  template <int dim, typename number>
   void
-  DGOperatorImplicit<dim, number, is_viscous>::apply_jacobian_analytic(const VectorType &src,
-                                                                       VectorType       &dst) const
+  DGOperatorImplicit<dim, number>::apply_jacobian_analytic(const VectorType &src,
+                                                           VectorType       &dst) const
   {
     Assert(dst.partitioners_are_globally_compatible(*(src.get_partitioner())),
            typename VectorType::ExcVectorTypeNotCompatible());
@@ -179,11 +178,10 @@ namespace MeltPoolDG::CompressibleFlow
       true);
   }
 
-  template <int dim, typename number, bool is_viscous>
+  template <int dim, typename number>
   void
-  DGOperatorImplicit<dim, number, is_viscous>::apply_jacobian_finite_differences(
-    const VectorType &src,
-    VectorType       &dst) const
+  DGOperatorImplicit<dim, number>::apply_jacobian_finite_differences(const VectorType &src,
+                                                                     VectorType       &dst) const
   {
     Assert(dst.partitioners_are_globally_compatible(*(src.get_partitioner())),
            typename VectorType::ExcVectorTypeNotCompatible());
@@ -227,9 +225,9 @@ namespace MeltPoolDG::CompressibleFlow
     local_compute_residual(disturbed_residual, dst, false, -1.0 / epsilon);
   }
 
-  template <int dim, typename number, bool is_viscous>
+  template <int dim, typename number>
   void
-  DGOperatorImplicit<dim, number, is_viscous>::local_cell_residual(
+  DGOperatorImplicit<dim, number>::local_cell_residual(
     const MatrixFree<dim, number> &,
     LinearAlgebra::distributed::Vector<number>       &dst,
     const LinearAlgebra::distributed::Vector<number> &src,
@@ -261,16 +259,14 @@ namespace MeltPoolDG::CompressibleFlow
         for (const unsigned int q : phi.quadrature_point_indices())
           {
             auto [value_q, grad_q] =
-              rhs_cell_integral_kernel<dim,
-                                       number,
-                                       FECellIntegrator<dim, dim + 2, number>,
-                                       is_viscous>(phi,
-                                                   q,
-                                                   constant_function ? &constant_body_force :
-                                                                       nullptr,
-                                                   convective_terms,
-                                                   viscous_terms,
-                                                   flow_scratch_data.body_force);
+              rhs_cell_integral_kernel<dim, number, FECellIntegrator<dim, dim + 2, number>>(
+                phi,
+                q,
+                constant_function ? &constant_body_force : nullptr,
+                convective_terms,
+                viscous_terms,
+                flow_scratch_data.body_force,
+                is_viscous);
 
             for (auto &external_force : external_forces_residual)
               value_q += external_force->value(current_time_step,
@@ -287,9 +283,9 @@ namespace MeltPoolDG::CompressibleFlow
       }
   }
 
-  template <int dim, typename number, bool is_viscous>
+  template <int dim, typename number>
   void
-  DGOperatorImplicit<dim, number, is_viscous>::local_face_residual(
+  DGOperatorImplicit<dim, number>::local_face_residual(
     const MatrixFree<dim, number> &,
     LinearAlgebra::distributed::Vector<number>       &dst,
     const LinearAlgebra::distributed::Vector<number> &src,
@@ -325,11 +321,14 @@ namespace MeltPoolDG::CompressibleFlow
         for (const unsigned int q : phi_m.quadrature_point_indices())
           {
             auto [flux_m, flux_p, grad_flux_m, grad_flux_p] =
-              rhs_face_integral_kernel<dim,
-                                       number,
-                                       FEFaceIntegrator<dim, dim + 2, number>,
-                                       is_viscous>(
-                phi_m, phi_p, q, interior_penalty_parameter, convective_terms, viscous_terms);
+              rhs_face_integral_kernel<dim, number, FEFaceIntegrator<dim, dim + 2, number>>(
+                phi_m,
+                phi_p,
+                q,
+                interior_penalty_parameter,
+                convective_terms,
+                viscous_terms,
+                is_viscous);
 
 
             // since we approach the face only once, we submit the contributions
@@ -349,9 +348,9 @@ namespace MeltPoolDG::CompressibleFlow
       }
   }
 
-  template <int dim, typename number, bool is_viscous>
+  template <int dim, typename number>
   void
-  DGOperatorImplicit<dim, number, is_viscous>::local_boundary_face_residual(
+  DGOperatorImplicit<dim, number>::local_boundary_face_residual(
     const MatrixFree<dim, number> &,
     LinearAlgebra::distributed::Vector<number>       &dst,
     const LinearAlgebra::distributed::Vector<number> &src,
@@ -375,15 +374,16 @@ namespace MeltPoolDG::CompressibleFlow
             const auto [flux_m, grad_flux_m] =
               rhs_boundary_face_integral_kernel<dim,
                                                 number,
-                                                FEFaceIntegrator<dim, dim + 2, number>,
-                                                is_viscous>(phi,
-                                                            q,
-                                                            phi.boundary_id(),
-                                                            interior_penalty_parameter,
-                                                            convective_terms,
-                                                            viscous_terms,
-                                                            flow_scratch_data.material,
-                                                            flow_scratch_data.boundary_conditions);
+                                                FEFaceIntegrator<dim, dim + 2, number>>(
+                phi,
+                q,
+                phi.boundary_id(),
+                interior_penalty_parameter,
+                convective_terms,
+                viscous_terms,
+                flow_scratch_data.material,
+                flow_scratch_data.boundary_conditions,
+                is_viscous);
 
             phi.submit_value(flux_m, q);
             phi.submit_gradient(grad_flux_m, q);
@@ -394,9 +394,9 @@ namespace MeltPoolDG::CompressibleFlow
       }
   }
 
-  template <int dim, typename number, bool is_viscous>
+  template <int dim, typename number>
   void
-  DGOperatorImplicit<dim, number, is_viscous>::local_cell_jacobian(
+  DGOperatorImplicit<dim, number>::local_cell_jacobian(
     const MatrixFree<dim, number> &,
     VectorType                          &dst,
     const VectorType                    &src,
@@ -437,9 +437,9 @@ namespace MeltPoolDG::CompressibleFlow
       }
   }
 
-  template <int dim, typename number, bool is_viscous>
+  template <int dim, typename number>
   void
-  DGOperatorImplicit<dim, number, is_viscous>::local_face_jacobian(
+  DGOperatorImplicit<dim, number>::local_face_jacobian(
     const MatrixFree<dim, number> &,
     VectorType                          &dst,
     const VectorType                    &src,
@@ -463,7 +463,6 @@ namespace MeltPoolDG::CompressibleFlow
       false /*is_interior_face*/,
       flow_scratch_data.dof_idx,
       flow_scratch_data.quad_idx);
-
 
     for (unsigned int face = face_range.first; face < face_range.second; ++face)
       {
@@ -506,9 +505,9 @@ namespace MeltPoolDG::CompressibleFlow
       }
   }
 
-  template <int dim, typename number, bool is_viscous>
+  template <int dim, typename number>
   void
-  DGOperatorImplicit<dim, number, is_viscous>::local_boundary_face_jacobian(
+  DGOperatorImplicit<dim, number>::local_boundary_face_jacobian(
     const MatrixFree<dim, number> &,
     LinearAlgebra::distributed::Vector<number>       &dst,
     const LinearAlgebra::distributed::Vector<number> &src,
@@ -547,9 +546,9 @@ namespace MeltPoolDG::CompressibleFlow
       }
   }
 
-  template <int dim, typename number, bool is_viscous>
+  template <int dim, typename number>
   void
-  DGOperatorImplicit<dim, number, is_viscous>::local_cell_jacobian_kernel(
+  DGOperatorImplicit<dim, number>::local_cell_jacobian_kernel(
     FECellIntegrator<dim, dim + 2, number>       &delta_phi,
     const FECellIntegrator<dim, dim + 2, number> &phi,
     const unsigned int                            q_index) const
@@ -593,9 +592,9 @@ namespace MeltPoolDG::CompressibleFlow
     delta_phi.submit_gradient(differential_change_flux, q_index);
   }
 
-  template <int dim, typename number, bool is_viscous>
+  template <int dim, typename number>
   void
-  DGOperatorImplicit<dim, number, is_viscous>::local_face_jacobian_kernel(
+  DGOperatorImplicit<dim, number>::local_face_jacobian_kernel(
     FEFaceIntegrator<dim, dim + 2, number>       &delta_phi_m,
     FEFaceIntegrator<dim, dim + 2, number>       &delta_phi_p,
     const FEFaceIntegrator<dim, dim + 2, number> &phi_m,
@@ -652,9 +651,9 @@ namespace MeltPoolDG::CompressibleFlow
     delta_phi_p.submit_value(-flux, q_index);
   }
 
-  template <int dim, typename number, bool is_viscous>
+  template <int dim, typename number>
   void
-  DGOperatorImplicit<dim, number, is_viscous>::local_boundary_face_jacobian_kernel(
+  DGOperatorImplicit<dim, number>::local_boundary_face_jacobian_kernel(
     FEFaceIntegrator<dim, dim + 2, number>       &delta_phi_m,
     const FEFaceIntegrator<dim, dim + 2, number> &phi_m,
     const unsigned                                q_index) const
@@ -708,10 +707,7 @@ namespace MeltPoolDG::CompressibleFlow
     delta_phi_m.submit_value(flux, q_index);
   }
 
-  template class DGOperatorImplicit<1, double, true>;
-  template class DGOperatorImplicit<2, double, true>;
-  template class DGOperatorImplicit<3, double, true>;
-  template class DGOperatorImplicit<1, double, false>;
-  template class DGOperatorImplicit<2, double, false>;
-  template class DGOperatorImplicit<3, double, false>;
+  template class DGOperatorImplicit<1, double>;
+  template class DGOperatorImplicit<2, double>;
+  template class DGOperatorImplicit<3, double>;
 } // namespace MeltPoolDG::CompressibleFlow
