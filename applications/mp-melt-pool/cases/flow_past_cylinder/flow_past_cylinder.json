@@ -12,8 +12,20 @@
     "end time": 2.0,
     "time step size": 0.02
   },
+  "output": {
+    "directory": "output_flow_past_cylinder",
+    "write frequency": 1,
+    "output variables": "all",
+    "paraview": {
+      "enable": true
+    }
+  },
   "material": {
     "gas": {
+      "density": 0.005,
+      "dynamic viscosity": 0.001
+    },
+    "liquid": {
       "density": 0.005,
       "dynamic viscosity": 0.001
     }
@@ -44,7 +56,6 @@
         "dimension": 2,
         "global refinements": 0,
         "velocity degree": 2,
-        "viscosity": 0.001,
         "Solver": {
           "linearization scheme": "coupled implicit Newton",
           "NL max iterations": 10,
