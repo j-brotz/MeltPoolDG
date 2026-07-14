@@ -30,7 +30,7 @@ check_metis() {
   if [[ $(ldconfig -p | grep libmetis) ]]; then
       log "Dependency libmetis found."
   else
-      log "WARNING: Dependency libmetis not found. Make sure to install metis if you want to use the functionalities."
+      log "ERROR: Dependency libmetis not found. Make sure to install metis if you want to use the functionalities."
       exit 1
   fi
 }
