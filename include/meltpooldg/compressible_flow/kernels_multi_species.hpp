@@ -107,7 +107,7 @@ namespace MeltPoolDG::CompressibleFlow
           SpeciesTransport::
             compute_diffusive_flux<n_species, DofStateViewType, SpeciesWritableFluxView>(
               DofStateViewType(u, grad_u, material), SpeciesWritableFluxView(flux));
-          SpeciesTransport::interdiffusional_enthalpy_flux<dim,
+          SpeciesTransport::interdiffusional_enthalpy_flux<n_species,
                                                            typename ValueType::value_type,
                                                            DofStateViewType,
                                                            SpeciesWritableFluxView>(
