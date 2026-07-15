@@ -125,10 +125,12 @@ CellListParticleHandler<dim, number, ObstacleType>::initialize()
   // TODO: The influence tolerance should be a parameter that can be set by the user. For now, we
   // use a hardcoded value of 1.2, which is a reasonable choice for most cases.
   constexpr number influence_tolerance = 1.2;
+
+  int local_cache_level = 0;
   if (cell_particle_cache.global_max_particle_radius == 0)
     {
       // If there are only particles with zero radius, we can store them on the finest level.
-      cell_particle_cache.cell_level = obstacle_handler.get_triangulation().n_global_levels() - 1;
+      local_cache_level = obstacle_handler.get_triangulation().n_global_levels() - 1;
     }
   else
     {
@@ -157,26 +159,43 @@ CellListParticleHandler<dim, number, ObstacleType>::initialize()
           "implemented yet. Please either provide a triangulation which has further coarser levels "
           "or reduce the size of the largest particle."));
 
-
-      for (unsigned int level = 0; level < tria.n_global_levels(); ++level)
+      for (unsigned int level = 0; level < tria.n_levels(); ++level)
         {
           if (tria.begin(level)->minimum_vertex_distance() <
               2 * influence_tolerance * cell_particle_cache.global_max_particle_radius)
             {
-              cell_particle_cache.cell_level = level == 0 ? 0 : level - 1;
+              local_cache_level = level == 0 ? 0 : level - 1;
               break;
             }
 
-          if (level == tria.n_global_levels() - 1)
+          if (level == tria.n_levels() - 1)
             {
               // If the finest level is still large enough to contain the largest particle, we store
               // the particles on the finest level.
-              cell_particle_cache.cell_level = level;
+              local_cache_level = level;
             }
         }
     }
-  MPI_Allreduce(
-    MPI_IN_PLACE, &cell_particle_cache.cell_level, 1, MPI_INT, MPI_MIN, mpi_communicator);
+
+  // We need to ensure that the local level on which we store particles is equal or smaller than
+  // the level of the coarsest active cell.
+  int smallest_local_level = tria.n_levels();
+  for (auto &cell : tria.active_cell_iterators())
+    {
+      smallest_local_level = std::min(smallest_local_level, cell->level());
+    }
+
+  if (local_cache_level > smallest_local_level)
+    {
+      local_cache_level = smallest_local_level;
+    }
+
+  // We need to ensure that the level on which we store particles is the same across all MPI
+  // ranks. Therefore, we perform a global reduction to find the minimum cache level across all
+  // ranks.
+  // TODO: Can we use the own cache level on each rank?
+  cell_particle_cache.cell_level =
+    dealii::Utilities::MPI::min(local_cache_level, tria.get_mpi_communicator());
 
   triangulation_level_cache.level = cell_particle_cache.cell_level;
 
@@ -477,9 +496,18 @@ CellListParticleHandler<dim, number, ObstacleType>::sort_particles_into_subdomai
         {
           dealii::TriaIterator<dealii::CellAccessor<dim>> cell = particle->get_surrounding_cell();
 
-          Assert(static_cast<unsigned int>(find_particle_cache_cell(cell)->index()) <
-                   cell_particle_cache.locally_owned_particles.size(),
-                 dealii::ExcInternalError());
+          Assert(
+            static_cast<unsigned int>(find_particle_cache_cell(cell)->index()) <
+              cell_particle_cache.locally_owned_particles.size(),
+            dealii::ExcMessage(
+              "The index of the cell in which the particle is located is larger than the size of "
+              "the vector that stores the locally owned particles for each cell. The index of the cell is " +
+              std::to_string(find_particle_cache_cell(cell)->index()) +
+              ", while the size of the vector is " +
+              std::to_string(cell_particle_cache.locally_owned_particles.size()) +
+              ", which is the global number of cells on the level " +
+              std::to_string(find_particle_cache_cell(cell)->level()) +
+              " used for caching particles."));
 
           cell_particle_cache.locally_owned_particles[find_particle_cache_cell(cell)->index()]
             .emplace_back(particle);
