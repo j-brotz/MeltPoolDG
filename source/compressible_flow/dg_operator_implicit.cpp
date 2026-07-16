@@ -15,51 +15,18 @@ namespace MeltPoolDG::CompressibleFlow
   DGOperatorImplicit<dim, number>::DGOperatorImplicit(
     OperationScratchData<dim, number> &flow_scratch_data)
     : flow_scratch_data(flow_scratch_data)
-    , time_integrator(flow_scratch_data.flow_data.time_integrator)
     , convective_terms(flow_scratch_data.flow_data, flow_scratch_data.material)
     , viscous_terms(flow_scratch_data.material)
     , is_viscous(is_viscous_flow<number, 1>(flow_scratch_data.material.data))
-  {
-    using Operator = DGOperatorImplicit<dim, number>;
-
-    auto preconditioner = make_preconditioner<dim, number, Operator, VectorType>(
-      flow_scratch_data.flow_data.time_integrator.linear_solver_data.preconditioner_type,
-      this,
-      flow_scratch_data.scratch_data,
-      flow_scratch_data.dof_idx,
-      true);
-    time_integrator.set_preconditioner(std::move(preconditioner));
-    time_integrator.configure_solver_functions(std::bind_front(&Operator::apply_jacobian, this),
-                                               std::bind_front(&Operator::compute_residual, this));
-  }
+  {}
 
   template <int dim, typename number>
   void
   DGOperatorImplicit<dim, number>::reinit()
   {
-    flow_scratch_data.reinit(time_integrator.required_solution_history_size());
-    time_integrator.reinit(flow_scratch_data.solution_history.get_current_solution());
     if (flow_scratch_data.flow_data.jacobian_type == JacobianType::finite_difference)
       flow_scratch_data.scratch_data.initialize_dof_vector(disturbed_residual,
                                                            flow_scratch_data.dof_idx);
-  }
-
-  template <int dim, typename number>
-  void
-  DGOperatorImplicit<dim, number>::advance_time_step(number time, number time_step)
-  {
-    std::function<void(number, number, VectorType &, const VectorType &)> pre_processing =
-      [&](number time, number time_step, VectorType &, const VectorType &) -> void {
-      current_time_step = time_step; // set for computing the preconditioner
-      flow_scratch_data.boundary_conditions.update_boundary_conditions(time);
-    };
-
-    time_integrator.perform_time_step(
-      time,
-      time_step,
-      flow_scratch_data.solution_history,
-      pre_processing,
-      std::function<void(number, number, VectorType &, const VectorType &)>());
   }
 
   template <int dim, typename number>

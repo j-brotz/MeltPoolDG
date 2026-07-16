@@ -438,7 +438,7 @@ namespace
     auto fsi_fluid_force_residual = std::make_shared<
       BrinkmanPenalizationResidualContribution<dim, number, SphericalParticle<dim, number>>>(
       brinkman_data, cell_batch_particle_cache);
-    this->data->flow_operator->add_external_force(fsi_fluid_force_residual, nullptr);
+    this->data->flow_operator->add_external_force(fsi_fluid_force_residual);
 
     // Run the benchmark loop, applying the operator with the Brinkman penalization forces included.
     constexpr number current_time = 0.1;

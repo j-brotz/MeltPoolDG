@@ -1,15 +1,12 @@
 #include <meltpooldg/compressible_flow/boundary_conditions.templates.hpp>
 #include <meltpooldg/compressible_flow/data_types.hpp>
 #include <meltpooldg/compressible_flow/dg_operator_explicit.hpp>
-#include <meltpooldg/compressible_flow/explicit_time_integration_utils.hpp>
 #include <meltpooldg/compressible_flow/kernels.hpp>
 #include <meltpooldg/compressible_flow/operation_scratch_data.hpp>
 #include <meltpooldg/compressible_flow/state_views_n_species.hpp>
 #include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/linear_algebra/utilities_matrixfree.hpp>
-#include <meltpooldg/time_integration/time_integrator_util.hpp>
 #include <meltpooldg/utilities/dg_generic_convection_diffusion_worker.hpp>
-#include <meltpooldg/utilities/limiters.templates.hpp>
 #include <meltpooldg/utilities/matrix_free_util.hpp>
 #include <meltpooldg/utilities/preprocessor_directives.hpp>
 #include <meltpooldg/utilities/vector_tools.templates.hpp>
@@ -23,46 +20,17 @@ namespace MeltPoolDG::CompressibleFlow
   DGOperatorExplicit<dim, number, n_species>::DGOperatorExplicit(
     OperationScratchData<dim, number> &flow_scratch_data)
     : flow_scratch_data(flow_scratch_data)
-    , time_integrator(flow_scratch_data.flow_data.time_integrator)
-  {
-    time_integrator.configure_rhs(
-      std::bind_front(&DGOperatorExplicit<dim, number, n_species>::apply_operator, this));
-  }
+  {}
 
   template <int dim, typename number, int n_species>
   void
   DGOperatorExplicit<dim, number, n_species>::reinit()
-  {
-    flow_scratch_data.reinit(time_integrator.required_solution_history_size());
-    time_integrator.reinit(flow_scratch_data.solution_history.get_current_solution());
-  }
-
-  template <int dim, typename number, int n_species>
-  void
-  DGOperatorExplicit<dim, number, n_species>::advance_time_step(number time, number time_step)
-  {
-    // No pre-processing is required here
-    std::function<void(number, number, VectorType &, const VectorType &)> pre_processing;
-
-    std::function<void(number, number, VectorType &, const VectorType &)> post_processing =
-      [&](number, number, VectorType &dst, const VectorType &src) -> void {
-      Utilities::apply_minmod_type_limiter<dim, n_conserved_variables<dim, n_species>, number>(
-        {flow_scratch_data.scratch_data.get_matrix_free(),
-         flow_scratch_data.dof_idx,
-         flow_scratch_data.quad_idx},
-        dst,
-        src,
-        flow_scratch_data.flow_data.limiter_data);
-    };
-
-    time_integrator.perform_time_step(
-      time, time_step, flow_scratch_data.solution_history, pre_processing, post_processing);
-  }
+  {}
 
   template <int dim, typename number, int n_species>
   void
   DGOperatorExplicit<dim, number, n_species>::apply_operator(
-    const number                                           time,
+    const number,
     const number                                           time_step,
     VectorType                                            &dst,
     const VectorType                                      &src,
@@ -74,7 +42,6 @@ namespace MeltPoolDG::CompressibleFlow
                                                   const VectorType &src,
                                                   const std::pair<unsigned int, unsigned int> &)>;
 
-    flow_scratch_data.boundary_conditions.update_boundary_conditions(time);
     local_applier_type cell          = MPDG_LAMBDA_WRAPPER(this->local_apply_cell);
     local_applier_type face          = MPDG_LAMBDA_WRAPPER(this->local_apply_face);
     local_applier_type boundary_face = MPDG_LAMBDA_WRAPPER(this->local_apply_boundary_face);
@@ -99,8 +66,7 @@ namespace MeltPoolDG::CompressibleFlow
   template <int dim, typename number, int n_species>
   void
   DGOperatorExplicit<dim, number, n_species>::add_external_force(
-    std::shared_ptr<ExternalFlowForce<dim, number, n_species>> external_force,
-    std::shared_ptr<ExternalFlowForceJacobian<dim, number, n_species>>)
+    std::shared_ptr<ExternalFlowForce<dim, number, n_species>> external_force)
   {
     Assert(external_force != nullptr, dealii::ExcInternalError());
     external_forces.push_back(external_force);

@@ -6,6 +6,7 @@
 
 #include <deal.II/numerics/data_component_interpretation.h>
 
+#include "meltpooldg/time_integration/bdf_time_integration.hpp"
 #include <meltpooldg/compressible_flow/data_types.hpp>
 #include <meltpooldg/compressible_flow/dg_operation.hpp>
 #include <meltpooldg/compressible_flow/dg_operator_explicit.hpp>
@@ -37,9 +38,9 @@ namespace MeltPoolDG::CompressibleFlow
     const unsigned int                   flow_dof_idx,
     const unsigned int                   flow_quad_idx)
     : flow_scratch_data(flow_data, material_data, scratch_data, flow_dof_idx, flow_quad_idx)
-
+    , flow_operator(setup_operator(flow_scratch_data))
   {
-    setup_operator();
+    setup_time_integrator();
 
     using OutputView = NSpeciesDofStateView<dim,
                                             n_species,
@@ -83,7 +84,9 @@ namespace MeltPoolDG::CompressibleFlow
   void
   DGOperation<dim, number, n_species>::reinit()
   {
-    comp_flow_operator->reinit();
+    flow_scratch_data.reinit(time_integrator->required_solution_history_size());
+    time_integrator->reinit(flow_scratch_data.solution_history);
+    std::visit([&](auto &operator_variant) { operator_variant.reinit(); }, flow_operator);
   }
 
   template <int dim, typename number, int n_species>
@@ -101,7 +104,35 @@ namespace MeltPoolDG::CompressibleFlow
     flow_scratch_data.solution_history.commit_old_solutions();
     flow_scratch_data.solution_history.update_ghost_values();
 
-    comp_flow_operator->advance_time_step(current_time, time_step);
+    std::function<void(number, number, VectorType &, const VectorType &)> stage_pre_processing =
+      [&](number time, number, VectorType &, const VectorType &) {
+        flow_scratch_data.boundary_conditions.update_boundary_conditions(time);
+        std::visit(
+          [&](auto &comp_flow_operator) {
+            using T = std::decay_t<decltype(comp_flow_operator)>;
+            if constexpr (std::is_same_v<DGOperatorImplicit<dim, number>, T> or
+                          std::is_same_v<DGOperatorImplicitExplicit<dim, number>, T>)
+              comp_flow_operator.set_preconditioner_time_step(time_step);
+          },
+          flow_operator);
+      };
+
+    std::function<void(number, number, VectorType &, const VectorType &)> stage_post_processing =
+      [&](number, number, VectorType &dst, const VectorType &src) {
+        Utilities::apply_minmod_type_limiter<dim, n_conserved_variables<dim, n_species>, number>(
+          {flow_scratch_data.scratch_data.get_matrix_free(),
+           flow_scratch_data.dof_idx,
+           flow_scratch_data.quad_idx},
+          dst,
+          src,
+          flow_scratch_data.flow_data.limiter_data);
+      };
+
+    time_integrator->perform_time_step(current_time,
+                                       time_step,
+                                       flow_scratch_data.solution_history,
+                                       stage_pre_processing,
+                                       stage_post_processing);
   }
 
   template <int dim, typename number, int n_species>
@@ -160,8 +191,22 @@ namespace MeltPoolDG::CompressibleFlow
     std::shared_ptr<ExternalFlowForce<dim, number, n_species>>         external_force_residuum,
     std::shared_ptr<ExternalFlowForceJacobian<dim, number, n_species>> external_force_jacobian)
   {
-    comp_flow_operator->add_external_force(std::move(external_force_residuum),
-                                           std::move(external_force_jacobian));
+    std::visit(
+      [&](auto &comp_flow_operator) {
+        using T = std::decay_t<decltype(comp_flow_operator)>;
+
+        if constexpr (std::is_same_v<DGOperatorExplicit<dim, number, n_species>, T>)
+          comp_flow_operator.add_external_force(std::move(external_force_residuum));
+        else
+          {
+            if constexpr (n_species == 1)
+              comp_flow_operator.add_external_force(std::move(external_force_residuum),
+                                                    std::move(external_force_jacobian));
+            else
+              AssertThrow(false, dealii::ExcInternalError());
+          }
+      },
+      flow_operator);
   }
 
   template <int dim, typename number, int n_species>
@@ -322,48 +367,131 @@ namespace MeltPoolDG::CompressibleFlow
   }
 
   template <int dim, typename number, int n_species>
-  void
-  DGOperation<dim, number, n_species>::setup_operator()
+  std::variant<DGOperatorExplicit<dim, number, n_species>,
+               DGOperatorImplicit<dim, number>,
+               DGOperatorImplicitExplicit<dim, number>>
+  DGOperation<dim, number, n_species>::setup_operator(
+    OperationScratchData<dim, number> &flow_scratch_data)
   {
-    // cut operator was already created in the constructor
-    if (flow_scratch_data.flow_data.domain_representation_type == "cut")
-      return;
     if (time_integrator_scheme_is_explicit(
           flow_scratch_data.flow_data.time_integrator.integrator_type))
       {
-        comp_flow_operator =
-          std::make_unique<DGOperatorExplicit<dim, number, n_species>>(flow_scratch_data);
-        return;
+        return DGOperatorExplicit<dim, number, n_species>(flow_scratch_data);
       }
     if constexpr (n_species == 1)
       {
         if (time_integrator_scheme_is_implicit(
               flow_scratch_data.flow_data.time_integrator.integrator_type))
           {
-            comp_flow_operator =
-              std::make_unique<DGOperatorImplicit<dim, number>>(flow_scratch_data);
-            return;
+            return DGOperatorImplicit<dim, number>(flow_scratch_data);
           }
         else if (flow_scratch_data.flow_data.time_integrator.integrator_type ==
                  TimeIntegration::TimeIntegratorSchemes::imex)
           {
-            comp_flow_operator =
-              std::make_unique<DGOperatorImplicitExplicit<dim, number>>(flow_scratch_data);
-            return;
+            return DGOperatorImplicitExplicit<dim, number>(flow_scratch_data);
           }
-        else
-          AssertThrow(false,
-                      dealii::ExcMessage(
-                        "The provided time integration scheme '" +
-                        std::to_string(
-                          flow_scratch_data.flow_data.time_integrator.integrator_type) +
-                        "' is not supported!"));
       }
+    else
+      {
+        AssertThrow(false,
+                    dealii::ExcMessage(
+                      "The provided time integration scheme '" +
+                      std::to_string(flow_scratch_data.flow_data.time_integrator.integrator_type) +
+                      "' is not supported! Note that multi-component flows are only supported for "
+                      " explicit time integration schemes."));
+      }
+
     AssertThrow(false,
                 dealii::ExcMessage(
                   "The provided time integration scheme '" +
                   std::to_string(flow_scratch_data.flow_data.time_integrator.integrator_type) +
                   "' is not supported for multi-component flows!"));
+  }
+
+  template <int dim, typename number, int n_species>
+  void
+  DGOperation<dim, number, n_species>::setup_time_integrator()
+  {
+    if (time_integrator_scheme_is_explicit(
+          flow_scratch_data.flow_data.time_integrator.integrator_type))
+      {
+        flow_operator.template emplace<DGOperatorExplicit<dim, number, n_species>>(
+          flow_scratch_data);
+
+        time_integrator =
+          std::make_unique<TimeIntegration::LowStorageExplicitRungeKuttaIntegrator<number>>(
+            flow_scratch_data.flow_data.time_integrator,
+            std::bind_front(&DGOperatorExplicit<dim, number, n_species>::apply_operator,
+                            &std::get<DGOperatorExplicit<dim, number, n_species>>(flow_operator)));
+
+        return;
+      }
+    else if (time_integrator_scheme_is_implicit(
+               flow_scratch_data.flow_data.time_integrator.integrator_type))
+      {
+        auto preconditioner =
+          make_preconditioner<dim, number, DGOperatorImplicit<dim, number>, VectorType>(
+            flow_scratch_data.flow_data.time_integrator.linear_solver_data.preconditioner_type,
+            &std::get<DGOperatorImplicit<dim, number>>(flow_operator),
+            flow_scratch_data.scratch_data,
+            flow_scratch_data.dof_idx,
+            true);
+
+        const typename TimeIntegration::BDFIntegrator<dim, number>::SolverFunctions
+          bdf_solver_functions{
+            .compute_jacobian =
+              std::bind_front(&DGOperatorImplicit<dim, number>::apply_jacobian,
+                              &std::get<DGOperatorImplicit<dim, number>>(flow_operator)),
+            .compute_residual =
+              std::bind_front(&DGOperatorImplicit<dim, number>::compute_residual,
+                              &std::get<DGOperatorImplicit<dim, number>>(flow_operator)),
+            .distribute_constraints = std::function<void(VectorType &)>()};
+
+        time_integrator = std::make_unique<TimeIntegration::BDFIntegrator<dim, number>>(
+          flow_scratch_data.flow_data.time_integrator,
+          bdf_solver_functions,
+          std::move(preconditioner));
+        return;
+      }
+    else if (flow_scratch_data.flow_data.time_integrator.integrator_type ==
+             TimeIntegration::TimeIntegratorSchemes::imex)
+      {
+        flow_operator.template emplace<DGOperatorImplicitExplicit<dim, number>>(flow_scratch_data);
+
+        auto preconditioner =
+          make_preconditioner<dim, number, DGOperatorImplicitExplicit<dim, number>, VectorType>(
+            flow_scratch_data.flow_data.time_integrator.linear_solver_data.preconditioner_type,
+            &std::get<DGOperatorImplicitExplicit<dim, number>>(flow_operator),
+            flow_scratch_data.scratch_data,
+            flow_scratch_data.dof_idx,
+            true);
+
+        const typename TimeIntegration::ImplicitExplicitIntegrator<dim, number>::SolverFunctions
+          imex_solver_functions{
+            .compute_jacobian =
+              std::bind_front(&DGOperatorImplicitExplicit<dim, number>::apply_jacobian,
+                              &std::get<DGOperatorImplicitExplicit<dim, number>>(flow_operator)),
+            .compute_residual =
+              std::bind_front(&DGOperatorImplicitExplicit<dim, number>::compute_residual,
+                              &std::get<DGOperatorImplicitExplicit<dim, number>>(flow_operator)),
+            .distribute_constraints = std::function<void(VectorType &)>(),
+            .compute_explicit_rhs =
+              std::bind_front(&DGOperatorImplicitExplicit<dim, number>::perform_explicit_stage,
+                              &std::get<DGOperatorImplicitExplicit<dim, number>>(flow_operator))};
+
+        time_integrator =
+          std::make_unique<TimeIntegration::ImplicitExplicitIntegrator<dim, number>>(
+            flow_scratch_data.flow_data.time_integrator,
+            imex_solver_functions,
+            std::move(preconditioner));
+        return;
+      }
+    else
+      AssertThrow(false,
+                  dealii::ExcMessage(
+                    "The provided time integration scheme '" +
+                    std::to_string(flow_scratch_data.flow_data.time_integrator.integrator_type) +
+                    "' is not supported!"));
   }
 
   template class DGOperation<1, double, 1>;

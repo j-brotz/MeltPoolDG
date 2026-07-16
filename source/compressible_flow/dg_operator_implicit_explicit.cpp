@@ -22,7 +22,6 @@ namespace MeltPoolDG::CompressibleFlow
   DGOperatorImplicitExplicit<dim, number>::DGOperatorImplicitExplicit(
     OperationScratchData<dim, number> &flow_scratch_data)
     : flow_scratch_data(flow_scratch_data)
-    , time_integrator(flow_scratch_data.flow_data.time_integrator)
     , convective_terms(flow_scratch_data.flow_data, flow_scratch_data.material)
     , viscous_terms(flow_scratch_data.material)
   {
@@ -33,23 +32,6 @@ namespace MeltPoolDG::CompressibleFlow
       dealii::ExcMessage(
         "Using the imex scheme for in-viscid compressible flows is inefficient. Please use "
         "either the full explicit or implicit schemes."));
-
-    using Operator = DGOperatorImplicitExplicit<dim, number>;
-
-    time_integrator.configure_explicit_step(
-      std::bind_front(&Operator::perform_explicit_stage, this));
-
-    time_integrator.configure_implicit_step(std::bind_front(&Operator::apply_jacobian, this),
-                                            std::bind_front(&Operator::compute_residual, this));
-
-    auto preconditioner = make_preconditioner<dim, number, Operator, VectorType>(
-      flow_scratch_data.flow_data.time_integrator.linear_solver_data.preconditioner_type,
-      this,
-      flow_scratch_data.scratch_data,
-      flow_scratch_data.dof_idx,
-      true);
-
-    time_integrator.set_preconditioner(std::move(preconditioner));
   }
 
   template <int dim, typename number>
@@ -111,28 +93,7 @@ namespace MeltPoolDG::CompressibleFlow
   template <int dim, typename number>
   void
   DGOperatorImplicitExplicit<dim, number>::reinit()
-  {
-    flow_scratch_data.reinit(time_integrator.required_solution_history_size());
-    time_integrator.reinit(flow_scratch_data.solution_history.get_current_solution());
-  }
-
-  template <int dim, typename number>
-  void
-  DGOperatorImplicitExplicit<dim, number>::advance_time_step(number time, number time_step)
-  {
-    std::function<void(number, number, VectorType &, const VectorType &)> pre_processing =
-      [&](number time, number time_step, VectorType &, const VectorType &) -> void {
-      current_time_increment = time_step; // set for computing the preconditioner
-      flow_scratch_data.boundary_conditions.update_boundary_conditions(time);
-    };
-
-    time_integrator.perform_time_step(
-      time,
-      time_step,
-      flow_scratch_data.solution_history,
-      pre_processing,
-      std::function<void(number, number, VectorType &, const VectorType &)>());
-  }
+  {}
 
   template <int dim, typename number>
   void

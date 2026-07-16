@@ -4,10 +4,8 @@
 
 #include <meltpooldg/compressible_flow/convective_kernels.hpp>
 #include <meltpooldg/compressible_flow/data_types.hpp>
-#include <meltpooldg/compressible_flow/dg_operator_base.hpp>
 #include <meltpooldg/compressible_flow/operation_scratch_data.hpp>
 #include <meltpooldg/compressible_flow/viscous_kernels.hpp>
-#include <meltpooldg/time_integration/bdf_time_integration.hpp>
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
 
 
@@ -22,7 +20,7 @@ namespace MeltPoolDG::CompressibleFlow
    * @tparam is_viscous Indicates whether the flow is viscous.
    */
   template <int dim, typename number>
-  class DGOperatorImplicit final : public DGOperatorBase<dim, number>
+  class DGOperatorImplicit final
   {
   public:
     using VectorType                 = dealii::LinearAlgebra::distributed::Vector<number>;
@@ -44,26 +42,20 @@ namespace MeltPoolDG::CompressibleFlow
      * according to the demands of the used time integrator.
      */
     void
-    reinit() override;
+    reinit();
 
     /**
-     * @brief Advances solver by a single time step.
+     * Add additional fluid forces provided by the user of the class (e.g. gravity, ...).
      *
-     * This function performs a single implicit time step of size @p time_step starting from the
-     * solution at time @p time.
-     *
-     * @note The function does not take care about updating the solution history object or similar
-     * operations which are not directly related to the integration. It **only** advances the
-     * solution by a single time step starting from the current solution in the solution history
-     * object of the @ref flow_scratch_data object.
+     * @param external_force_residuum A provided shared pointer to the external force definition
+     * added to the residuum.
+     * @param external_force_jacobian A provided shared pointer to the external force Jacobian
+     * definition.
      */
-    void
-    advance_time_step(number time, number time_step) override;
-
     void
     add_external_force(
       std::shared_ptr<ExternalFlowForce<dim, number>>         external_force_residuum,
-      std::shared_ptr<ExternalFlowForceJacobian<dim, number>> external_force_jacobian) override;
+      std::shared_ptr<ExternalFlowForceJacobian<dim, number>> external_force_jacobian);
 
     /**
      * @brief Compute the matrix representation of the Jacobian.
@@ -83,11 +75,24 @@ namespace MeltPoolDG::CompressibleFlow
     compute_inverse_diagonal_from_matrixfree(VectorType &diagonal) const;
 
     /**
+     * This function sets the current time step used in the preconditioner. It should be called
+     * before the preconditioner is applied to the system matrix.
+     *
+     * @param time_step The current time step size used by the preconditioner.
+     */
+    void
+    set_preconditioner_time_step(const number time_step)
+    {
+      current_time_step = time_step;
+    }
+
+    /**
      * @brief Compute the result of J*x, where J is the Jacobian.
      *
      * The method on how to compute/approximate the Jacobian is defined by the user in the
      * compressible flow data.
      *
+     * @param time_step Current time step size.
      * @param src Source vector x with which the Jacobian gets multiplied.
      * @param dst Location at which the result of J*x is stored.
      *
@@ -96,9 +101,7 @@ namespace MeltPoolDG::CompressibleFlow
      * @note This function assumes that the function set_stage_constants() has been called in advance.
      */
     void
-    apply_jacobian(number            time_step,
-                   VectorType       &dst,
-                   const VectorType &src) const; // TODO
+    apply_jacobian(number time_step, VectorType &dst, const VectorType &src) const;
 
     /**
      * @brief Compute the negative residual.
@@ -108,8 +111,10 @@ namespace MeltPoolDG::CompressibleFlow
      * equations (right-hand side).
      *
      * @param current_time Current physical time.
+     * @param time_step Current time step size.
      * @param src Current solution vector used to compute the residual.
      * @param dst Vector in which the residual is stored.
+     * @param old_solution Vector containing the solution at the previous time step.
      *
      * @throws Assert if the layout of the two given vectors @p src and @p dst are not identical.
      *
@@ -120,7 +125,7 @@ namespace MeltPoolDG::CompressibleFlow
                      number            time_step,
                      const VectorType &src,
                      VectorType       &dst,
-                     const VectorType &old_solution) const; // TODO
+                     const VectorType &old_solution) const;
 
 
     /**
@@ -130,7 +135,6 @@ namespace MeltPoolDG::CompressibleFlow
      * distributions are added to this integrator.
      * @param phi Cell integrator for the primary variables.
      * @param q_index Quadrature point index.
-     * @param cell_batch_id ID of the current cell batch.
      */
     void
     local_cell_jacobian_kernel(FECellIntegrator<dim, dim + 2, number>       &delta_phi,
@@ -144,8 +148,8 @@ namespace MeltPoolDG::CompressibleFlow
      * Quadrature point distributions are added to this integrator.
      * @param delta_phi_p Face integrator for the change in the primary variables on the outer face.
      * Quadrature point distributions are added to this integrator.
-     * @param phi_m Cell integrator for the primary varibales on the inner face.
-     * @param phi_p Cell integrator for the primary varibales on the outer face.
+     * @param phi_m Cell integrator for the primary variables on the inner face.
+     * @param phi_p Cell integrator for the primary variables on the outer face.
      * @param q_index Quadrature point index.
      */
     void
@@ -186,9 +190,6 @@ namespace MeltPoolDG::CompressibleFlow
 
     /// Scratch data for compressible flows
     OperationScratchData<dim, number> &flow_scratch_data;
-
-    /// Time integrator class used for the time integration.
-    TimeIntegration::BDFIntegrator<dim, number> time_integrator;
 
     /// Object for the convective term evaluations
     ConvectiveKernels<dim, number> convective_terms;

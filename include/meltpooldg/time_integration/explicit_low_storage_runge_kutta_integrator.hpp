@@ -43,12 +43,15 @@ namespace MeltPoolDG::TimeIntegration
 
 
     /**
-     * Constructor. Set the coefficients for the low storage explicit Runge-Kutta scheme.
+     * Constructor. Set the coefficients for the low storage explicit Runge-Kutta scheme. And store
+     * the function which computes the right-hand side of the ODE system internally.
      *
      * @param time_integrator_data Time integrator data struct setting the scheme of the integrator.
+     * @param compute_rhs_in Function to compute the right-hand side of the ODE.
      */
     explicit LowStorageExplicitRungeKuttaIntegrator(
-      const TimeIntegratorData<number> &time_integrator_data);
+      const TimeIntegratorData<number> &time_integrator_data,
+      const RhsFunctionType            &compute_rhs);
 
     /**
      * Returns the number of previous solutions, that is solutions at time step n - x, where x >= 0,
@@ -56,19 +59,6 @@ namespace MeltPoolDG::TimeIntegration
      */
     unsigned int
     required_solution_history_size() const override;
-
-
-    /**
-     * @brief Configure the function used to compute the right-hand side of the ODE.
-     *
-     * Sets the class member @ref compute_rhs to the provided function.
-     * For details on the expected function signature and behavior, see the
-     * documentation of the corresponding class member.
-     *
-     * @param compute_rhs_in Function to compute the right-hand side of the ODE.
-     */
-    void
-    configure_rhs(const RhsFunctionType &compute_rhs_in);
 
     /**
      * Allocate memory for the required vectors used during the integration. This function needs to

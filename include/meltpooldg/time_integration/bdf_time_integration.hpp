@@ -6,6 +6,7 @@
 
 #include <meltpooldg/linear_algebra/newton_raphson_solver.hpp>
 #include <meltpooldg/linear_algebra/preconditioner.hpp>
+#include <meltpooldg/linear_algebra/preconditioner_trilinos_wrapper.hpp>
 #include <meltpooldg/time_integration/solution_history.hpp>
 #include <meltpooldg/time_integration/time_integrator_base.hpp>
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
@@ -43,40 +44,35 @@ namespace MeltPoolDG::TimeIntegration
     using DistributeConstraintsType = std::function<void(VectorType &dst)>;
 
     /**
-     * Constructor. Sets up the nonlinear solver. After construction it is still required to set the
-     * required
-     * functions by calling @ref configure_solver_functions() and calling @ref reinit() to allocate required memory before the integrator can be used.
+     * Structure containing the functions used by the internal nonlinear solver to solve the
+     * implicit step.
+     */
+    struct SolverFunctions
+    {
+      /// Function that applies the Jacobian of the residual operator to a given vector.
+      JacobianType compute_jacobian;
+
+      /// Function that computes the negative residual for the implicit step of the time integrator.
+      ResidualType compute_residual;
+
+      /// An optional function that applies constraints to a given vector. If not provided, no
+      /// constraints will be applied.
+      DistributeConstraintsType distribute_constraints;
+    };
+
+    /**
+     * Constructor. Sets up the nonlinear solver.
      *
      * @param time_integrator_data Time integrator data struct setting the scheme of the integrator.
-     */
-    explicit BDFIntegrator(const TimeIntegratorData<number> &time_integrator_data);
-
-    /**
-     * @brief Configure the functions used by the internal nonlinear solver to solve the implicit step. For
-     * details on the functions see the corresponding class member descriptions.
-     *
-     * Sets the class member @ref compute_jacobian , @ref compute_residual and @ref distribute_constraints to the
-     * provided functions. For details on the expected function signatures and behavior, see the
-     * documentation of the corresponding class member.
-     *
-     * @param jacobian Function used to apply the Jacobian to a vector.
-     * @param residual Function used to compute the residual.
-     * @param constraints Function used to apply constraints to a vector.
-     */
-    void
-    configure_solver_functions(
-      JacobianType              jacobian,
-      ResidualType              residual,
-      DistributeConstraintsType constraints = [](VectorType &) {});
-
-    /**
-     * Set the preconditioner used in the linear solver of the implicit step. If this function is
-     * never called an identity preconditioner is used.
-     *
+     * @param solver_functions Struct containing the functions used by the internal nonlinear solver
+     * to solve the implicit step.
      * @param preconditioner_in Preconditioner to be used in the linear solver of the implicit step.
      */
-    void
-    set_preconditioner(Preconditioner<dim, VectorType, number> &&preconditioner_in);
+    explicit BDFIntegrator(
+      const TimeIntegratorData<number>         &time_integrator_data,
+      const SolverFunctions                    &solver_functions,
+      Preconditioner<dim, VectorType, number> &&preconditioner_in =
+        Preconditioner<dim, VectorType, number>(IdentityPreconditioner<dim, VectorType, number>()));
 
     /**
      * Returns the number of previous solutions, that is solutions at time step n - x, where x >= 0,

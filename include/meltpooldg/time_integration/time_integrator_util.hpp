@@ -68,15 +68,8 @@ namespace MeltPoolDG::TimeIntegration
   {
     if (Utils::contains(explicit_lsrk_supported_schemes, params.integrator_type))
       {
-        auto integrator = new LowStorageExplicitRungeKuttaIntegrator<number>(params);
-        integrator->configure_rhs(
-          [&pde_operator](number time,
-                          number,
-                          dealii::LinearAlgebra::distributed::Vector<number>       &dst,
-                          const dealii::LinearAlgebra::distributed::Vector<number> &src,
-                          std::function<void(unsigned, unsigned)>                   post) {
-            pde_operator.apply_operator(time, dst, src, post);
-          });
+        auto integrator = new LowStorageExplicitRungeKuttaIntegrator<number>(
+          params, std::bind_front(&PDEOperator::apply_operator, &pde_operator));
         return integrator;
       }
     return nullptr;
@@ -113,11 +106,16 @@ namespace MeltPoolDG::TimeIntegration
           scratch_data,
           dof_idx,
           true);
-        auto integrator = new BDFIntegrator<dim, number>(params);
-        integrator->set_preconditioner(std::move(preconditioner));
-        integrator->configure_solver_functions(
-          std::bind_front(&PDEOperator::apply_jacobian, pde_operator),
-          std::bind_front(&PDEOperator::compute_residual, pde_operator));
+
+        const typename TimeIntegration::BDFIntegrator<dim, number>::SolverFunctions
+          bdf_solver_functions{.compute_jacobian =
+                                 std::bind_front(&PDEOperator::apply_jacobian, &pde_operator),
+                               .compute_residual =
+                                 std::bind_front(&PDEOperator::compute_residual, &pde_operator),
+                               .distribute_constraints = std::function<void(VectorType &)>()};
+
+        auto integrator =
+          new BDFIntegrator<dim, number>(params, bdf_solver_functions, std::move(preconditioner));
         return integrator;
       }
     return nullptr;
@@ -149,8 +147,8 @@ namespace MeltPoolDG::TimeIntegration
   {
     if (Utils::contains(explicit_lsrk_supported_schemes, params.integrator_type))
       {
-        auto integrator = new LowStorageExplicitRungeKuttaIntegrator<number>(params);
-        integrator->configure_rhs(
+        auto integrator = new LowStorageExplicitRungeKuttaIntegrator<number>(
+          params,
           [&pde_operator](number time,
                           number,
                           dealii::LinearAlgebra::distributed::Vector<number>       &dst,

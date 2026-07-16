@@ -1,41 +1,42 @@
-/**
- * @brief This operation solves the compressible Navier-Stokes equations, comprising
- * the primary variables
- *  - density (ρ)
- *  - momentum (ρ u)
- *  - volume-specific energy (ρ E)
- *
- * It is an extension of deal.II step-67 and is based on the paper
- *
- * Fehn, N., Wall, W. A., & Kronbichler, M. (2019). A matrix‐free high‐order
- * discontinuous Galerkin compressible Navier‐Stokes solver: A performance
- * comparison of compressible and incompressible formulations for turbulent
- * incompressible flows. International Journal for Numerical Methods in Fluids,
- * 89(3), 71-102.
- */
-
 #pragma once
 
 #include <deal.II/base/function.h>
 
 #include <deal.II/lac/la_parallel_vector.h>
 
-#include <meltpooldg/compressible_flow/dg_operator_base.hpp>
+#include "meltpooldg/time_integration/time_integrator_base.hpp"
+#include <meltpooldg/compressible_flow/dg_operator_explicit.hpp>
+#include <meltpooldg/compressible_flow/dg_operator_implicit.hpp>
+#include <meltpooldg/compressible_flow/dg_operator_implicit_explicit.hpp>
 #include <meltpooldg/compressible_flow/operation_data.hpp>
 #include <meltpooldg/compressible_flow/operation_scratch_data.hpp>
 #include <meltpooldg/compressible_flow/output_post_processor.hpp>
 #include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
+#include <meltpooldg/time_integration/bdf_time_integration.hpp>
+#include <meltpooldg/time_integration/explicit_low_storage_runge_kutta_integrator.hpp>
+#include <meltpooldg/time_integration/implicit_explicit_integrator.hpp>
 #include <meltpooldg/time_integration/solution_history.hpp>
-#include <meltpooldg/time_integration/time_integrator_base.hpp>
 
 #include <memory>
+#include <string>
 
 namespace MeltPoolDG::CompressibleFlow
 {
   /**
-   * @brief Operation that performs a full time step for the compressible Navier-Stokes.
+   * This operation solves, i.e., perform a full time step for the compressible Navier-Stokes
+   * equations, comprising the primary variables
+   *  - density (ρ)
+   *  - momentum (ρ u)
+   *  - volume-specific energy (ρ E)
+   *
+   * It is an extension of deal.II step-67 and is based on the paper
+   *
+   * Fehn, N., Wall, W. A., & Kronbichler, M. (2019). A matrix‐free high‐order discontinuous
+   * Galerkin compressible Navier‐Stokes solver: A performance comparison of compressible and
+   * incompressible formulations for turbulent incompressible flows. International Journal for
+   * Numerical Methods in Fluids, 89(3), 71-102.
    */
   template <int dim, typename number, int n_species = 1>
   class DGOperation
@@ -44,8 +45,6 @@ namespace MeltPoolDG::CompressibleFlow
     using VectorType = dealii::LinearAlgebra::distributed::Vector<number>;
 
     /**
-     * @brief Constructor.
-     *
      * Initializes all internal data structures required to simulate compressible Navier-Stokes
      * flows.
      *
@@ -54,7 +53,6 @@ namespace MeltPoolDG::CompressibleFlow
      * @param material_data_in Reference to the material data struct.
      * @param flow_dof_idx Index of the used dof handler in @p scratch_data_in.
      * @param flow_quad_idx Index of the used quadrature object in @p scratch_data_in.
-     * @param external_forces Pointer to a struct implementing external forces acting on the fluid.
      */
     explicit DGOperation(const ScratchData<dim, dim, number> &scratch_data,
                          const OperationData<number>         &flow_data,
@@ -110,6 +108,25 @@ namespace MeltPoolDG::CompressibleFlow
     void
     set_body_force(std::unique_ptr<dealii::Function<dim>> body_force_in);
 
+    /**
+     * Adds an external force to the right-hand side of the governing equations. The external force
+     * can be specified by providing a pointer to an object implementing the external flow force. To
+     * see what is expected from the interface of the external flow force, please refer to the
+     * ExternalFlowForce and ExternalFlowForceJacobian classes.
+     *
+     * Independent of the time integration scheme, the external force residuum must be provided. If
+     * the time integration scheme is implicit or implicit-explicit, the external force jacobian
+     * must also be provided. In the case of an explicit time integration scheme, the external force
+     * jacobian is not required and can be set to nullptr.
+     *
+     * @param external_force_residuum Pointer to an object implementing the external force residuum,
+     * i.e., the contribution of the external force to the right-hand side of the compressible flow
+     * governing equations.
+     * @param external_force_jacobian Pointer to an object implementing the external force jacobian,
+     * i.e., the contribution of the external force to the jacobian of the compressible flow
+     * governing equations. This parameter can be set to nullptr if the time integration scheme is
+     * explicit.
+     */
     void
     add_external_force(
       std::shared_ptr<ExternalFlowForce<dim, number, n_species>>         external_force_residuum,
@@ -166,8 +183,18 @@ namespace MeltPoolDG::CompressibleFlow
     /// Scratch data for compressible flows
     OperationScratchData<dim, number> flow_scratch_data;
 
-    /// Compressible flow operator object
-    std::unique_ptr<DGOperatorBase<dim, number, n_species>> comp_flow_operator;
+    /// A pointer to the time integrator used for the time integration of the compressible flow
+    /// equations. This includes explicit, implicit, and implicit-explicit time integration schemes.
+    std::unique_ptr<TimeIntegration::TimeIntegratorBase<number>> time_integrator;
+
+    /// The flow operator used for the time integration of the compressible flow equations. This
+    /// includes explicit, implicit, and implicit-explicit flow operators. A variant is used here in
+    /// order to allow for the use of different flow operators depending on the time integration
+    /// scheme.
+    std::variant<DGOperatorExplicit<dim, number, n_species>,
+                 DGOperatorImplicit<dim, number>,
+                 DGOperatorImplicitExplicit<dim, number>>
+      flow_operator;
 
     /// Object containing the data post processor for the different output options
     OutputManager<dim, number> output_manager;
@@ -189,12 +216,21 @@ namespace MeltPoolDG::CompressibleFlow
     compute_minimum_density() const;
 
     /**
-     * @brief Set up the operator to suit the specified time integration scheme.
+     * Set up the operator based on the time integration scheme.
      *
-     * @param external_forces Pointer to a struct implementing external forces acting on the fluid.
+     * @param flow_scratch_data Scratch data for the compressible flow.
+     * @return The initialized operator.
+     */
+    static std::variant<DGOperatorExplicit<dim, number, n_species>,
+                        DGOperatorImplicit<dim, number>,
+                        DGOperatorImplicitExplicit<dim, number>>
+    setup_operator(OperationScratchData<dim, number> &flow_scratch_data);
+
+    /**
+     * Set up the time integration schemes as requested by the input data.
      */
     void
-    setup_operator();
+    setup_time_integrator();
   };
 
 
