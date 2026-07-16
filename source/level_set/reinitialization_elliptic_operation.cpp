@@ -43,17 +43,17 @@ namespace MeltPoolDG::LevelSet
         ++iter;
       }
 
-    Journal::print_line(scratch_data.get_pcout(1),
-                        "Reinitialization completed in " + std::to_string(iter) + " iterations.",
-                        "reinitialization");
-
-    Journal::print_formatted_norm<number>(scratch_data.get_pcout(2),
+    Journal::print_formatted_norm<number>(scratch_data.get_pcout(1),
                                           relative_change_level_set,
                                           "|Δψ|/|ψ^n|",
                                           "reinitialization",
                                           8 /*precision*/,
                                           "L2 ",
                                           2 /*extra_size*/);
+
+    Journal::print_line(scratch_data.get_pcout(1),
+                        "Reinitialization completed in " + std::to_string(iter) + " iterations.",
+                        "reinitialization");
   }
 
   template <int dim, typename number>
@@ -98,7 +98,7 @@ namespace MeltPoolDG::LevelSet
                                               dealii::VectorTools::NormType::L2_norm));
 
     Journal::print_formatted_norm<number>(
-      scratch_data.get_pcout(1),
+      scratch_data.get_pcout(2),
       [&]() -> number {
         return VectorTools::compute_norm<dim, number>(solution_level_set,
                                                       scratch_data,
