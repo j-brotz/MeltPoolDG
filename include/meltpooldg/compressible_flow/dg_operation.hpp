@@ -4,7 +4,6 @@
 
 #include <deal.II/lac/la_parallel_vector.h>
 
-#include "meltpooldg/time_integration/time_integrator_base.hpp"
 #include <meltpooldg/compressible_flow/dg_operator_explicit.hpp>
 #include <meltpooldg/compressible_flow/dg_operator_implicit.hpp>
 #include <meltpooldg/compressible_flow/dg_operator_implicit_explicit.hpp>
@@ -18,6 +17,8 @@
 #include <meltpooldg/time_integration/explicit_low_storage_runge_kutta_integrator.hpp>
 #include <meltpooldg/time_integration/implicit_explicit_integrator.hpp>
 #include <meltpooldg/time_integration/solution_history.hpp>
+#include <meltpooldg/time_integration/time_integrator_base.hpp>
+#include <meltpooldg/utilities/generic_limiter.hpp>
 
 #include <memory>
 #include <string>
@@ -198,6 +199,8 @@ namespace MeltPoolDG::CompressibleFlow
 
     /// Object containing the data post processor for the different output options
     OutputManager<dim, number> output_manager;
+
+    Utilities::Limiter<dim, n_conserved_variables<dim, n_species>, number> limiter;
 
     /**
      * @brief Compute the convective time step limit for the current mesh and flow field.

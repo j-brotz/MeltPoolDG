@@ -125,6 +125,30 @@ namespace MeltPoolDG::CompressibleFlow
   }
 
   template <int dim, typename number, int n_species>
+  auto
+  DGOperatorExplicit<dim, number, n_species>::compute_numerical_flux(
+    const ConservedVariables &w_m,
+    const ConservedVariables &w_p) const -> FlowFluxType
+  {
+    // TODO: Reuse existing code
+    // TODO: Viscous flux terms
+    const ConvectiveKernel kernel(flow_scratch_data.material.data);
+
+    const FlowFluxType flux_m = kernel.flux(w_m);
+    const FlowFluxType flux_p = kernel.flux(w_p);
+
+    const auto local_maximum_wave_speed = kernel.local_maximum_wave_speed(w_m, w_p);
+
+    FlowFluxType numerical_flux;
+    for (unsigned int c = 0; c < n_conserved_variables<dim, n_species>; ++c)
+      for (unsigned int d = 0; d < dim; ++d)
+        numerical_flux[c][d] =
+          0.5 * (flux_m[c][d] + flux_p[c][d]) + 0.5 * local_maximum_wave_speed * (w_m[c] - w_p[c]);
+
+    return numerical_flux;
+  }
+
+  template <int dim, typename number, int n_species>
   void
   DGOperatorExplicit<dim, number, n_species>::local_apply_face(
     const MatrixFree<dim, number>               &mf,
