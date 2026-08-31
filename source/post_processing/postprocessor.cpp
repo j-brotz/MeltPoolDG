@@ -154,6 +154,13 @@ namespace MeltPoolDG
           }
       }
 
+    // Data post postprocessor output data
+    for (const auto &i : generic_data_out.data_postprocessor_entries)
+      {
+        const auto &[dof_handler, data, data_postprocessor] = i;
+        data_out.add_data_vector(*dof_handler, *data, *data_postprocessor);
+      }
+
     // Attach element-wise output data.
     for (const auto &i : element_ids)
       {
@@ -162,13 +169,6 @@ namespace MeltPoolDG
                                  std::get<3>(data),
                                  dealii::DataOut_DoFData<dim, dim>::DataVectorType::type_cell_data,
                                  std::get<4>(data));
-      }
-
-    // Data post postprocessor output data
-    for (const auto &i : generic_data_out.data_postprocessor_entries)
-      {
-        const auto &[dof_handler, data, data_postprocessor] = i;
-        data_out.add_data_vector(*dof_handler, *data, *data_postprocessor);
       }
 
     const auto get_tria = [&generic_data_out]() -> const dealii::Triangulation<dim> & {

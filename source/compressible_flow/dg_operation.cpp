@@ -2,11 +2,12 @@
 #include <deal.II/base/mpi.h>
 #include <deal.II/base/vectorization.h>
 
+#include <deal.II/fe/fe_dgq.h>
+
 #include <deal.II/matrix_free/operators.h>
 
 #include <deal.II/numerics/data_component_interpretation.h>
 
-#include "meltpooldg/time_integration/bdf_time_integration.hpp"
 #include <meltpooldg/compressible_flow/data_types.hpp>
 #include <meltpooldg/compressible_flow/dg_operation.hpp>
 #include <meltpooldg/compressible_flow/dg_operator_explicit.hpp>
@@ -15,8 +16,10 @@
 #include <meltpooldg/compressible_flow/operation_scratch_data.hpp>
 #include <meltpooldg/compressible_flow/state_views_n_species.hpp>
 #include <meltpooldg/species_transport/output_post_processor.hpp>
+#include <meltpooldg/time_integration/bdf_time_integration.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
+#include <meltpooldg/utilities/generic_limiter.hpp>
 #include <meltpooldg/utilities/vector_tools.templates.hpp>
 
 #include <algorithm>
@@ -39,6 +42,7 @@ namespace MeltPoolDG::CompressibleFlow
     const unsigned int                   flow_quad_idx)
     : flow_scratch_data(flow_data, material_data, scratch_data, flow_dof_idx, flow_quad_idx)
     , flow_operator(setup_operator(flow_scratch_data))
+    , limiter(scratch_data.get_matrix_free(), flow_dof_idx, flow_quad_idx)
   {
     setup_time_integrator();
 
@@ -87,6 +91,7 @@ namespace MeltPoolDG::CompressibleFlow
     flow_scratch_data.reinit(time_integrator->required_solution_history_size());
     time_integrator->reinit(flow_scratch_data.solution_history);
     std::visit([&](auto &operator_variant) { operator_variant.reinit(); }, flow_operator);
+    limiter.reinit();
   }
 
   template <int dim, typename number, int n_species>
@@ -105,7 +110,7 @@ namespace MeltPoolDG::CompressibleFlow
     flow_scratch_data.solution_history.update_ghost_values();
 
     std::function<void(number, number, VectorType &, const VectorType &)> stage_pre_processing =
-      [&](number time, number, VectorType &, const VectorType &) {
+      [&](number time, number, VectorType &, const VectorType &current_solution) {
         flow_scratch_data.boundary_conditions.update_boundary_conditions(time);
         std::visit(
           [&](auto &comp_flow_operator) {
@@ -115,17 +120,30 @@ namespace MeltPoolDG::CompressibleFlow
               comp_flow_operator.set_preconditioner_time_step(time_step);
           },
           flow_operator);
+        limiter.prepare_for_limiting(current_solution);
       };
 
     std::function<void(number, number, VectorType &, const VectorType &)> stage_post_processing =
-      [&](number, number, VectorType &dst, const VectorType &src) {
-        Utilities::apply_minmod_type_limiter<dim, n_conserved_variables<dim, n_species>, number>(
-          {flow_scratch_data.scratch_data.get_matrix_free(),
-           flow_scratch_data.dof_idx,
-           flow_scratch_data.quad_idx},
-          dst,
-          src,
-          flow_scratch_data.flow_data.limiter_data);
+      [&](number, number time_step, VectorType &dst, const VectorType &src) {
+        const std::function<FluxType<dim, number, n_species>(
+          const ConservedVariablesType<dim, number, n_species> &w_m,
+          const ConservedVariablesType<dim, number, n_species> &w_p)>
+          numerical_flux = [&](const ConservedVariablesType<dim, number, n_species> &w_m,
+                               const ConservedVariablesType<dim, number, n_species> &w_p) {
+            return std::visit(
+              [&](auto &comp_flow_operator) {
+                using T = std::decay_t<decltype(comp_flow_operator)>;
+                if constexpr (std::is_same_v<DGOperatorExplicit<dim, number, n_species>, T>)
+                  return comp_flow_operator.compute_numerical_flux(w_m, w_p);
+                else
+                  AssertThrow(false, dealii::ExcInternalError());
+                return FluxType<dim, number, n_species>(); // to avoid compiler warning
+              },
+              flow_operator);
+          };
+        std::cout << "Applying limiter with time step: " << time_step << std::endl;
+        if (flow_scratch_data.flow_data.limiter_data.apply_limiter)
+          limiter.apply_limiting(time_step, numerical_flux, dst, src);
       };
 
     time_integrator->perform_time_step(current_time,
@@ -364,6 +382,8 @@ namespace MeltPoolDG::CompressibleFlow
                                         flow_scratch_data.dof_idx),
                                       flow_scratch_data.solution_history.get_current_solution(),
                                       flow_scratch_data.flow_data.output_variables);
+    if (flow_scratch_data.flow_data.limiter_data.apply_limiter)
+      limiter.attach_to_data_out(data_out);
   }
 
   template <int dim, typename number, int n_species>

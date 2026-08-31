@@ -238,6 +238,8 @@ namespace MeltPoolDG
                                 0);
             additional_data.mapping_update_flags_boundary_faces = update_flags;
           }
+        additional_data.hold_all_faces_to_owned_cells       = true;
+        additional_data.mapping_update_flags_faces_by_cells = update_flags;
         this->matrix_free.reinit(
           *this->mapping, this->dof_handler, this->constraint, this->quad, additional_data);
 

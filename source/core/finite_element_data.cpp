@@ -61,7 +61,10 @@ namespace MeltPoolDG
   unsigned int
   FiniteElementData::get_n_q_points() const
   {
-    return degree + 1;
+    if (type == FiniteElementType::FE_DGQ_GaussLobatto)
+      return degree + 2;
+    else
+      return degree + 1;
   }
 
   unsigned int

@@ -2,6 +2,7 @@
 
 #include <deal.II/base/exceptions.h>
 #include <deal.II/base/quadrature.h>
+#include <deal.II/base/quadrature_lib.h>
 
 #include <deal.II/dofs/dof_handler.h>
 
@@ -42,6 +43,11 @@ namespace MeltPoolDG::FiniteElementUtils
                 dof_handler.distribute_dofs(dealii::FE_DGQ<dim>(fe_data.degree));
                 break;
               }
+              case FiniteElementType::FE_DGQ_GaussLobatto: {
+                dof_handler.distribute_dofs(dealii::FE_DGQArbitraryNodes<dim>(
+                  dealii::QGaussLobatto<1>(fe_data.get_n_q_points())));
+                break;
+              }
             case FiniteElementType::not_initialized:
               DEAL_II_ASSERT_UNREACHABLE();
             default:
@@ -70,6 +76,13 @@ namespace MeltPoolDG::FiniteElementUtils
               case FiniteElementType::FE_DGQ: {
                 dof_handler.distribute_dofs(
                   dealii::FESystem<dim>(dealii::FE_DGQ<dim>(fe_data.degree), n_components));
+                break;
+              }
+              case FiniteElementType::FE_DGQ_GaussLobatto: {
+                dof_handler.distribute_dofs(
+                  dealii::FESystem<dim>(dealii::FE_DGQArbitraryNodes<dim>(
+                                          dealii::QGaussLobatto<1>(fe_data.get_n_q_points())),
+                                        n_components));
                 break;
               }
             case FiniteElementType::not_initialized:
