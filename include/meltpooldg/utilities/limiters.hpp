@@ -24,6 +24,11 @@ namespace MeltPoolDG::Utilities
    */
   BETTER_ENUM(LimiterType, char, tvd_minmod, tvb_minmod)
 
+  BETTER_ENUM(TroubledCellMarkingType,
+              char,
+              inter_cell_numerical_admissibility,
+              local_cell_numerical_admissibility)
+
   /**
    * A struct to hold the data for the limiters.
    */
@@ -36,6 +41,9 @@ namespace MeltPoolDG::Utilities
     /// The TVB constant used in the TVB minmod limiter.
     std::vector<number> tvb_constant;
 
+    /// The types of troubled cell marking to use for the limiter.
+    std::vector<TroubledCellMarkingType> troubled_cell_marking_types;
+
     /// The type of limiter to apply.
     LimiterType type = LimiterType::tvd_minmod;
 
@@ -46,6 +54,12 @@ namespace MeltPoolDG::Utilities
      */
     void
     add_parameters(dealii::ParameterHandler &prm);
+
+    /**
+     * Check the input parameters for validity.
+     */
+    void
+    check_input_parameters() const;
   };
 
   /**

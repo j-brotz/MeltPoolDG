@@ -143,6 +143,7 @@ namespace MeltPoolDG::CompressibleFlow
     post(const FiniteElementData &base_fe_data, const unsigned int base_verbosity_level)
     {
       fe.post(base_fe_data);
+      limiter_data.check_input_parameters();
       AssertThrow(
         fe.type == FiniteElementType::FE_DGQ or fe.type == FiniteElementType::FE_DGQ_GaussLobatto,
         dealii::ExcMessage(
