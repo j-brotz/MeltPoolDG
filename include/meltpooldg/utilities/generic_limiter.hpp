@@ -13,7 +13,10 @@
 #include <deal.II/matrix_free/operators.h>
 
 #include <meltpooldg/post_processing/generic_data_out.hpp>
+#include <meltpooldg/utilities/limiters.templates.hpp>
 #include <meltpooldg/utilities/matrix_free_util.hpp>
+
+#include <meltpooldg/utilities/cpp23_functions.h>
 
 #include <algorithm>
 #include <cstddef>
@@ -112,10 +115,12 @@ namespace MeltPoolDG::Utilities
     using FluxType = dealii::Tensor<1, n_components, dealii::Tensor<1, dim, VectorizedArrayType>>;
 
   public:
-    Limiter(const dealii::MatrixFree<dim, number> &matrix_free,
+    Limiter(const LimiterData<number>             &limiter_data,
+            const dealii::MatrixFree<dim, number> &matrix_free,
             const unsigned int                     dof_idx,
             const unsigned int                     quad_idx)
       : matrix_free_context(matrix_free, dof_idx, quad_idx)
+      , limiter_data(limiter_data)
     {}
 
     void
@@ -160,6 +165,8 @@ namespace MeltPoolDG::Utilities
     VectorType previous_time_solution;
 
     MatrixFreeContext<dim, number> matrix_free_context;
+
+    const LimiterData<number> limiter_data;
 
     /**
      * Cartesian-indexed access to the finite volume subcell average values on a cell, including the
@@ -387,6 +394,16 @@ namespace MeltPoolDG::Utilities
         }
       return cartesian_index;
     }
+
+    unsigned int
+    inter_cell_numerical_admissibility_marking(
+      const VectorType                                       &solution,
+      dealii::AlignedVector<dealii::VectorizedArray<number>> &marked_cells_dst) const;
+
+    unsigned int
+    local_cell_numerical_admissibility_marking(
+      const VectorType                                       &solution,
+      dealii::AlignedVector<dealii::VectorizedArray<number>> &marked_cells_dst) const;
   };
 
 
@@ -400,13 +417,20 @@ namespace MeltPoolDG::Utilities
 
   template <int dim, int n_components, typename number>
   unsigned int
-  Limiter<dim, n_components, number>::mark_cells_for_limiting(const VectorType &solution)
+  Limiter<dim, n_components, number>::local_cell_numerical_admissibility_marking(
+    const VectorType                                       &solution,
+    dealii::AlignedVector<dealii::VectorizedArray<number>> &marked_cells_dst) const
   {
-    // TODO 1: Consider local smooth extrema
-    // TODO 2: Check for physical admissibility (e.g. positivity of density and pressure)
+    return 0;
+  }
 
+  template <int dim, int n_components, typename number>
+  unsigned int
+  Limiter<dim, n_components, number>::inter_cell_numerical_admissibility_marking(
+    const VectorType                                       &solution,
+    dealii::AlignedVector<dealii::VectorizedArray<number>> &marked_cells_dst) const
+  {
     unsigned int cells_marked = 0;
-
 
     std::function<void(const dealii::MatrixFree<dim, number> &,
                        DistributedCellData<dim,
@@ -576,12 +600,34 @@ namespace MeltPoolDG::Utilities
 
             cells_marked += local_troubled_cells.sum();
 
+            local_troubled_cells = dealii::compare_and_apply_mask<dealii::SIMDComparison::equal>(
+              local_troubled_cells,
+              dealii::VectorizedArray<number>(1),
+              dealii::VectorizedArray<number>(1),
+              cell_evaluator_new.read_cell_data(marked_cells));
             cell_evaluator_new.set_cell_data(marked_cells, local_troubled_cells);
           }
       };
 
-    matrix_free_context.mf.cell_loop(mark_cells, troubled_cells, solution);
+    matrix_free_context.mf.cell_loop(mark_cells, marked_cells_dst, solution);
     return dealii::Utilities::MPI::sum(cells_marked, MPI_COMM_WORLD);
+  }
+
+  template <int dim, int n_components, typename number>
+  unsigned int
+  Limiter<dim, n_components, number>::mark_cells_for_limiting(const VectorType &solution)
+  {
+    // TODO 1: Consider local smooth extrema
+    // TODO 2: Check for physical admissibility (e.g. positivity of density and pressure)
+
+    unsigned int cells_marked = 0;
+    for (dealii::VectorizedArray<number> &troubled_cells_batch : troubled_cells)
+      troubled_cells_batch = 0.;
+
+    if (Utils::contains(limiter_data.troubled_cell_marking_types,
+                        TroubledCellMarkingType::inter_cell_numerical_admissibility))
+      cells_marked += inter_cell_numerical_admissibility_marking(solution, troubled_cells);
+    return cells_marked;
   }
 
   template <int dim, int n_components, typename number>

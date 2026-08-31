@@ -19,6 +19,8 @@
 
 #include <boost/container/small_vector.hpp>
 
+#include <meltpooldg/utilities/cpp23_functions.h>
+
 #include <array>
 #include <functional>
 #include <vector>
@@ -35,8 +37,28 @@ MeltPoolDG::Utilities::LimiterData<number>::add_parameters(dealii::ParameterHand
       tvb_constant,
       "The TVB constant used in the TVB minmod limiter. The constant has the dimension of a second derivative.");
     prm.add_parameter("type", type, "The type of limiter to apply.");
+    prm.add_parameter("troubled cell marking types",
+                      troubled_cell_marking_types,
+                      "The types of troubled cell marking to use for the limiter.");
   }
   prm.leave_subsection();
+}
+
+template <typename number>
+void
+MeltPoolDG::Utilities::LimiterData<number>::check_input_parameters() const
+{
+  AssertThrow(
+    !apply_limiter or !troubled_cell_marking_types.empty(),
+    dealii::ExcMessage(
+      "If the limiter is applied, at least one troubled cell marking type must be specified."));
+  AssertThrow(
+    !(Utils::contains(troubled_cell_marking_types,
+                      TroubledCellMarkingType::inter_cell_numerical_admissibility) and
+      Utils::contains(troubled_cell_marking_types,
+                      TroubledCellMarkingType::local_cell_numerical_admissibility)),
+    dealii::ExcMessage(
+      "Using both inter-cell and local cell numerical admissibility is not recommended as it adds computational complexity without providing significant benefits and hence it is not supported. Please choose one of the two marking types."));
 }
 
 template <int n_components, typename TensorType, typename Container>

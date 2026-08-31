@@ -42,7 +42,10 @@ namespace MeltPoolDG::CompressibleFlow
     const unsigned int                   flow_quad_idx)
     : flow_scratch_data(flow_data, material_data, scratch_data, flow_dof_idx, flow_quad_idx)
     , flow_operator(setup_operator(flow_scratch_data))
-    , limiter(scratch_data.get_matrix_free(), flow_dof_idx, flow_quad_idx)
+    , limiter(flow_scratch_data.flow_data.limiter_data,
+              scratch_data.get_matrix_free(),
+              flow_dof_idx,
+              flow_quad_idx)
   {
     setup_time_integrator();
 
