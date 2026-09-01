@@ -290,6 +290,42 @@ namespace MeltPoolDG
     return jump;
   }
 
+  template <typename number>
+  number
+  elementwise_min(const number &a, const number &b)
+  {
+    return std::min(a, b);
+  }
+
+  template <typename number>
+  number
+  elementwise_max(const number &a, const number &b)
+  {
+    return std::max(a, b);
+  }
+
+  template <int rank, int dim, typename number>
+  dealii::Tensor<rank, dim, number>
+  elementwise_min(const dealii::Tensor<rank, dim, number> &a,
+                  const dealii::Tensor<rank, dim, number> &b)
+  {
+    dealii::Tensor<rank, dim, number> result;
+    for (unsigned int i = 0; i < dim; ++i)
+      result[i] = elementwise_min(a[i], b[i]);
+    return result;
+  }
+
+  template <int rank, int dim, typename number>
+  dealii::Tensor<rank, dim, number>
+  elementwise_max(const dealii::Tensor<rank, dim, number> &a,
+                  const dealii::Tensor<rank, dim, number> &b)
+  {
+    dealii::Tensor<rank, dim, number> result;
+    for (unsigned int i = 0; i < dim; ++i)
+      result[i] = elementwise_max(a[i], b[i]);
+    return result;
+  }
+
   /*
    * Trait to detect whether a type is a specialization of `dealii::Tensor`. The trait consists of
    * a primary template defaulting to `false` and a specialized version for `dealii::Tensor` types

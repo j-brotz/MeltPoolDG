@@ -13,6 +13,7 @@
 #include <deal.II/matrix_free/operators.h>
 
 #include <meltpooldg/post_processing/generic_data_out.hpp>
+#include <meltpooldg/utilities/dealii_tensor.hpp>
 #include <meltpooldg/utilities/limiters.templates.hpp>
 #include <meltpooldg/utilities/matrix_free_util.hpp>
 
@@ -127,10 +128,9 @@ namespace MeltPoolDG::Utilities
     reinit();
 
     unsigned int
-    mark_cells_for_limiting(const VectorType &solution);
-
-    number
-    compute_smoothness_indicator() const;
+    mark_cells_for_limiting(
+      const VectorType                                                        &solution,
+      const std::function<dealii::VectorizedArray<number>(const ValueType &)> &admissibility_check);
 
     void
     prepare_for_limiting(const VectorType &solution);
@@ -140,7 +140,9 @@ namespace MeltPoolDG::Utilities
       const number                                                              time_step,
       const std::function<FluxType(const ValueType &w_m, const ValueType &w_p)> numerical_flux,
       VectorType                                                               &limited_solution,
-      const VectorType                                                         &solution);
+      const VectorType                                                         &solution,
+      const std::function<dealii::VectorizedArray<number>(const ValueType &)> &admissibility_check =
+        nullptr);
 
     /**
      * This function attaches relevant limiter data to the provided GenericDataOut object for output
@@ -404,6 +406,13 @@ namespace MeltPoolDG::Utilities
     local_cell_numerical_admissibility_marking(
       const VectorType                                       &solution,
       dealii::AlignedVector<dealii::VectorizedArray<number>> &marked_cells_dst) const;
+
+    unsigned int
+    physical_admissibility_marking(
+      const VectorType                                                        &solution,
+      dealii::AlignedVector<dealii::VectorizedArray<number>>                  &marked_cells_dst,
+      const std::function<dealii::VectorizedArray<number>(const ValueType &)> &admissibility_check)
+      const;
   };
 
 
@@ -417,11 +426,188 @@ namespace MeltPoolDG::Utilities
 
   template <int dim, int n_components, typename number>
   unsigned int
+  Limiter<dim, n_components, number>::physical_admissibility_marking(
+    const VectorType                                                        &solution,
+    dealii::AlignedVector<dealii::VectorizedArray<number>>                  &marked_cells_dst,
+    const std::function<dealii::VectorizedArray<number>(const ValueType &)> &admissibility_check)
+    const
+  {
+    Assert(admissibility_check,
+           dealii::ExcMessage(
+             "Physical admissibility check function must be provided for physical admissibility "
+             "marking."));
+
+    unsigned int cells_marked = 0;
+
+    std::function<void(const dealii::MatrixFree<dim, number> &,
+                       dealii::AlignedVector<dealii::VectorizedArray<number>> &,
+                       const VectorType &,
+                       const std::pair<unsigned int, unsigned int> &)>
+      mark_troubled_cells =
+        [&](const dealii::MatrixFree<dim, number>                  &matrix_free,
+            dealii::AlignedVector<dealii::VectorizedArray<number>> &marked_cells,
+            const VectorType                                       &current_solution,
+            const std::pair<unsigned int, unsigned int>            &cell_range) {
+          FECellIntegrator<dim, n_components, number> cell_evaluator(matrix_free,
+                                                                     matrix_free_context.dof_idx,
+                                                                     matrix_free_context.quad_idx);
+
+          for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
+            {
+              cell_evaluator.reinit(cell);
+              cell_evaluator.gather_evaluate(current_solution, dealii::EvaluationFlags::values);
+
+              dealii::VectorizedArray<number> local_troubled_cells = 0.;
+              for (const unsigned int subcell : cell_evaluator.quadrature_point_indices())
+                {
+                  local_troubled_cells =
+                    dealii::compare_and_apply_mask<dealii::SIMDComparison::equal>(
+                      admissibility_check(cell_evaluator.get_value(subcell)),
+                      dealii::VectorizedArray<number>(1.),
+                      dealii::VectorizedArray<number>(1.),
+                      local_troubled_cells);
+                }
+
+              if (matrix_free.n_active_entries_per_cell_batch(cell) <
+                  dealii::VectorizedArray<number>::size())
+                {
+                  // Non-active entries shall not be marked as troubled, so we mask them out here.
+                  for (unsigned int lane = matrix_free.n_active_entries_per_cell_batch(cell);
+                       lane < dealii::VectorizedArray<number>::size();
+                       ++lane)
+                    {
+                      local_troubled_cells[lane] = 0;
+                    }
+                }
+
+              cells_marked += local_troubled_cells.sum();
+
+              local_troubled_cells = dealii::compare_and_apply_mask<dealii::SIMDComparison::equal>(
+                local_troubled_cells,
+                dealii::VectorizedArray<number>(1.),
+                dealii::VectorizedArray<number>(1.),
+                cell_evaluator.read_cell_data(marked_cells));
+              cell_evaluator.set_cell_data(marked_cells, local_troubled_cells);
+            }
+        };
+
+    matrix_free_context.mf.cell_loop(mark_troubled_cells, marked_cells_dst, solution);
+    return dealii::Utilities::MPI::sum(cells_marked, MPI_COMM_WORLD);
+  }
+
+  template <int dim, int n_components, typename number>
+  unsigned int
   Limiter<dim, n_components, number>::local_cell_numerical_admissibility_marking(
     const VectorType                                       &solution,
     dealii::AlignedVector<dealii::VectorizedArray<number>> &marked_cells_dst) const
   {
-    return 0;
+    unsigned int cells_marked = 0;
+
+    std::function<void(const dealii::MatrixFree<dim, number> &,
+                       dealii::AlignedVector<dealii::VectorizedArray<number>> &,
+                       const VectorType &,
+                       const std::pair<unsigned int, unsigned int> &)>
+      mark_troubled_cells =
+        [&](const dealii::MatrixFree<dim, number>                  &matrix_free,
+            dealii::AlignedVector<dealii::VectorizedArray<number>> &marked_cells,
+            const VectorType                                       &current_solution,
+            const std::pair<unsigned int, unsigned int>            &cell_range) {
+          FECellIntegrator<dim, n_components, number> cell_evaluator_new(
+            matrix_free, matrix_free_context.dof_idx, matrix_free_context.quad_idx);
+          FECellIntegrator<dim, n_components, number> cell_evaluator_old(
+            matrix_free, matrix_free_context.dof_idx, matrix_free_context.quad_idx);
+          FEFaceIntegrator<dim, n_components, number> outer_face_evaluator(
+            matrix_free, false, matrix_free_context.dof_idx, matrix_free_context.quad_idx);
+          FEFaceIntegrator<dim, n_components, number> inner_face_evaluator(
+            matrix_free, true, matrix_free_context.dof_idx, matrix_free_context.quad_idx);
+
+          const VectorizedArrayType tol(1e-5); // TODO: How to deal with this
+          for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
+            {
+              cell_evaluator_new.reinit(cell);
+              cell_evaluator_old.reinit(cell);
+              cell_evaluator_new.gather_evaluate(current_solution, dealii::EvaluationFlags::values);
+              cell_evaluator_old.gather_evaluate(previous_time_solution,
+                                                 dealii::EvaluationFlags::values);
+
+              CartesianIndexedSubcellValues subcell_average_values(
+                cell_evaluator_old,
+                outer_face_evaluator,
+                inner_face_evaluator,
+                previous_time_solution,
+                cell,
+                matrix_free.get_quadrature(matrix_free_context.quad_idx)
+                  .get_tensor_basis()[0]
+                  .size());
+
+
+              dealii::VectorizedArray<number> local_troubled_cells = 0.;
+              for (const unsigned int subcell : cell_evaluator_new.quadrature_point_indices())
+                {
+                  std::array<int, dim> cartesian_index =
+                    get_cartesian_from_lexicographic_q_index(subcell);
+
+                  const ValueType w_old = cell_evaluator_old.get_value(subcell);
+
+                  ValueType min_neighbor_values = w_old;
+                  ValueType max_neighbor_values = w_old;
+                  for (unsigned int subcell_face = 0;
+                       subcell_face < dealii::GeometryInfo<dim>::faces_per_cell;
+                       ++subcell_face)
+                    {
+                      min_neighbor_values =
+                        elementwise_min(min_neighbor_values,
+                                        subcell_average_values.neighbor_value(cartesian_index,
+                                                                              subcell_face));
+                      max_neighbor_values =
+                        elementwise_max(max_neighbor_values,
+                                        subcell_average_values.neighbor_value(cartesian_index,
+                                                                              subcell_face));
+                    }
+
+                  for (unsigned int c = 0; c < n_components; ++c)
+                    {
+                      local_troubled_cells =
+                        dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than>(
+                          cell_evaluator_new.get_value(subcell)[c],
+                          min_neighbor_values[c] - tol,
+                          1.,
+                          local_troubled_cells);
+
+                      local_troubled_cells =
+                        dealii::compare_and_apply_mask<dealii::SIMDComparison::greater_than>(
+                          cell_evaluator_new.get_value(subcell)[c],
+                          max_neighbor_values[c] + tol,
+                          1.,
+                          local_troubled_cells);
+                    }
+                }
+
+              if (matrix_free.n_active_entries_per_cell_batch(cell) <
+                  dealii::VectorizedArray<number>::size())
+                {
+                  // Non-active entries shall not be marked as troubled, so we mask them out here.
+                  for (unsigned int lane = matrix_free.n_active_entries_per_cell_batch(cell);
+                       lane < dealii::VectorizedArray<number>::size();
+                       ++lane)
+                    {
+                      local_troubled_cells[lane] = 0;
+                    }
+                }
+
+              cells_marked += local_troubled_cells.sum();
+
+              local_troubled_cells = dealii::compare_and_apply_mask<dealii::SIMDComparison::equal>(
+                local_troubled_cells,
+                dealii::VectorizedArray<number>(1),
+                dealii::VectorizedArray<number>(1),
+                cell_evaluator_new.read_cell_data(marked_cells));
+              cell_evaluator_new.set_cell_data(marked_cells, local_troubled_cells);
+            }
+        };
+
+    matrix_free_context.mf.cell_loop(mark_troubled_cells, marked_cells_dst, solution);
+    return dealii::Utilities::MPI::sum(cells_marked, MPI_COMM_WORLD);
   }
 
   template <int dim, int n_components, typename number>
@@ -615,7 +801,9 @@ namespace MeltPoolDG::Utilities
 
   template <int dim, int n_components, typename number>
   unsigned int
-  Limiter<dim, n_components, number>::mark_cells_for_limiting(const VectorType &solution)
+  Limiter<dim, n_components, number>::mark_cells_for_limiting(
+    const VectorType                                                        &solution,
+    const std::function<dealii::VectorizedArray<number>(const ValueType &)> &admissibility_check)
   {
     // TODO 1: Consider local smooth extrema
     // TODO 2: Check for physical admissibility (e.g. positivity of density and pressure)
@@ -627,6 +815,15 @@ namespace MeltPoolDG::Utilities
     if (Utils::contains(limiter_data.troubled_cell_marking_types,
                         TroubledCellMarkingType::inter_cell_numerical_admissibility))
       cells_marked += inter_cell_numerical_admissibility_marking(solution, troubled_cells);
+
+    if (Utils::contains(limiter_data.troubled_cell_marking_types,
+                        TroubledCellMarkingType::local_cell_numerical_admissibility))
+      cells_marked += local_cell_numerical_admissibility_marking(solution, troubled_cells);
+
+    if (Utils::contains(limiter_data.troubled_cell_marking_types,
+                        TroubledCellMarkingType::physical_admissibility))
+      cells_marked += physical_admissibility_marking(solution, troubled_cells, admissibility_check);
+
     return cells_marked;
   }
 
@@ -636,12 +833,13 @@ namespace MeltPoolDG::Utilities
     const number                                                              time_step,
     const std::function<FluxType(const ValueType &w_m, const ValueType &w_p)> numerical_flux,
     VectorType                                                               &limited_solution,
-    const VectorType                                                         &solution)
+    const VectorType                                                         &solution,
+    const std::function<dealii::VectorizedArray<number>(const ValueType &)>  &admissibility_check)
   {
     if (limited_solution.has_ghost_elements())
       limited_solution.zero_out_ghost_values();
 
-    const unsigned int n_cells_to_limit = mark_cells_for_limiting(solution);
+    const unsigned int n_cells_to_limit = mark_cells_for_limiting(solution, admissibility_check);
 
     std::cout << "Number of cells to limit: " << n_cells_to_limit << std::endl;
 
@@ -691,10 +889,11 @@ namespace MeltPoolDG::Utilities
             // looping over all quadrature points.
             //
             // The finite volume update must be recomputed entirely from the previous time (stage)
-            // level solution -- both the cell's own subcell values and its neighbors' -- so that it
-            // yields a robust, bound-preserving replacement value. Basing it on the (possibly
+            // level solution -- both the cell's own subcell values and its neighbors' -- so that
+            // it yields a robust, bound-preserving replacement value. Basing it on the (possibly
             // already oscillatory) new solution `src` would make the correction a small
-            // perturbation on top of the polluted value instead of an independent low-order update.
+            // perturbation on top of the polluted value instead of an independent low-order
+            // update.
             CartesianIndexedSubcellValues subcell_average_values(
               cell_evaluator_old,
               outer_face_evaluator,
@@ -721,10 +920,10 @@ namespace MeltPoolDG::Utilities
                     dealii::Tensor<1, dim, VectorizedArrayType> normal;
                     normal[subcell_face / 2] = (subcell_face % 2 == 0) ? -1. : 1.;
 
-                    // The subcell face separating this subcell from its neighbor  has, in reference
-                    // coordinates, an area given by the product of the tangential (i.e. all but the
-                    // face-normal direction) subcell widths, which in turn equal the 1d quadrature
-                    // weights at the corresponding cartesian index.
+                    // The subcell face separating this subcell from its neighbor  has, in
+                    // reference coordinates, an area given by the product of the tangential (i.e.
+                    // all but the face-normal direction) subcell widths, which in turn equal the
+                    // 1d quadrature weights at the corresponding cartesian index.
                     const unsigned int          direction = subcell_face / 2;
                     const dealii::Quadrature<1> quadrature_1d =
                       matrix_free.get_quadrature(matrix_free_context.quad_idx)
@@ -776,8 +975,6 @@ namespace MeltPoolDG::Utilities
     matrix_free_context.mf.loop_cell_centric(mf_limiter_loop, limited_solution, solution);
     return n_cells_to_limit;
   }
-
-
 
   /**
    * Ready functions

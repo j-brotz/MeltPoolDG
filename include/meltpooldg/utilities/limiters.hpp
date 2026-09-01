@@ -27,7 +27,8 @@ namespace MeltPoolDG::Utilities
   BETTER_ENUM(TroubledCellMarkingType,
               char,
               inter_cell_numerical_admissibility,
-              local_cell_numerical_admissibility)
+              local_cell_numerical_admissibility,
+              physical_admissibility)
 
   /**
    * A struct to hold the data for the limiters.
