@@ -144,9 +144,20 @@ namespace MeltPoolDG::CompressibleFlow
               },
               flow_operator);
           };
+
+        const std::function<dealii::VectorizedArray<number>(
+          const ConservedVariablesType<dim, number, n_species> &w)>
+          admissibility_check = [&](const ConservedVariablesType<dim, number, n_species> &w) {
+            MultiSpeciesDofStateView<dim,
+                                     n_species,
+                                     number,
+                                     const ConservedVariablesType<dim, number, n_species>>
+              flux_view(w, flow_scratch_data.material.data);
+            return is_physical_admissible<number, decltype(flux_view), n_species>(flux_view);
+          };
         std::cout << "Applying limiter with time step: " << time_step << std::endl;
         if (flow_scratch_data.flow_data.limiter_data.apply_limiter)
-          limiter.apply_limiting(time_step, numerical_flux, dst, src);
+          limiter.apply_limiting(time_step, numerical_flux, dst, src, admissibility_check);
       };
 
     time_integrator->perform_time_step(current_time,

@@ -463,7 +463,7 @@ namespace MeltPoolDG::Utilities
                   local_troubled_cells =
                     dealii::compare_and_apply_mask<dealii::SIMDComparison::equal>(
                       admissibility_check(cell_evaluator.get_value(subcell)),
-                      dealii::VectorizedArray<number>(1.),
+                      dealii::VectorizedArray<number>(0.),
                       dealii::VectorizedArray<number>(1.),
                       local_troubled_cells);
                 }

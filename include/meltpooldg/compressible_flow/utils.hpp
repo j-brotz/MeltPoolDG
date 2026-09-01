@@ -230,6 +230,69 @@ namespace MeltPoolDG::CompressibleFlow
     return false;
   }
 
+  template <typename number, typename PrimitiveVariablesView, int n_species>
+  inline dealii::VectorizedArray<number>
+  is_physical_admissible(const PrimitiveVariablesView &w_view)
+  {
+    if constexpr (n_species == 1)
+      {
+        dealii::VectorizedArray<number> is_admissible = 1.;
+        is_admissible = dealii::compare_and_apply_mask<dealii::SIMDComparison::greater_than>(
+          w_view.density(),
+          dealii::VectorizedArray<number>(0.),
+          is_admissible,
+          dealii::VectorizedArray<number>(0.));
+
+        is_admissible = dealii::compare_and_apply_mask<dealii::SIMDComparison::greater_than>(
+          w_view.pressure(),
+          dealii::VectorizedArray<number>(0.),
+          is_admissible,
+          dealii::VectorizedArray<number>(0.));
+        return is_admissible;
+      }
+    else
+      {
+        dealii::VectorizedArray<number> is_admissible = 1.;
+        for (unsigned int species = 0; species < n_species; ++species)
+          {
+            is_admissible = dealii::compare_and_apply_mask<dealii::SIMDComparison::greater_than>(
+              w_view.mass_fraction(species),
+              dealii::VectorizedArray<number>(0.),
+              is_admissible,
+              dealii::VectorizedArray<number>(0.));
+
+            is_admissible = dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than>(
+              w_view.mass_fraction(species),
+              dealii::VectorizedArray<number>(1.),
+              is_admissible,
+              dealii::VectorizedArray<number>(0.));
+          }
+
+        dealii::VectorizedArray<number> mass_fraction_sum = 0.0;
+        for (unsigned int species = 0; species < n_species; ++species)
+          mass_fraction_sum += w_view.mass_fraction(species);
+
+        is_admissible = dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than>(
+          mass_fraction_sum,
+          dealii::VectorizedArray<number>(1.0),
+          is_admissible,
+          dealii::VectorizedArray<number>(0.));
+
+        is_admissible = dealii::compare_and_apply_mask<dealii::SIMDComparison::greater_than>(
+          w_view.density(),
+          dealii::VectorizedArray<number>(0.),
+          is_admissible,
+          dealii::VectorizedArray<number>(0.));
+
+        is_admissible = dealii::compare_and_apply_mask<dealii::SIMDComparison::greater_than>(
+          w_view.pressure(),
+          dealii::VectorizedArray<number>(0.),
+          is_admissible,
+          dealii::VectorizedArray<number>(0.));
+        return is_admissible;
+      }
+  }
+
   template <int dim, typename Number>
   void
   calculate_penalty_parameter(
