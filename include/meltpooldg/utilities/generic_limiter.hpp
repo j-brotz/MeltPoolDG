@@ -130,6 +130,11 @@ namespace MeltPoolDG::Utilities
     unsigned int
     mark_cells_for_limiting(
       const VectorType                                                        &solution,
+      std::function<dealii::Tensor<1, n_components, number>(
+        const dealii::Point<dim, number> &,
+        const dealii::Tensor<1, dim, number> &,
+        dealii::types::boundary_id,
+        const dealii::Tensor<1, n_components, number> &)>                      get_boundary_value,
       const std::function<dealii::VectorizedArray<number>(const ValueType &)> &admissibility_check);
 
     void
@@ -139,6 +144,11 @@ namespace MeltPoolDG::Utilities
     apply_limiting(
       const number                                                              time_step,
       const std::function<FluxType(const ValueType &w_m, const ValueType &w_p)> numerical_flux,
+      std::function<dealii::Tensor<1, n_components, number>(
+        const dealii::Point<dim, number> &,
+        const dealii::Tensor<1, dim, number> &,
+        dealii::types::boundary_id,
+        const dealii::Tensor<1, n_components, number> &)>                       get_boundary_value,
       VectorType                                                               &limited_solution,
       const VectorType                                                         &solution,
       const std::function<dealii::VectorizedArray<number>(const ValueType &)> &admissibility_check =
@@ -210,12 +220,17 @@ namespace MeltPoolDG::Utilities
        * Assuming that both have been reinited on the the cell of interest
        */
       CartesianIndexedSubcellValues(
-        const FECellIntegrator<dim, n_components, number> &cell_evaluator,
-        FEFaceIntegrator<dim, n_components, number>       &outer_face_evaluator,
-        FEFaceIntegrator<dim, n_components, number>       &inner_face_evaluator,
-        const VectorType                                  &solution,
-        const unsigned int                                 cell_batch_index,
-        const unsigned int                                 n_q_points_1d_in)
+        std::function<dealii::Tensor<1, n_components, number>(
+          const dealii::Point<dim, number> &,
+          const dealii::Tensor<1, dim, number> &,
+          dealii::types::boundary_id,
+          const dealii::Tensor<1, n_components, number> &)> get_boundary_value,
+        const FECellIntegrator<dim, n_components, number>  &cell_evaluator,
+        FEFaceIntegrator<dim, n_components, number>        &outer_face_evaluator,
+        FEFaceIntegrator<dim, n_components, number>        &inner_face_evaluator,
+        const VectorType                                   &solution,
+        const unsigned int                                  cell_batch_index,
+        const unsigned int                                  n_q_points_1d_in)
         : n_q_points_1d(n_q_points_1d_in)
       {
         subcell_values.reserve(cell_evaluator.n_q_points +
@@ -228,8 +243,7 @@ namespace MeltPoolDG::Utilities
           }
 
         // out subcell values (face-adjacent neighbors)
-        // TODO: For now we assume that we are never at a domain boundary and that no local mesh
-        // refinement is present
+        // TODO: For now we assume that no local mesh refinement is present
         for (unsigned int face = 0; face < dealii::GeometryInfo<dim>::faces_per_cell; ++face)
           {
             outer_face_evaluator.reinit(cell_batch_index, face);
@@ -251,8 +265,8 @@ namespace MeltPoolDG::Utilities
             // solution here, but it works for now since we don't have any domain boundaries in our
             // test cases.
             const auto &matrix_free = cell_evaluator.get_matrix_free();
-            const auto  boundary_ids =
-              matrix_free.get_faces_by_cells_boundary_id(cell_batch_index, face);
+            const std::array<dealii::types::boundary_id, dealii::VectorizedArray<number>::size()>
+              boundary_ids = matrix_free.get_faces_by_cells_boundary_id(cell_batch_index, face);
             const unsigned int n_active_lanes =
               matrix_free.n_active_entries_per_cell_batch(cell_batch_index);
 
@@ -267,9 +281,52 @@ namespace MeltPoolDG::Utilities
             if (is_at_boundary)
               {
                 inner_face_evaluator.gather_evaluate(solution, dealii::EvaluationFlags::values);
+
                 for (const unsigned int q : inner_face_evaluator.quadrature_point_indices())
                   {
-                    subcell_values.push_back(inner_face_evaluator.get_value(q));
+                    const ValueType w_inner = inner_face_evaluator.get_value(q);
+                    const dealii::Point<dim, VectorizedArrayType> &location =
+                      inner_face_evaluator.quadrature_point(q);
+                    const dealii::Tensor<1, dim, VectorizedArrayType> &normal =
+                      inner_face_evaluator.normal_vector(q);
+
+                    ValueType w_boundary;
+
+                    for (unsigned int lane = 0; lane < n_active_lanes; ++lane)
+                      {
+                        dealii::Tensor<1, n_components, number> w_boundary_lane;
+                        if (boundary_ids[lane] != dealii::numbers::internal_face_boundary_id)
+                          {
+                            dealii::Point<dim, number>     location_lane;
+                            dealii::Tensor<1, dim, number> normal_lane;
+                            for (unsigned int d = 0; d < dim; ++d)
+                              {
+                                location_lane[d] = location[d][lane];
+                                normal_lane[d]   = normal[d][lane];
+                              }
+
+                            dealii::Tensor<1, n_components, number> w_inner_lane;
+                            for (unsigned int c = 0; c < n_components; ++c)
+                              w_inner_lane[c] = w_inner[c][lane];
+
+                            const dealii::types::boundary_id boundary_id = boundary_ids[lane];
+
+                            w_boundary_lane = get_boundary_value(location_lane,
+                                                                 normal_lane,
+                                                                 boundary_id,
+                                                                 w_inner_lane);
+                          }
+                        else
+                          {
+                            for (unsigned int c = 0; c < n_components; ++c)
+                              w_boundary_lane[c] = w_inner[c][lane];
+                          }
+
+                        for (unsigned int c = 0; c < n_components; ++c)
+                          w_boundary[c][lane] = w_boundary_lane[c];
+                      }
+
+                    subcell_values.push_back(w_boundary);
                   }
               }
             else
@@ -400,12 +457,22 @@ namespace MeltPoolDG::Utilities
     unsigned int
     inter_cell_numerical_admissibility_marking(
       const VectorType                                       &solution,
-      dealii::AlignedVector<dealii::VectorizedArray<number>> &marked_cells_dst) const;
+      dealii::AlignedVector<dealii::VectorizedArray<number>> &marked_cells_dst,
+      std::function<dealii::Tensor<1, n_components, number>(
+        const dealii::Point<dim, number> &,
+        const dealii::Tensor<1, dim, number> &,
+        dealii::types::boundary_id,
+        const dealii::Tensor<1, n_components, number> &)>     get_boundary_value) const;
 
     unsigned int
     local_cell_numerical_admissibility_marking(
       const VectorType                                       &solution,
-      dealii::AlignedVector<dealii::VectorizedArray<number>> &marked_cells_dst) const;
+      dealii::AlignedVector<dealii::VectorizedArray<number>> &marked_cells_dst,
+      std::function<dealii::Tensor<1, n_components, number>(
+        const dealii::Point<dim, number> &,
+        const dealii::Tensor<1, dim, number> &,
+        dealii::types::boundary_id,
+        const dealii::Tensor<1, n_components, number> &)>     get_boundary_value) const;
 
     unsigned int
     physical_admissibility_marking(
@@ -499,7 +566,12 @@ namespace MeltPoolDG::Utilities
   unsigned int
   Limiter<dim, n_components, number>::local_cell_numerical_admissibility_marking(
     const VectorType                                       &solution,
-    dealii::AlignedVector<dealii::VectorizedArray<number>> &marked_cells_dst) const
+    dealii::AlignedVector<dealii::VectorizedArray<number>> &marked_cells_dst,
+    std::function<dealii::Tensor<1, n_components, number>(
+      const dealii::Point<dim, number> &,
+      const dealii::Tensor<1, dim, number> &,
+      dealii::types::boundary_id,
+      const dealii::Tensor<1, n_components, number> &)>     get_boundary_value) const
   {
     unsigned int cells_marked = 0;
 
@@ -531,6 +603,7 @@ namespace MeltPoolDG::Utilities
                                                  dealii::EvaluationFlags::values);
 
               CartesianIndexedSubcellValues subcell_average_values(
+                get_boundary_value,
                 cell_evaluator_old,
                 outer_face_evaluator,
                 inner_face_evaluator,
@@ -614,7 +687,12 @@ namespace MeltPoolDG::Utilities
   unsigned int
   Limiter<dim, n_components, number>::inter_cell_numerical_admissibility_marking(
     const VectorType                                       &solution,
-    dealii::AlignedVector<dealii::VectorizedArray<number>> &marked_cells_dst) const
+    dealii::AlignedVector<dealii::VectorizedArray<number>> &marked_cells_dst,
+    std::function<dealii::Tensor<1, n_components, number>(
+      const dealii::Point<dim, number> &,
+      const dealii::Tensor<1, dim, number> &,
+      dealii::types::boundary_id,
+      const dealii::Tensor<1, n_components, number> &)>     get_boundary_value) const
   {
     unsigned int cells_marked = 0;
 
@@ -701,6 +779,10 @@ namespace MeltPoolDG::Utilities
                        const std::pair<unsigned int, unsigned int>            &cell_range) {
         FECellIntegrator<dim, n_components, number> cell_evaluator_new(
           matrix_free, matrix_free_context.dof_idx, matrix_free_context.quad_idx);
+        FEFaceIntegrator<dim, n_components, number> face_evaluator(matrix_free,
+                                                                   true,
+                                                                   matrix_free_context.dof_idx,
+                                                                   matrix_free_context.quad_idx);
 
         const VectorizedArrayType tol(1e-5); // TODO: Hwo to deal with this
         for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
@@ -708,17 +790,93 @@ namespace MeltPoolDG::Utilities
             cell_evaluator_new.reinit(cell);
             cell_evaluator_new.gather_evaluate(current_solution, dealii::EvaluationFlags::values);
 
-            const auto cells = cells_in_cell_batch(matrix_free, cell);
-            ValueType  min_subcell_values;
-            ValueType  max_subcell_values;
+            const auto         cells          = cells_in_cell_batch(matrix_free, cell);
+            const unsigned int n_active_lanes = matrix_free.n_active_entries_per_cell_batch(cell);
+            ValueType          min_subcell_values;
+            ValueType          max_subcell_values;
             for (unsigned int c = 0; c < n_components; ++c)
               {
                 min_subcell_values[c] = std::numeric_limits<number>::max();
                 max_subcell_values[c] = std::numeric_limits<number>::lowest();
               }
 
-            for (unsigned int lane = 0; lane < matrix_free.n_active_entries_per_cell_batch(cell);
-                 ++lane)
+            // Precompute a JxW-weighted average of the boundary condition over each face of the
+            // cell batch that lies on the domain boundary (for at least one lane). This average
+            // is used below as the "virtual neighbor" value on boundary faces, mirroring how a
+            // real neighbor contributes a single min/max pair rather than pointwise values.
+            std::array<ValueType, dealii::GeometryInfo<dim>::faces_per_cell>
+              averaged_boundary_values{};
+
+            for (unsigned int face = 0; face < dealii::GeometryInfo<dim>::faces_per_cell; ++face)
+              {
+                const std::array<dealii::types::boundary_id, VectorizedArrayType::size()>
+                  boundary_ids = matrix_free.get_faces_by_cells_boundary_id(cell, face);
+
+                const bool any_lane_at_boundary =
+                  std::any_of(boundary_ids.begin(),
+                              boundary_ids.begin() + n_active_lanes,
+                              [](const dealii::types::boundary_id id) {
+                                return id != dealii::numbers::internal_face_boundary_id;
+                              });
+                if (!any_lane_at_boundary)
+                  continue;
+
+                face_evaluator.reinit(cell, face);
+                face_evaluator.gather_evaluate(current_solution, dealii::EvaluationFlags::values);
+
+                ValueType           weighted_sum{};
+                VectorizedArrayType weight_sum = 0.;
+
+                for (const unsigned int q : face_evaluator.quadrature_point_indices())
+                  {
+                    const ValueType w_inner = face_evaluator.get_value(q);
+                    const dealii::Point<dim, VectorizedArrayType> &location =
+                      face_evaluator.quadrature_point(q);
+                    const dealii::Tensor<1, dim, VectorizedArrayType> &normal =
+                      face_evaluator.normal_vector(q);
+                    const VectorizedArrayType JxW = face_evaluator.JxW(q);
+
+                    for (unsigned int lane = 0; lane < n_active_lanes; ++lane)
+                      {
+                        if (boundary_ids[lane] == dealii::numbers::internal_face_boundary_id)
+                          continue;
+
+                        dealii::Point<dim, number>     location_lane;
+                        dealii::Tensor<1, dim, number> normal_lane;
+                        for (unsigned int d = 0; d < dim; ++d)
+                          {
+                            location_lane[d] = location[d][lane];
+                            normal_lane[d]   = normal[d][lane];
+                          }
+
+                        dealii::Tensor<1, n_components, number> w_inner_lane;
+                        for (unsigned int c = 0; c < n_components; ++c)
+                          w_inner_lane[c] = w_inner[c][lane];
+
+                        const dealii::Tensor<1, n_components, number> w_boundary_lane =
+                          get_boundary_value(location_lane,
+                                             normal_lane,
+                                             boundary_ids[lane],
+                                             w_inner_lane);
+
+                        for (unsigned int c = 0; c < n_components; ++c)
+                          weighted_sum[c][lane] += w_boundary_lane[c] * JxW[lane];
+                        weight_sum[lane] += JxW[lane];
+                      }
+                  }
+
+                for (unsigned int lane = 0; lane < n_active_lanes; ++lane)
+                  {
+                    if (boundary_ids[lane] == dealii::numbers::internal_face_boundary_id)
+                      continue;
+
+                    for (unsigned int c = 0; c < n_components; ++c)
+                      averaged_boundary_values[face][c][lane] =
+                        weighted_sum[c][lane] / weight_sum[lane];
+                  }
+              }
+
+            for (unsigned int lane = 0; lane < n_active_lanes; ++lane)
               {
                 // own cells
                 for (unsigned int c = 0; c < n_components; ++c)
@@ -746,6 +904,21 @@ namespace MeltPoolDG::Utilities
                             max_subcell_values[c][lane] = std::max(
                               max_subcell_values[c][lane],
                               min_max_subcell_values[neighbor_cell->active_cell_index()].second[c]);
+                          }
+                      }
+                    else
+                      {
+                        // Domain boundary: no neighbor cell exists, so use the JxW-weighted
+                        // average of the prescribed boundary value over this face (computed
+                        // above) as a stand-in "virtual neighbor" value.
+                        for (unsigned int c = 0; c < n_components; ++c)
+                          {
+                            min_subcell_values[c][lane] =
+                              std::min(min_subcell_values[c][lane],
+                                       averaged_boundary_values[face][c][lane]);
+                            max_subcell_values[c][lane] =
+                              std::max(max_subcell_values[c][lane],
+                                       averaged_boundary_values[face][c][lane]);
                           }
                       }
                   }
@@ -803,6 +976,11 @@ namespace MeltPoolDG::Utilities
   unsigned int
   Limiter<dim, n_components, number>::mark_cells_for_limiting(
     const VectorType                                                        &solution,
+    std::function<dealii::Tensor<1, n_components, number>(
+      const dealii::Point<dim, number> &,
+      const dealii::Tensor<1, dim, number> &,
+      dealii::types::boundary_id,
+      const dealii::Tensor<1, n_components, number> &)>                      get_boundary_value,
     const std::function<dealii::VectorizedArray<number>(const ValueType &)> &admissibility_check)
   {
     // TODO 1: Consider local smooth extrema
@@ -814,11 +992,13 @@ namespace MeltPoolDG::Utilities
 
     if (Utils::contains(limiter_data.troubled_cell_marking_types,
                         TroubledCellMarkingType::inter_cell_numerical_admissibility))
-      cells_marked += inter_cell_numerical_admissibility_marking(solution, troubled_cells);
+      cells_marked +=
+        inter_cell_numerical_admissibility_marking(solution, troubled_cells, get_boundary_value);
 
     if (Utils::contains(limiter_data.troubled_cell_marking_types,
                         TroubledCellMarkingType::local_cell_numerical_admissibility))
-      cells_marked += local_cell_numerical_admissibility_marking(solution, troubled_cells);
+      cells_marked +=
+        local_cell_numerical_admissibility_marking(solution, troubled_cells, get_boundary_value);
 
     if (Utils::contains(limiter_data.troubled_cell_marking_types,
                         TroubledCellMarkingType::physical_admissibility))
@@ -832,6 +1012,11 @@ namespace MeltPoolDG::Utilities
   Limiter<dim, n_components, number>::apply_limiting(
     const number                                                              time_step,
     const std::function<FluxType(const ValueType &w_m, const ValueType &w_p)> numerical_flux,
+    std::function<dealii::Tensor<1, n_components, number>(
+      const dealii::Point<dim, number> &,
+      const dealii::Tensor<1, dim, number> &,
+      dealii::types::boundary_id,
+      const dealii::Tensor<1, n_components, number> &)>                       get_boundary_value,
     VectorType                                                               &limited_solution,
     const VectorType                                                         &solution,
     const std::function<dealii::VectorizedArray<number>(const ValueType &)>  &admissibility_check)
@@ -839,7 +1024,8 @@ namespace MeltPoolDG::Utilities
     if (limited_solution.has_ghost_elements())
       limited_solution.zero_out_ghost_values();
 
-    const unsigned int n_cells_to_limit = mark_cells_for_limiting(solution, admissibility_check);
+    const unsigned int n_cells_to_limit =
+      mark_cells_for_limiting(solution, get_boundary_value, admissibility_check);
 
     std::cout << "Number of cells to limit: " << n_cells_to_limit << std::endl;
 
@@ -895,6 +1081,7 @@ namespace MeltPoolDG::Utilities
             // perturbation on top of the polluted value instead of an independent low-order
             // update.
             CartesianIndexedSubcellValues subcell_average_values(
+              get_boundary_value,
               cell_evaluator_old,
               outer_face_evaluator,
               inner_face_evaluator,
