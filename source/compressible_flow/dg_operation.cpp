@@ -155,9 +155,69 @@ namespace MeltPoolDG::CompressibleFlow
               flux_view(w, flow_scratch_data.material.data);
             return is_physical_admissible<number, decltype(flux_view), n_species>(flux_view);
           };
+
+        const std::function<ConservedVariablesType<dim, number, n_species, number>(
+          const dealii::Point<dim, number> &,
+          const dealii::Tensor<1, dim, number> &,
+          dealii::types::boundary_id,
+          const ConservedVariablesType<dim, number, n_species, number> &)>
+          get_boundary_value =
+            [&](const dealii::Point<dim, number>                             &point,
+                const dealii::Tensor<1, dim, number>                         &normal,
+                dealii::types::boundary_id                                    boundary_id,
+                const ConservedVariablesType<dim, number, n_species, number> &w) {
+              using DofReaderType = NSpeciesDofValueAndGradientStateView<
+                dim,
+                n_species,
+                number,
+                const ConservedVariablesType<dim, number, n_species>,
+                const ConservedVariablesGradientType<dim, number, n_species>>;
+
+              using DofWriteType = NSpeciesDofValueAndGradientStateView<
+                dim,
+                n_species,
+                number,
+                ConservedVariablesType<dim, number, n_species>,
+                ConservedVariablesGradientType<dim, number, n_species>>;
+
+              ConservedVariablesType<dim, number, n_species>         w_p;
+              ConservedVariablesGradientType<dim, number, n_species> grad_w_p;
+
+              ConservedVariablesType<dim, number, n_species>         w_m;
+              ConservedVariablesGradientType<dim, number, n_species> grad_w_m;
+
+              dealii::Point<dim, dealii::VectorizedArray<number>>     q_point;
+              dealii::Tensor<1, dim, dealii::VectorizedArray<number>> q_normal;
+              for (unsigned int d = 0; d < dim; ++d)
+                {
+                  q_point[d]  = dealii::VectorizedArray<number>(point[d]);
+                  q_normal[d] = dealii::VectorizedArray<number>(normal[d]);
+                }
+
+              for (unsigned int component = 0; component < n_conserved_variables<dim, n_species>;
+                   ++component)
+                w_m[component] = dealii::VectorizedArray<number>(w[component]);
+
+              flow_scratch_data.boundary_conditions
+                .set_conserved_variables_boundary_value_and_gradient(
+                  q_point,
+                  q_normal,
+                  boundary_id,
+                  DofReaderType(w_m, grad_w_m, flow_scratch_data.material.data),
+                  DofWriteType(w_p, grad_w_p, flow_scratch_data.material.data));
+
+              ConservedVariablesType<dim, number, n_species, number> w_p_scalar;
+              for (unsigned int component = 0; component < n_conserved_variables<dim, n_species>;
+                   ++component)
+                w_p_scalar[component] = w_p[component][0];
+
+              return w_p_scalar;
+            };
+
         std::cout << "Applying limiter with time step: " << time_step << std::endl;
         if (flow_scratch_data.flow_data.limiter_data.apply_limiter)
-          limiter.apply_limiting(time_step, numerical_flux, dst, src, admissibility_check);
+          limiter.apply_limiting(
+            time_step, numerical_flux, get_boundary_value, dst, src, admissibility_check);
       };
 
     time_integrator->perform_time_step(current_time,
