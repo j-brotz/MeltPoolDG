@@ -84,7 +84,6 @@ namespace MeltPoolDG::CompressibleFlow
     {
       prm.enter_subsection("compressible navier stokes");
       {
-        fe.add_parameters(prm);
         time_integrator.add_parameters(prm);
         prm.add_parameter(
           "linearization jump convective flux",
