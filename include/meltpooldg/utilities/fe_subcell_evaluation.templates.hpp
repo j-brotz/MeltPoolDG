@@ -1,0 +1,211 @@
+#pragma once
+
+#include <deal.II/base/tensor.h>
+#include <deal.II/base/vectorization.h>
+
+#include <deal.II/lac/la_parallel_vector.h>
+
+#include <deal.II/matrix_free/matrix_free.h>
+#include <deal.II/matrix_free/operators.h>
+
+#include <meltpooldg/utilities/fe_subcell_evaluation.hpp>
+#include <meltpooldg/utilities/matrix_free_util.hpp>
+
+namespace MeltPoolDG::Utilities
+{
+  template <int dim, int n_components, typename number>
+  FESubcellEvaluation<dim, n_components, number>::FESubcellEvaluation(
+    const dealii::MatrixFree<dim, number> &matrix_free,
+    const unsigned int                     dof_no,
+    const unsigned int                     quad_no)
+    : matrix_free_context(matrix_free, dof_no, quad_no)
+    , fe_cell_integrator(matrix_free, dof_no, quad_no)
+    , fe_inner_face_integrator(matrix_free, true, dof_no, quad_no)
+    , fe_outer_face_integrator(matrix_free, false, dof_no, quad_no)
+    , n_subcells_1d(matrix_free.get_quadrature(quad_no).get_tensor_basis()[0].size())
+  {
+    subcell_values.resize(fe_cell_integrator.n_quadrature_points() +
+                          2 * dim * std::pow(n_subcells_1d, dim - 1));
+  }
+
+
+  template <int dim, int n_components, typename number>
+  void
+  FESubcellEvaluation<dim, n_components, number>::reinit(const unsigned int cell_batch_index_in)
+  {
+    cell_batch_index = cell_batch_index_in;
+    fe_cell_integrator.reinit(cell_batch_index);
+  }
+
+
+  template <int dim, int n_components, typename number>
+  void
+  FESubcellEvaluation<dim, n_components, number>::gather_evaluate(
+    const dealii::LinearAlgebra::distributed::Vector<number> &input_vector,
+    std::function<value_type(const dealii::Point<dim, dealii::VectorizedArray<number>> &,
+                             dealii::types::boundary_id,
+                             const value_type &)>             get_boundary_value)
+  {
+    fe_cell_integrator.gather_evaluate(input_vector, dealii::EvaluationFlags::values);
+
+    for (unsigned int q : fe_cell_integrator.quadrature_point_indices())
+      {
+        subcell_values[subcell_index_to_padded_index(q)] = fe_cell_integrator.get_value(q);
+      }
+
+    for (unsigned int face_no = 0; face_no < 2 * dim; ++face_no)
+      {
+        // TODO!!!
+        const auto face_q_index_to_padded_index = [this, face_no](unsigned int face_q_index) {
+          const unsigned int direction = face_no / 2;
+          const unsigned int side      = face_no % 2;
+
+          unsigned int padded_index = 0;
+          unsigned int stride       = 1;
+          for (unsigned int d = 0; d < dim; ++d)
+            {
+              const unsigned int coordinate_d = (d == direction) ?
+                                                  ((side == 0) ? 0 : n_subcells_1d + 1) :
+                                                  (face_q_index % n_subcells_1d);
+              if (d != direction)
+                face_q_index /= n_subcells_1d;
+
+              padded_index += coordinate_d * stride;
+              stride *= (n_subcells_1d + 2);
+            }
+          return padded_index;
+        };
+
+        fe_inner_face_integrator.reinit(cell_batch_index, face_no);
+        if (fe_inner_face_integrator.at_boundary())
+          {
+            for (unsigned int q : fe_inner_face_integrator.quadrature_point_indices())
+              {
+                Assert(
+                  get_boundary_value,
+                  dealii::ExcMessage(
+                    "FESubcellEvaluation requires a boundary value function to be provided if working on a cell batch that has a face at the boundary."));
+
+                subcell_values[face_q_index_to_padded_index(0)] =
+                  get_boundary_value(fe_inner_face_integrator.quadrature_point(q),
+                                     fe_inner_face_integrator.get_boundary_id(),
+                                     fe_inner_face_integrator.get_value(q));
+              }
+          }
+        else
+          {
+            fe_outer_face_integrator.reinit(cell_batch_index, face_no);
+            for (unsigned int q : fe_inner_face_integrator.quadrature_point_indices())
+              {
+                subcell_values[face_q_index_to_padded_index(q)] =
+                  fe_outer_face_integrator.get_value(q);
+              }
+          }
+      }
+
+    submitted_subcell_values = subcell_values;
+  }
+
+
+  template <int dim, int n_components, typename number>
+  typename FESubcellEvaluation<dim, n_components, number>::value_type
+  FESubcellEvaluation<dim, n_components, number>::get_subcell_value(
+    const unsigned int subcell_index) const
+  {
+    AssertIndexRange(subcell_index, subcell_values.size());
+    return subcell_values[subcell_index_to_padded_index(subcell_index)];
+  }
+
+
+  template <int dim, int n_components, typename number>
+  typename FESubcellEvaluation<dim, n_components, number>::value_type
+  FESubcellEvaluation<dim, n_components, number>::get_subcell_neighbor_value(
+    const unsigned int subcell_index,
+    const unsigned int face_no) const
+  {
+    AssertIndexRange(subcell_index, subcell_values.size());
+    AssertIndexRange(face_no, 2 * dim);
+
+    const unsigned int direction = face_no / 2;
+    const unsigned int side      = face_no % 2;
+
+    return subcell_values[subcell_index +
+                          ((side == 0) ? -1 : 1) *
+                            static_cast<unsigned int>(std::pow(n_subcells_1d, direction))];
+  }
+
+  template <int dim, int n_components, typename number>
+  void
+  FESubcellEvaluation<dim, n_components, number>::submit_subcell_value(
+    const unsigned int subcell_index,
+    const value_type  &value)
+  {
+    AssertIndexRange(subcell_index, submitted_subcell_values.size());
+    submitted_subcell_values[subcell_index] = value;
+  }
+
+  template <int dim, int n_components, typename number>
+  void
+  FESubcellEvaluation<dim, n_components, number>::set_dof_values(
+    dealii::LinearAlgebra::distributed::Vector<number> &dst_vector)
+  {
+    dealii::MatrixFreeOperators::CellwiseInverseMassMatrix<dim, -1, n_components, number> inverse(
+      fe_cell_integrator);
+
+    std::vector<dealii::VectorizedArray<number>> subcell_values_dof_vector(
+      n_components * fe_cell_integrator.quadrature_point_indices().size());
+
+    for (unsigned int subcell : fe_cell_integrator.quadrature_point_indices())
+      {
+        for (unsigned int c = 0; c < n_components; ++c)
+          subcell_values_dof_vector[c * fe_cell_integrator.quadrature_point_indices().size() +
+                                    subcell] = submitted_subcell_values[subcell][c];
+      }
+    inverse.transform_from_q_points_to_basis(n_components,
+                                             subcell_values_dof_vector.data(),
+                                             fe_cell_integrator.begin_dof_values());
+    fe_cell_integrator.set_dof_values(dst_vector);
+  }
+
+  template <int dim, int n_components, typename number>
+  bool
+  FESubcellEvaluation<dim, n_components, number>::is_subcell_face_at_cell_boundary(
+    const unsigned int subcell_index,
+    const unsigned int face_no) const
+  {
+    AssertIndexRange(subcell_index, subcell_values.size());
+    AssertIndexRange(face_no, 2 * dim);
+
+    const unsigned int direction = face_no / 2;
+    const unsigned int side      = face_no % 2;
+
+    unsigned int idx = subcell_index;
+    for (unsigned int d = 0; d < direction; ++d)
+      idx /= n_subcells_1d;
+
+    const unsigned int i_direction = idx % n_subcells_1d;
+
+    return (side == 0) ? (i_direction == 0) : (i_direction == n_subcells_1d - 1);
+  }
+
+
+  template <int dim, int n_components, typename number>
+  unsigned int
+  FESubcellEvaluation<dim, n_components, number>::subcell_index_to_padded_index(
+    unsigned int subcell_index) const
+  {
+    const unsigned int padded_n = n_subcells_1d + 2;
+
+    unsigned int padded_index = 0;
+    unsigned int stride       = 1;
+    for (unsigned int d = 0; d < dim; ++d)
+      {
+        const unsigned int coordinate_d = subcell_index % n_subcells_1d;
+        subcell_index /= n_subcells_1d;
+
+        padded_index += (coordinate_d + 1) * stride;
+        stride *= padded_n;
+      }
+    return padded_index;
+  }
+} // namespace MeltPoolDG::Utilities

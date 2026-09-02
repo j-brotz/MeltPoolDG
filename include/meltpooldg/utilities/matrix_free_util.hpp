@@ -367,4 +367,35 @@ namespace MeltPoolDG
 
     return cell_average_values;
   }
+
+  /**
+   * Computes a vector of categories for each active cell in the triangulation based on the
+   * boundary faces of the cell. Each category is represented as a bitmask, where each bit
+   * corresponds to a face of the cell. If a face is on the domain boundary, the corresponding bit
+   * is set to 1; otherwise, it is set to 0. This allows for efficient grouping of cells with
+   * similar boundary conditions during matrix-free computations via setting the
+   * `cell_vectorization_categories` in the AdditionalData of the MatrixFree object.
+   *
+   * @param tria The triangulation containing the active cells to be categorized.
+   * @return A vector of unsigned integers, where each entry corresponds to an active cell and
+   *         contains the bitmask representing its boundary face categories.
+   */
+  template <int dim, int spacedim>
+  std::vector<unsigned int>
+  compute_boundary_face_vectorization_categories(const dealii::Triangulation<dim, spacedim> &tria)
+  {
+    std::vector<unsigned int> categories(tria.n_active_cells(), 0);
+
+    for (const auto &cell : tria.active_cell_iterators())
+      {
+        unsigned int mask = 0;
+        for (unsigned int face = 0; face < dealii::GeometryInfo<dim>::faces_per_cell; ++face)
+          if (cell->at_boundary(face))
+            mask |= (1u << face);
+
+        categories[cell->active_cell_index()] = mask;
+      }
+
+    return categories;
+  }
 } // namespace MeltPoolDG
