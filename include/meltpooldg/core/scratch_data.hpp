@@ -110,7 +110,8 @@ namespace MeltPoolDG
            const std::vector<dealii::Quadrature<dim>>                   &quad,
            const bool                                                    enable_boundary_face_loops,
            const bool                                                    enable_inner_face_loops,
-           const bool enable_normal_vector_update = false);
+           const bool                       enable_normal_vector_update   = false,
+           const std::vector<unsigned int> &cell_vectorization_categories = {});
     /**
      * @brief Set the mapping by value.
      *
@@ -215,10 +216,11 @@ namespace MeltPoolDG
      *                                           inner face loops.
      */
     void
-    build(const bool enable_boundary_face_loops,
-          const bool enable_inner_face_loops,
-          const bool enable_normal_vector_update       = false,
-          const bool enable_inner_face_hessians_update = false);
+    build(const bool                       enable_boundary_face_loops,
+          const bool                       enable_inner_face_loops,
+          const bool                       enable_normal_vector_update       = false,
+          const bool                       enable_inner_face_hessians_update = false,
+          const std::vector<unsigned int> &cell_vectorization_categories     = {});
 
     /**
      * @brief Initialize a distributed vector for a given DoF index.

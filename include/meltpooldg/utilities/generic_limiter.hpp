@@ -318,6 +318,7 @@ namespace MeltPoolDG::Utilities
                           }
                         else
                           {
+                            std::cout << "I am here" << std::endl;
                             for (unsigned int c = 0; c < n_components; ++c)
                               w_boundary_lane[c] = w_inner[c][lane];
                           }
@@ -558,7 +559,7 @@ namespace MeltPoolDG::Utilities
             }
         };
 
-    matrix_free_context.mf.cell_loop(mark_troubled_cells, marked_cells_dst, solution);
+    matrix_free_context.mf.loop_cell_centric(mark_troubled_cells, marked_cells_dst, solution);
     return dealii::Utilities::MPI::sum(cells_marked, MPI_COMM_WORLD);
   }
 
@@ -679,7 +680,7 @@ namespace MeltPoolDG::Utilities
             }
         };
 
-    matrix_free_context.mf.cell_loop(mark_troubled_cells, marked_cells_dst, solution);
+    matrix_free_context.mf.loop_cell_centric(mark_troubled_cells, marked_cells_dst, solution);
     return dealii::Utilities::MPI::sum(cells_marked, MPI_COMM_WORLD);
   }
 
@@ -763,9 +764,9 @@ namespace MeltPoolDG::Utilities
       std::pair<dealii::Tensor<1, n_components, number>, dealii::Tensor<1, n_components, number>>>
       min_max_subcell_values(
         matrix_free_context.mf.get_dof_handler(matrix_free_context.dof_idx).get_triangulation());
-    matrix_free_context.mf.cell_loop(compute_min_max_subcell_values,
-                                     min_max_subcell_values,
-                                     previous_time_solution);
+    matrix_free_context.mf.loop_cell_centric(compute_min_max_subcell_values,
+                                             min_max_subcell_values,
+                                             previous_time_solution);
     min_max_subcell_values.update_ghost_values();
 
     // Step 2: Compute NAD criteria
@@ -968,7 +969,7 @@ namespace MeltPoolDG::Utilities
           }
       };
 
-    matrix_free_context.mf.cell_loop(mark_cells, marked_cells_dst, solution);
+    matrix_free_context.mf.loop_cell_centric(mark_cells, marked_cells_dst, solution);
     return dealii::Utilities::MPI::sum(cells_marked, MPI_COMM_WORLD);
   }
 
@@ -1166,7 +1167,6 @@ namespace MeltPoolDG::Utilities
   /**
    * Ready functions
    */
-
   template <int dim, int n_components, typename number>
   void
   Limiter<dim, n_components, number>::prepare_for_limiting(const VectorType &solution)
