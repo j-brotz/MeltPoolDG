@@ -24,8 +24,7 @@ namespace MeltPoolDG::Utilities
     , fe_outer_face_integrator(matrix_free, false, dof_no, quad_no)
     , n_subcells_1d(matrix_free.get_quadrature(quad_no).get_tensor_basis()[0].size())
   {
-    subcell_values.resize(fe_cell_integrator.n_quadrature_points() +
-                          2 * dim * std::pow(n_subcells_1d, dim - 1));
+    subcell_values.resize(std::pow(n_subcells_1d + 2, dim));
   }
 
 
@@ -35,6 +34,14 @@ namespace MeltPoolDG::Utilities
   {
     cell_batch_index = cell_batch_index_in;
     fe_cell_integrator.reinit(cell_batch_index);
+  }
+
+
+  template <int dim, int n_components, typename number>
+  dealii::std_cxx20::ranges::iota_view<unsigned int, unsigned int>
+  FESubcellEvaluation<dim, n_components, number>::subcell_indices() const
+  {
+    return fe_cell_integrator.quadrature_point_indices();
   }
 
 
@@ -76,8 +83,12 @@ namespace MeltPoolDG::Utilities
           return padded_index;
         };
 
+        const auto boundary_ids =
+          matrix_free_context.mf.get_faces_by_cells_boundary_id(cell_batch_index, face_no);
+        const bool is_at_boundary = boundary_ids[0] != dealii::numbers::internal_face_boundary_id;
+
         fe_inner_face_integrator.reinit(cell_batch_index, face_no);
-        if (fe_inner_face_integrator.at_boundary())
+        if (is_at_boundary)
           {
             for (unsigned int q : fe_inner_face_integrator.quadrature_point_indices())
               {
@@ -86,15 +97,18 @@ namespace MeltPoolDG::Utilities
                   dealii::ExcMessage(
                     "FESubcellEvaluation requires a boundary value function to be provided if working on a cell batch that has a face at the boundary."));
 
+                fe_inner_face_integrator.gather_evaluate(input_vector,
+                                                         dealii::EvaluationFlags::values);
                 subcell_values[face_q_index_to_padded_index(0)] =
                   get_boundary_value(fe_inner_face_integrator.quadrature_point(q),
-                                     fe_inner_face_integrator.get_boundary_id(),
+                                     boundary_ids[0],
                                      fe_inner_face_integrator.get_value(q));
               }
           }
         else
           {
             fe_outer_face_integrator.reinit(cell_batch_index, face_no);
+            fe_outer_face_integrator.gather_evaluate(input_vector, dealii::EvaluationFlags::values);
             for (unsigned int q : fe_inner_face_integrator.quadrature_point_indices())
               {
                 subcell_values[face_q_index_to_padded_index(q)] =
@@ -108,11 +122,53 @@ namespace MeltPoolDG::Utilities
 
 
   template <int dim, int n_components, typename number>
+  dealii::VectorizedArray<number>
+  FESubcellEvaluation<dim, n_components, number>::subcell_size(
+    const unsigned int subcell_index) const
+  {
+    AssertIndexRange(subcell_index, dealii::Utilities::fixed_power<3>(n_subcells_1d));
+    return fe_cell_integrator.JxW(subcell_index);
+  }
+
+
+  template <int dim, int n_components, typename number>
+  dealii::VectorizedArray<number>
+  FESubcellEvaluation<dim, n_components, number>::subcell_face_size(
+    const unsigned int subcell_index,
+    const unsigned int face_no) const
+  {
+    AssertIndexRange(subcell_index, dealii::Utilities::fixed_power<3>(n_subcells_1d));
+    AssertIndexRange(face_no, 2 * dim);
+
+    const unsigned int direction = face_no / 2;
+
+    const dealii::Quadrature<1> quadrature_1d =
+      matrix_free_context.mf.get_quadrature(matrix_free_context.quad_idx).get_tensor_basis()[0];
+
+    dealii::VectorizedArray<number> reference_tangential_extent(1.);
+    unsigned int                    idx = subcell_index;
+    for (unsigned int d = 0; d < dim; ++d)
+      {
+        const unsigned int coordinate_d = idx % n_subcells_1d;
+        idx /= n_subcells_1d;
+        if (d != direction)
+          reference_tangential_extent *= quadrature_1d.weight(coordinate_d);
+      }
+
+    const auto inverse_jacobian     = fe_cell_integrator.inverse_jacobian(0);
+    const auto jacobian_determinant = 1. / dealii::determinant(inverse_jacobian);
+
+    return jacobian_determinant * inverse_jacobian[direction][direction] *
+           reference_tangential_extent;
+  }
+
+
+  template <int dim, int n_components, typename number>
   typename FESubcellEvaluation<dim, n_components, number>::value_type
   FESubcellEvaluation<dim, n_components, number>::get_subcell_value(
     const unsigned int subcell_index) const
   {
-    AssertIndexRange(subcell_index, subcell_values.size());
+    AssertIndexRange(subcell_index, dealii::Utilities::fixed_power<3>(n_subcells_1d));
     return subcell_values[subcell_index_to_padded_index(subcell_index)];
   }
 
@@ -123,13 +179,12 @@ namespace MeltPoolDG::Utilities
     const unsigned int subcell_index,
     const unsigned int face_no) const
   {
-    AssertIndexRange(subcell_index, subcell_values.size());
+    AssertIndexRange(subcell_index, dealii::Utilities::fixed_power<3>(n_subcells_1d));
     AssertIndexRange(face_no, 2 * dim);
 
     const unsigned int direction = face_no / 2;
     const unsigned int side      = face_no % 2;
-
-    return subcell_values[subcell_index +
+    return subcell_values[subcell_index_to_padded_index(subcell_index) +
                           ((side == 0) ? -1 : 1) *
                             static_cast<unsigned int>(std::pow(n_subcells_1d, direction))];
   }

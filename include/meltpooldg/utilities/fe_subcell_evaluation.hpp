@@ -1,5 +1,6 @@
 #pragma once
 
+#include <deal.II/base/std_cxx20/iota_view.h>
 #include <deal.II/base/tensor.h>
 #include <deal.II/base/vectorization.h>
 
@@ -110,6 +111,29 @@ namespace MeltPoolDG::Utilities
 
     void
     set_dof_values(dealii::LinearAlgebra::distributed::Vector<number> &dst);
+
+    dealii::std_cxx20::ranges::iota_view<unsigned int, unsigned int>
+    subcell_indices() const;
+
+    template <typename T>
+    T
+    read_cell_data(const dealii::AlignedVector<T> &data) const
+    {
+      return fe_cell_integrator.read_cell_data(data);
+    }
+
+    template <typename T>
+    void
+    set_cell_data(dealii::AlignedVector<T> &data, const T &value) const
+    {
+      fe_cell_integrator.set_cell_data(data, value);
+    }
+
+    dealii::VectorizedArray<number>
+    subcell_size(const unsigned int subcell_index) const;
+
+    dealii::VectorizedArray<number>
+    subcell_face_size(const unsigned int subcell_index, const unsigned int face_no) const;
 
   private:
     const MatrixFreeContext<dim, number> matrix_free_context;

@@ -11,6 +11,8 @@
 
 #include <meltpooldg/utilities/fe_integrator.hpp>
 
+#include <array>
+#include <map>
 #include <vector>
 
 namespace MeltPoolDG
@@ -369,31 +371,49 @@ namespace MeltPoolDG
   }
 
   /**
-   * Computes a vector of categories for each active cell in the triangulation based on the
-   * boundary faces of the cell. Each category is represented as a bitmask, where each bit
-   * corresponds to a face of the cell. If a face is on the domain boundary, the corresponding bit
-   * is set to 1; otherwise, it is set to 0. This allows for efficient grouping of cells with
-   * similar boundary conditions during matrix-free computations via setting the
-   * `cell_vectorization_categories` in the AdditionalData of the MatrixFree object.
+   * Computes a vector of categories for each active cell in the triangulation, such that two
+   * cells receive the same category if and only if they agree, face by face, on whether that
+   * face lies on the domain boundary and, if so, on its exact `boundary_id`. This allows
+   * face-based code (e.g. FESubcellEvaluation) to rely on every cell in a vectorized batch having
+   * the same face type -- including the same boundary_id, not merely "boundary vs. interior" --
+   * at each face index, by setting the `cell_vectorization_category` (together with
+   * `cell_vectorization_categories_strict = true`) in the AdditionalData of the MatrixFree
+   * object.
+   *
+   * @note A plain per-face bitmask of "is this face a boundary face" is not sufficient here: it
+   * would happily combine, say, an inflow cell and a wall cell into the same batch as long as
+   * both merely have *some* boundary face at the same face index, even though their boundary_ids
+   * (and thus the boundary values/conditions to apply) differ. This function instead keys on the
+   * full per-face signature of boundary ids (using numbers::internal_face_boundary_id for
+   * interior faces), so cells are only grouped together when they are truly interchangeable from
+   * a boundary-handling point of view.
    *
    * @param tria The triangulation containing the active cells to be categorized.
    * @return A vector of unsigned integers, where each entry corresponds to an active cell and
-   *         contains the bitmask representing its boundary face categories.
+   *         contains the category index for that cell's face signature.
    */
   template <int dim, int spacedim>
   std::vector<unsigned int>
   compute_boundary_face_vectorization_categories(const dealii::Triangulation<dim, spacedim> &tria)
   {
+    constexpr unsigned int n_faces = dealii::GeometryInfo<dim>::faces_per_cell;
+    using FaceSignature            = std::array<dealii::types::boundary_id, n_faces>;
+
+    std::map<FaceSignature, unsigned int> signature_to_category;
+
     std::vector<unsigned int> categories(tria.n_active_cells(), 0);
 
     for (const auto &cell : tria.active_cell_iterators())
       {
-        unsigned int mask = 0;
-        for (unsigned int face = 0; face < dealii::GeometryInfo<dim>::faces_per_cell; ++face)
-          if (cell->at_boundary(face))
-            mask |= (1u << face);
+        FaceSignature signature;
+        for (unsigned int face = 0; face < n_faces; ++face)
+          signature[face] = cell->at_boundary(face) ? cell->face(face)->boundary_id() :
+                                                      dealii::numbers::internal_face_boundary_id;
 
-        categories[cell->active_cell_index()] = mask;
+        const auto [it, inserted] = signature_to_category.try_emplace(
+          signature, static_cast<unsigned int>(signature_to_category.size()));
+
+        categories[cell->active_cell_index()] = it->second;
       }
 
     return categories;
