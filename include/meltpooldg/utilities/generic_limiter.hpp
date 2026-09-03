@@ -765,9 +765,6 @@ namespace MeltPoolDG::Utilities
                      subcell_face < dealii::GeometryInfo<dim>::faces_per_cell;
                      ++subcell_face)
                   {
-                    dealii::Tensor<1, dim, VectorizedArrayType> normal;
-                    normal[subcell_face / 2] = (subcell_face % 2 == 0) ? -1. : 1.;
-
                     // numerical_flux(w_left, w_right) approximates the physical flux at the
                     // interface using the state ordered by the *global* coordinate direction, not
                     // by "own vs. neighbor". On the negative-direction (e.g. west) face, the
@@ -779,6 +776,8 @@ namespace MeltPoolDG::Utilities
                     const FluxType flux = is_negative_side ? numerical_flux(neighbor, w_old) :
                                                              numerical_flux(w_old, neighbor);
 
+                    const dealii::Tensor<1, dim, VectorizedArrayType> normal =
+                      subcell_evaluator.subcell_face_normal(subcell, subcell_face);
                     for (unsigned int c = 0; c < n_components; ++c)
                       for (unsigned int d = 0; d < dim; ++d)
                         fv_subcell_average[c] -=

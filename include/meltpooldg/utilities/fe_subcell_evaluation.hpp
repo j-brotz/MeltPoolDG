@@ -135,6 +135,9 @@ namespace MeltPoolDG::Utilities
     dealii::VectorizedArray<number>
     subcell_face_size(const unsigned int subcell_index, const unsigned int face_no) const;
 
+    dealii::Tensor<1, dim, dealii::VectorizedArray<number>>
+    subcell_face_normal(const unsigned int subcell_index, const unsigned int face_no);
+
   private:
     const MatrixFreeContext<dim, number> matrix_free_context;
     unsigned int                         cell_batch_index;
