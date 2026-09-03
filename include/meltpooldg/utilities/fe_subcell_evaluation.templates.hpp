@@ -62,7 +62,6 @@ namespace MeltPoolDG::Utilities
 
     for (unsigned int face_no = 0; face_no < 2 * dim; ++face_no)
       {
-        // TODO!!!
         const auto face_q_index_to_padded_index = [this, face_no](unsigned int face_q_index) {
           const unsigned int direction = face_no / 2;
           const unsigned int side      = face_no % 2;
@@ -73,7 +72,7 @@ namespace MeltPoolDG::Utilities
             {
               const unsigned int coordinate_d = (d == direction) ?
                                                   ((side == 0) ? 0 : n_subcells_1d + 1) :
-                                                  (face_q_index % n_subcells_1d);
+                                                  (face_q_index % n_subcells_1d + 1);
               if (d != direction)
                 face_q_index /= n_subcells_1d;
 
@@ -99,7 +98,7 @@ namespace MeltPoolDG::Utilities
 
                 fe_inner_face_integrator.gather_evaluate(input_vector,
                                                          dealii::EvaluationFlags::values);
-                subcell_values[face_q_index_to_padded_index(0)] =
+                subcell_values[face_q_index_to_padded_index(q)] =
                   get_boundary_value(fe_inner_face_integrator.quadrature_point(q),
                                      boundary_ids[0],
                                      fe_inner_face_integrator.get_value(q));
@@ -162,6 +161,18 @@ namespace MeltPoolDG::Utilities
            reference_tangential_extent;
   }
 
+  template <int dim, int n_components, typename number>
+  dealii::Tensor<1, dim, dealii::VectorizedArray<number>>
+  FESubcellEvaluation<dim, n_components, number>::subcell_face_normal(
+    const unsigned int subcell_index,
+    const unsigned int face_no)
+  {
+    AssertIndexRange(subcell_index, dealii::Utilities::fixed_power<3>(n_subcells_1d));
+    AssertIndexRange(face_no, 2 * dim);
+    fe_inner_face_integrator.reinit(cell_batch_index, face_no);
+    return fe_inner_face_integrator.normal_vector(subcell_index);
+  }
+
 
   template <int dim, int n_components, typename number>
   typename FESubcellEvaluation<dim, n_components, number>::value_type
@@ -184,9 +195,10 @@ namespace MeltPoolDG::Utilities
 
     const unsigned int direction = face_no / 2;
     const unsigned int side      = face_no % 2;
+
     return subcell_values[subcell_index_to_padded_index(subcell_index) +
                           ((side == 0) ? -1 : 1) *
-                            static_cast<unsigned int>(std::pow(n_subcells_1d, direction))];
+                            static_cast<unsigned int>(std::pow(n_subcells_1d + 2, direction))];
   }
 
   template <int dim, int n_components, typename number>
