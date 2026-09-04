@@ -391,7 +391,7 @@ namespace MeltPoolDG::Utilities
     dealii::AlignedVector<dealii::VectorizedArray<number>> &marked_cells_dst,
     std::function<ValueType(const dealii::Point<dim, dealii::VectorizedArray<number>> &,
                             dealii::types::boundary_id,
-                            const ValueType &)>) const
+                            const ValueType &)>             get_boundary_value) const
   {
     unsigned int cells_marked = 0;
 
@@ -402,7 +402,9 @@ namespace MeltPoolDG::Utilities
                        const VectorType &,
                        const std::pair<unsigned int, unsigned int> &)>
       compute_min_max_subcell_values =
-        [dof_idx = matrix_free_context.dof_idx, quad_idx = matrix_free_context.quad_idx](
+        [dof_idx  = matrix_free_context.dof_idx,
+         quad_idx = matrix_free_context.quad_idx,
+         &get_boundary_value](
           const dealii::MatrixFree<dim, number> &matrix_free,
           DistributedCellData<dim,
                               std::pair<dealii::Tensor<1, n_components, number>,
@@ -410,20 +412,20 @@ namespace MeltPoolDG::Utilities
                                                       &min_max_subcell_values,
           const VectorType                            &old_solution,
           const std::pair<unsigned int, unsigned int> &cell_range) {
-          FECellIntegrator<dim, n_components, number> cell_evaluator_old(matrix_free,
-                                                                         dof_idx,
-                                                                         quad_idx);
+          FESubcellEvaluation<dim, n_components, number> subcell_evaluator_old(matrix_free,
+                                                                               dof_idx,
+                                                                               quad_idx);
 
           for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
             {
-              cell_evaluator_old.reinit(cell);
-              cell_evaluator_old.gather_evaluate(old_solution, dealii::EvaluationFlags::values);
+              subcell_evaluator_old.reinit(cell);
+              subcell_evaluator_old.gather_evaluate(old_solution, get_boundary_value);
 
-              ValueType min_subcell_values = cell_evaluator_old.get_value(0);
-              ValueType max_subcell_values = cell_evaluator_old.get_value(0);
-              for (const unsigned int q : cell_evaluator_old.quadrature_point_indices())
+              ValueType min_subcell_values = subcell_evaluator_old.get_value(0);
+              ValueType max_subcell_values = subcell_evaluator_old.get_value(0);
+              for (const unsigned int subcell : subcell_evaluator_old.subcell_indices())
                 {
-                  const ValueType subcell_values = cell_evaluator_old.get_value(q);
+                  const ValueType subcell_values = subcell_evaluator_old.get_subcell_value(subcell);
                   for (unsigned int c = 0; c < n_components; ++c)
                     {
                       min_subcell_values[c] =
@@ -476,7 +478,7 @@ namespace MeltPoolDG::Utilities
                        dealii::AlignedVector<dealii::VectorizedArray<number>> &marked_cells,
                        const VectorType                                       &current_solution,
                        const std::pair<unsigned int, unsigned int>            &cell_range) {
-        FECellIntegrator<dim, n_components, number> cell_evaluator_new(
+        FESubcellEvaluation<dim, n_components, number> subcell_evaluator_new(
           matrix_free, matrix_free_context.dof_idx, matrix_free_context.quad_idx);
         FEFaceIntegrator<dim, n_components, number> face_evaluator(matrix_free,
                                                                    true,
@@ -486,8 +488,8 @@ namespace MeltPoolDG::Utilities
         const VectorizedArrayType tol(1e-5); // TODO: Hwo to deal with this
         for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
           {
-            cell_evaluator_new.reinit(cell);
-            cell_evaluator_new.gather_evaluate(current_solution, dealii::EvaluationFlags::values);
+            subcell_evaluator_new.reinit(cell);
+            subcell_evaluator_new.gather_evaluate(current_solution, get_boundary_value);
 
             const auto         cells          = cells_in_cell_batch(matrix_free, cell);
             const unsigned int n_active_lanes = matrix_free.n_active_entries_per_cell_batch(cell);
@@ -531,39 +533,29 @@ namespace MeltPoolDG::Utilities
                     const ValueType w_inner = face_evaluator.get_value(q);
                     const dealii::Point<dim, VectorizedArrayType> &location =
                       face_evaluator.quadrature_point(q);
-                    const dealii::Tensor<1, dim, VectorizedArrayType> &normal =
-                      face_evaluator.normal_vector(q);
-                    // const VectorizedArrayType JxW = face_evaluator.JxW(q);
+                    const VectorizedArrayType JxW = face_evaluator.JxW(q);
 
                     for (unsigned int lane = 0; lane < n_active_lanes; ++lane)
                       {
                         if (boundary_ids[lane] == dealii::numbers::internal_face_boundary_id)
                           continue;
 
-                        dealii::Point<dim, number>     location_lane;
-                        dealii::Tensor<1, dim, number> normal_lane;
+                        dealii::Point<dim, number> location_lane;
                         for (unsigned int d = 0; d < dim; ++d)
                           {
                             location_lane[d] = location[d][lane];
-                            normal_lane[d]   = normal[d][lane];
                           }
 
                         dealii::Tensor<1, n_components, number> w_inner_lane;
                         for (unsigned int c = 0; c < n_components; ++c)
                           w_inner_lane[c] = w_inner[c][lane];
 
-                        // TODO
-                        /*
-                      const dealii::Tensor<1, n_components, number> w_boundary_lane =
-                        get_boundary_value(location_lane,
-                                           normal_lane,
-                                           boundary_ids[lane],
-                                           w_inner_lane);
+                        const dealii::Tensor<1, n_components, number> w_boundary_lane =
+                          get_boundary_value(location_lane, boundary_ids[lane], w_inner_lane);
 
-                      for (unsigned int c = 0; c < n_components; ++c)
-                        weighted_sum[c][lane] += w_boundary_lane[c] * JxW[lane];
-                      weight_sum[lane] += JxW[lane];
-                      */
+                        for (unsigned int c = 0; c < n_components; ++c)
+                          weighted_sum[c][lane] += w_boundary_lane[c] * JxW[lane];
+                        weight_sum[lane] += JxW[lane];
                       }
                   }
 
@@ -626,10 +618,12 @@ namespace MeltPoolDG::Utilities
                   }
               }
 
+            // Check if any subcell values are outside the min/max range of the cell and its
+            // neighbors at its old time step. If so, mark the cell as troubled.
             dealii::VectorizedArray<number> local_troubled_cells = 0;
-            for (const unsigned int q : cell_evaluator_new.quadrature_point_indices())
+            for (const unsigned int subcell : subcell_evaluator_new.subcell_indices())
               {
-                const ValueType subcell_values = cell_evaluator_new.get_value(q);
+                const ValueType subcell_values = subcell_evaluator_new.get_subcell_value(subcell);
                 for (unsigned int c = 0; c < n_components; ++c)
                   {
                     local_troubled_cells =
@@ -658,15 +652,18 @@ namespace MeltPoolDG::Utilities
                     local_troubled_cells[lane] = 0;
                   }
               }
-
             cells_marked += local_troubled_cells.sum();
 
+            // Mark troubled cells in the output vector. We use a compare_and_apply_mask operation
+            // to ensure that we only mark cells that are currently unmarked (i.e., have a value of
+            // 0) and not accidentally unmark cells that have already been marked as troubled in the
+            // given dst vector.
             local_troubled_cells = dealii::compare_and_apply_mask<dealii::SIMDComparison::equal>(
               local_troubled_cells,
               dealii::VectorizedArray<number>(1),
               dealii::VectorizedArray<number>(1),
-              cell_evaluator_new.read_cell_data(marked_cells));
-            cell_evaluator_new.set_cell_data(marked_cells, local_troubled_cells);
+              subcell_evaluator_new.read_cell_data(marked_cells));
+            subcell_evaluator_new.set_cell_data(marked_cells, local_troubled_cells);
           }
       };
 

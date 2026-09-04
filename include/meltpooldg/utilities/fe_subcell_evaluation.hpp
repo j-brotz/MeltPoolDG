@@ -46,6 +46,9 @@ namespace MeltPoolDG::Utilities
    * face type at the same face index. This means that e.g. a cell whose faces 0 and 2 ly at a
    * domain boundary cannot be in the same cell batch as a cell whose faces 0 and 2 are interior
    * faces.
+   *
+   * @note **Important**: Currently cartesian cells are assumed, i.e. the subcells are assumed to be
+   * aligned with the coordinate axes.
    */
   template <int dim, int n_components, typename number>
   class FESubcellEvaluation
@@ -203,6 +206,8 @@ namespace MeltPoolDG::Utilities
     std::vector<value_type> submitted_subcell_values;
 
     const unsigned int n_subcells_1d;
+    const unsigned int n_padded_subcells_1d;
+    const unsigned int n_subcells;
 
     bool
     is_subcell_face_at_cell_boundary(const unsigned int subcell_index,
