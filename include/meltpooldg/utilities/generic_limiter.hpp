@@ -421,8 +421,8 @@ namespace MeltPoolDG::Utilities
               subcell_evaluator_old.reinit(cell);
               subcell_evaluator_old.gather_evaluate(old_solution, get_boundary_value);
 
-              ValueType min_subcell_values = subcell_evaluator_old.get_value(0);
-              ValueType max_subcell_values = subcell_evaluator_old.get_value(0);
+              ValueType min_subcell_values = subcell_evaluator_old.get_subcell_value(0);
+              ValueType max_subcell_values = subcell_evaluator_old.get_subcell_value(0);
               for (const unsigned int subcell : subcell_evaluator_old.subcell_indices())
                 {
                   const ValueType subcell_values = subcell_evaluator_old.get_subcell_value(subcell);
@@ -501,72 +501,42 @@ namespace MeltPoolDG::Utilities
                 max_subcell_values[c] = std::numeric_limits<number>::lowest();
               }
 
-            // Precompute a JxW-weighted average of the boundary condition over each face of the
-            // cell batch that lies on the domain boundary (for at least one lane). This average
-            // is used below as the "virtual neighbor" value on boundary faces, mirroring how a
-            // real neighbor contributes a single min/max pair rather than pointwise values.
-            std::array<ValueType, dealii::GeometryInfo<dim>::faces_per_cell>
-              averaged_boundary_values{};
-
+            ValueType min_boundary_subcell_value = face_evaluator.get_value(0);
+            ValueType max_boundary_subcell_value = face_evaluator.get_value(0);
             for (unsigned int face = 0; face < dealii::GeometryInfo<dim>::faces_per_cell; ++face)
               {
                 const std::array<dealii::types::boundary_id, VectorizedArrayType::size()>
-                  boundary_ids = matrix_free.get_faces_by_cells_boundary_id(cell, face);
-
-                const bool any_lane_at_boundary =
-                  std::any_of(boundary_ids.begin(),
-                              boundary_ids.begin() + n_active_lanes,
-                              [](const dealii::types::boundary_id id) {
-                                return id != dealii::numbers::internal_face_boundary_id;
-                              });
-                if (!any_lane_at_boundary)
+                           boundary_ids = matrix_free.get_faces_by_cells_boundary_id(cell, face);
+                const bool is_at_boundary =
+                  boundary_ids[0] != dealii::numbers::internal_face_boundary_id;
+                if (!is_at_boundary)
                   continue;
 
                 face_evaluator.reinit(cell, face);
                 face_evaluator.gather_evaluate(current_solution, dealii::EvaluationFlags::values);
 
-                ValueType           weighted_sum{};
-                VectorizedArrayType weight_sum = 0.;
+                min_boundary_subcell_value = face_evaluator.get_value(0);
+                max_boundary_subcell_value = face_evaluator.get_value(0);
 
                 for (const unsigned int q : face_evaluator.quadrature_point_indices())
                   {
-                    const ValueType w_inner = face_evaluator.get_value(q);
-                    const dealii::Point<dim, VectorizedArrayType> &location =
-                      face_evaluator.quadrature_point(q);
-                    const VectorizedArrayType JxW = face_evaluator.JxW(q);
-
-                    for (unsigned int lane = 0; lane < n_active_lanes; ++lane)
-                      {
-                        if (boundary_ids[lane] == dealii::numbers::internal_face_boundary_id)
-                          continue;
-
-                        dealii::Point<dim, number> location_lane;
-                        for (unsigned int d = 0; d < dim; ++d)
-                          {
-                            location_lane[d] = location[d][lane];
-                          }
-
-                        dealii::Tensor<1, n_components, number> w_inner_lane;
-                        for (unsigned int c = 0; c < n_components; ++c)
-                          w_inner_lane[c] = w_inner[c][lane];
-
-                        const dealii::Tensor<1, n_components, number> w_boundary_lane =
-                          get_boundary_value(location_lane, boundary_ids[lane], w_inner_lane);
-
-                        for (unsigned int c = 0; c < n_components; ++c)
-                          weighted_sum[c][lane] += w_boundary_lane[c] * JxW[lane];
-                        weight_sum[lane] += JxW[lane];
-                      }
-                  }
-
-                for (unsigned int lane = 0; lane < n_active_lanes; ++lane)
-                  {
-                    if (boundary_ids[lane] == dealii::numbers::internal_face_boundary_id)
-                      continue;
+                    const ValueType w = face_evaluator.get_value(q);
 
                     for (unsigned int c = 0; c < n_components; ++c)
-                      averaged_boundary_values[face][c][lane] =
-                        weighted_sum[c][lane] / weight_sum[lane];
+                      {
+                        min_boundary_subcell_value[c] =
+                          dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than>(
+                            w[c],
+                            min_boundary_subcell_value[c],
+                            w[c],
+                            min_boundary_subcell_value[c]);
+                        max_boundary_subcell_value[c] =
+                          dealii::compare_and_apply_mask<dealii::SIMDComparison::greater_than>(
+                            w[c],
+                            max_boundary_subcell_value[c],
+                            w[c],
+                            max_boundary_subcell_value[c]);
+                      }
                   }
               }
 
@@ -609,10 +579,10 @@ namespace MeltPoolDG::Utilities
                           {
                             min_subcell_values[c][lane] =
                               std::min(min_subcell_values[c][lane],
-                                       averaged_boundary_values[face][c][lane]);
+                                       min_boundary_subcell_value[c][lane]);
                             max_subcell_values[c][lane] =
                               std::max(max_subcell_values[c][lane],
-                                       averaged_boundary_values[face][c][lane]);
+                                       max_boundary_subcell_value[c][lane]);
                           }
                       }
                   }
