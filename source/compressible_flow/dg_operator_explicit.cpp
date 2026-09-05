@@ -5,8 +5,8 @@
 #include <meltpooldg/compressible_flow/operation_scratch_data.hpp>
 #include <meltpooldg/compressible_flow/state_views_n_species.hpp>
 #include <meltpooldg/compressible_flow/utils.hpp>
+#include <meltpooldg/hyperbolic_pde_tools/dg_generic_convection_diffusion_worker.hpp>
 #include <meltpooldg/linear_algebra/utilities_matrixfree.hpp>
-#include <meltpooldg/utilities/dg_generic_convection_diffusion_worker.hpp>
 #include <meltpooldg/utilities/matrix_free_util.hpp>
 #include <meltpooldg/utilities/preprocessor_directives.hpp>
 #include <meltpooldg/utilities/vector_tools.templates.hpp>

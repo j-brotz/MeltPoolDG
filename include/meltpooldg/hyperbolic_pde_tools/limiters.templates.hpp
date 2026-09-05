@@ -10,11 +10,11 @@
 
 #include <deal.II/matrix_free/matrix_free.h>
 
+#include <meltpooldg/hyperbolic_pde_tools/limiters.hpp>
 #include <meltpooldg/linear_algebra/utilities_matrixfree.hpp>
 #include <meltpooldg/utilities/better_enum.hpp>
 #include <meltpooldg/utilities/dealii_tensor.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
-#include <meltpooldg/utilities/limiters.hpp>
 #include <meltpooldg/utilities/matrix_free_util.hpp>
 
 #include <boost/container/small_vector.hpp>
@@ -25,45 +25,9 @@
 #include <functional>
 #include <vector>
 
-template <typename number>
-void
-MeltPoolDG::Utilities::LimiterData<number>::add_parameters(dealii::ParameterHandler &prm)
-{
-  prm.enter_subsection("limiter");
-  {
-    prm.add_parameter("apply", apply_limiter, "Whether to apply a limiter.");
-    prm.add_parameter(
-      "tvb constant",
-      tvb_constant,
-      "The TVB constant used in the TVB minmod limiter. The constant has the dimension of a second derivative.");
-    prm.add_parameter("type", type, "The type of limiter to apply.");
-    prm.add_parameter("troubled cell marking types",
-                      troubled_cell_marking_types,
-                      "The types of troubled cell marking to use for the limiter.");
-  }
-  prm.leave_subsection();
-}
-
-template <typename number>
-void
-MeltPoolDG::Utilities::LimiterData<number>::check_input_parameters() const
-{
-  AssertThrow(
-    !apply_limiter or !troubled_cell_marking_types.empty(),
-    dealii::ExcMessage(
-      "If the limiter is applied, at least one troubled cell marking type must be specified."));
-  AssertThrow(
-    !(Utils::contains(troubled_cell_marking_types,
-                      TroubledCellMarkingType::inter_cell_numerical_admissibility) and
-      Utils::contains(troubled_cell_marking_types,
-                      TroubledCellMarkingType::local_cell_numerical_admissibility)),
-    dealii::ExcMessage(
-      "Using both inter-cell and local cell numerical admissibility is not recommended as it adds computational complexity without providing significant benefits and hence it is not supported. Please choose one of the two marking types."));
-}
-
 template <int n_components, typename TensorType, typename Container>
 TensorType
-MeltPoolDG::Utilities::tvd_minmod(const Container &values)
+MeltPoolDG::HyperbolicPDETools::tvd_minmod(const Container &values)
 {
   Assert(values.begin() != values.end(), dealii::ExcMessage("Container must not be empty."));
 
@@ -98,9 +62,9 @@ MeltPoolDG::Utilities::tvd_minmod(const Container &values)
 
 template <typename number, int n_components, typename TensorType, typename Container>
 TensorType
-MeltPoolDG::Utilities::tvb_minmod(const Container           &values,
-                                  const std::vector<number> &tvb_constant,
-                                  const number               cell_size)
+MeltPoolDG::HyperbolicPDETools::tvb_minmod(const Container           &values,
+                                           const std::vector<number> &tvb_constant,
+                                           const number               cell_size)
 {
   Assert(values.begin() != values.end(), dealii::ExcMessage("Container must not be empty."));
   Assert(tvb_constant.size() == n_components,
@@ -145,12 +109,12 @@ MeltPoolDG::Utilities::tvb_minmod(const Container           &values,
 
 template <int dim, int n_components, typename number>
 std::array<dealii::Tensor<1, n_components, number>, dim>
-MeltPoolDG::Utilities::compute_minmod_type_limited_slopes(
+MeltPoolDG::HyperbolicPDETools::compute_minmod_type_limited_slopes(
   const std::vector<std::pair<dealii::Tensor<1, n_components, number>,
                               dealii::Tensor<1, n_components, dealii::Tensor<1, dim, number>>>>
                                                                   &cell_average_values,
   const typename dealii::Triangulation<dim>::active_cell_iterator &cell,
-  const MeltPoolDG::Utilities::LimiterData<number>                &limiter_data)
+  const MeltPoolDG::HyperbolicPDETools::LimiterData<number>       &limiter_data)
 {
   std::array<dealii::Tensor<1, n_components, number>, dim> limited_slopes;
 
@@ -274,11 +238,11 @@ template <int dim,
           typename VectorizedArrayType,
           typename VectorType>
 void
-MeltPoolDG::Utilities::apply_minmod_type_limiter(
-  const MatrixFreeContext<dim, number>             &mf_context,
-  VectorType                                       &dst,
-  const VectorType                                 &src,
-  const MeltPoolDG::Utilities::LimiterData<number> &limiter_data)
+MeltPoolDG::HyperbolicPDETools::apply_minmod_type_limiter(
+  const MatrixFreeContext<dim, number>                      &mf_context,
+  VectorType                                                &dst,
+  const VectorType                                          &src,
+  const MeltPoolDG::HyperbolicPDETools::LimiterData<number> &limiter_data)
 {
   if (not limiter_data.apply_limiter)
     return;

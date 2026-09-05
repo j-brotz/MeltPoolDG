@@ -9,7 +9,7 @@
 #include <meltpooldg/compressible_flow/operation_scratch_data.hpp>
 #include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/compressible_flow/viscous_kernels.hpp>
-#include <meltpooldg/utilities/dg_generic_convection_diffusion_worker.hpp>
+#include <meltpooldg/hyperbolic_pde_tools/dg_generic_convection_diffusion_worker.hpp>
 
 #include <functional>
 #include <memory>
@@ -46,10 +46,11 @@ namespace MeltPoolDG::CompressibleFlow
                                                   ConservedVariablesGradient,
                                                   FlowFluxType>;
 
-    using ConvectionDiffusionOperator =
-      Utils::DGConvectionDiffusionOperator<dim, number, ConvectiveKernel, DiffusiveKernel>;
+    using ConvectionDiffusionOperator = HyperbolicPDETools::
+      DGConvectionDiffusionOperator<dim, number, ConvectiveKernel, DiffusiveKernel>;
 
-    using ConvectionOperator = Utils::DGConvectionOperator<dim, number, ConvectiveKernel>;
+    using ConvectionOperator =
+      HyperbolicPDETools::DGConvectionOperator<dim, number, ConvectiveKernel>;
 
     /**
      * @brief Constructor.

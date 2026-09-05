@@ -8,10 +8,10 @@
 #include <deal.II/matrix_free/matrix_free.h>
 #include <deal.II/matrix_free/operators.h>
 
-#include <meltpooldg/utilities/fe_subcell_evaluation.hpp>
+#include <meltpooldg/hyperbolic_pde_tools/fe_subcell_evaluation.hpp>
 #include <meltpooldg/utilities/matrix_free_util.hpp>
 
-namespace MeltPoolDG::Utilities
+namespace MeltPoolDG::HyperbolicPDETools
 {
   template <int dim, int n_components, typename number>
   FESubcellEvaluation<dim, n_components, number>::FESubcellEvaluation(
@@ -293,4 +293,4 @@ namespace MeltPoolDG::Utilities
       }
     return padded_index;
   }
-} // namespace MeltPoolDG::Utilities
+} // namespace MeltPoolDG::HyperbolicPDETools

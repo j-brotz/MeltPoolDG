@@ -5,8 +5,9 @@
 #include <deal.II/grid/cell_id.h>
 #include <deal.II/grid/grid_generator.h>
 
-#include <meltpooldg/utilities/limiters.hpp>
-#include <meltpooldg/utilities/limiters.templates.hpp>
+#include <meltpooldg/hyperbolic_pde_tools/limiter_data.hpp>
+#include <meltpooldg/hyperbolic_pde_tools/limiters.hpp>
+#include <meltpooldg/hyperbolic_pde_tools/limiters.templates.hpp>
 
 #include <vector>
 
@@ -28,9 +29,8 @@ TEST(TVDMinmodTest, AllPositiveValues)
                                          TensorValueType{{1.0, 5.0, 6.0}},
                                          TensorValueType{{3.0, 2.0, 7.0}}};
 
-  auto result =
-    MeltPoolDG::Utilities::tvd_minmod<n_components, TensorValueType, std::vector<TensorValueType>>(
-      values);
+  auto result = MeltPoolDG::HyperbolicPDETools::
+    tvd_minmod<n_components, TensorValueType, std::vector<TensorValueType>>(values);
 
   EXPECT_DOUBLE_EQ(result[0], 1.0);
   EXPECT_DOUBLE_EQ(result[1], 2.0);
@@ -46,9 +46,8 @@ TEST(MinmodTest, MixedSignValues)
                                          TensorValueType{{-1.0, 5.0, -6.0}},
                                          TensorValueType{{3.0, -2.0, 7.0}}};
 
-  auto result =
-    MeltPoolDG::Utilities::tvd_minmod<n_components, TensorValueType, std::vector<TensorValueType>>(
-      values);
+  auto result = MeltPoolDG::HyperbolicPDETools::
+    tvd_minmod<n_components, TensorValueType, std::vector<TensorValueType>>(values);
 
   EXPECT_DOUBLE_EQ(result[0], 0.0);
   EXPECT_DOUBLE_EQ(result[1], 0.0);
@@ -66,9 +65,8 @@ TEST(MinmodTest, AllNegativeValues)
                                          TensorValueType{{-1.0, -5.0, -6.0}},
                                          TensorValueType{{-3.0, -2.0, -7.0}}};
 
-  auto result =
-    MeltPoolDG::Utilities::tvd_minmod<n_components, TensorValueType, std::vector<TensorValueType>>(
-      values);
+  auto result = MeltPoolDG::HyperbolicPDETools::
+    tvd_minmod<n_components, TensorValueType, std::vector<TensorValueType>>(values);
 
   EXPECT_DOUBLE_EQ(result[0], -1.0);
   EXPECT_DOUBLE_EQ(result[1], -2.0);
@@ -84,9 +82,8 @@ TEST(MinmodTest, ContainingZeroValues)
                                          TensorValueType{{-1.0, 0.0, -6.0}},
                                          TensorValueType{{3.0, -2.0, 0.0}}};
 
-  auto result =
-    MeltPoolDG::Utilities::tvd_minmod<n_components, TensorValueType, std::vector<TensorValueType>>(
-      values);
+  auto result = MeltPoolDG::HyperbolicPDETools::
+    tvd_minmod<n_components, TensorValueType, std::vector<TensorValueType>>(values);
 
   EXPECT_DOUBLE_EQ(result[0], 0.0);
   EXPECT_DOUBLE_EQ(result[1], 0.0);
@@ -106,12 +103,11 @@ TEST(TVBMinmodTest, AllBelowSlopeLimit)
     dealii::Tensor<1, n_components, double>{{1.0, 5.0, 6.0}},
     dealii::Tensor<1, n_components, double>{{3.0, 2.0, 7.0}}};
 
-  auto result =
-    MeltPoolDG::Utilities::tvb_minmod<double,
-                                      n_components,
-                                      dealii::Tensor<1, n_components, double>,
-                                      std::vector<dealii::Tensor<1, n_components, double>>>(
-      values, tvb_constant, cell_size);
+  auto result = MeltPoolDG::HyperbolicPDETools::tvb_minmod<
+    double,
+    n_components,
+    dealii::Tensor<1, n_components, double>,
+    std::vector<dealii::Tensor<1, n_components, double>>>(values, tvb_constant, cell_size);
 
   EXPECT_DOUBLE_EQ(result[0], 2.0);
   EXPECT_DOUBLE_EQ(result[1], 3.0);
@@ -130,7 +126,7 @@ TEST(TVBMinmodTest, AllAboveSlopeLimit)
                                             TensorValueType{{1.0, 5.0, 6.0}},
                                             TensorValueType{{3.0, 2.0, 7.0}}};
 
-  auto result = MeltPoolDG::Utilities::
+  auto result = MeltPoolDG::HyperbolicPDETools::
     tvb_minmod<double, n_components, TensorValueType, std::vector<TensorValueType>>(values,
                                                                                     tvb_constant,
                                                                                     cell_size);
@@ -154,7 +150,7 @@ TEST(TVBMinmodTest, MixedBelowAndAboveSlopeLimit)
                                             TensorValueType{{1.0, 5.0, 6.0}},
                                             TensorValueType{{3.0, 2.0, 7.0}}};
 
-  auto result = MeltPoolDG::Utilities::
+  auto result = MeltPoolDG::HyperbolicPDETools::
     tvb_minmod<double, n_components, TensorValueType, std::vector<TensorValueType>>(values,
                                                                                     tvb_constant,
                                                                                     cell_size);
@@ -173,8 +169,8 @@ TEST(MinmodTypeLimiterSlopes, 1D)
 {
   constexpr int dim = 1;
 
-  MeltPoolDG::Utilities::LimiterData<double> limiter_data;
-  limiter_data.type = MeltPoolDG::Utilities::LimiterType::tvd_minmod;
+  MeltPoolDG::HyperbolicPDETools::LimiterData<double> limiter_data;
+  limiter_data.type = MeltPoolDG::HyperbolicPDETools::LimiterType::tvd_minmod;
 
   // Create the triangulation
   dealii::Triangulation<dim> triangulation;
@@ -199,10 +195,8 @@ TEST(MinmodTypeLimiterSlopes, 1D)
 
   {
     SCOPED_TRACE("Cell in the middle of the domain.");
-    auto limited_value =
-      MeltPoolDG::Utilities::compute_minmod_type_limited_slopes(cell_average_values,
-                                                                ++triangulation.begin_active(),
-                                                                limiter_data);
+    auto limited_value = MeltPoolDG::HyperbolicPDETools::compute_minmod_type_limited_slopes(
+      cell_average_values, ++triangulation.begin_active(), limiter_data);
 
     EXPECT_DOUBLE_EQ(limited_value[0][0], 0.0);
     EXPECT_DOUBLE_EQ(limited_value[0][1], -1.0);
@@ -214,10 +208,8 @@ TEST(MinmodTypeLimiterSlopes, 1D)
     average_cell_gradient[1][0] = -8.0;
     cell_average_values[triangulation.begin_active()->active_cell_index()].second =
       average_cell_gradient;
-    auto limited_value =
-      MeltPoolDG::Utilities::compute_minmod_type_limited_slopes(cell_average_values,
-                                                                triangulation.begin_active(),
-                                                                limiter_data);
+    auto limited_value = MeltPoolDG::HyperbolicPDETools::compute_minmod_type_limited_slopes(
+      cell_average_values, triangulation.begin_active(), limiter_data);
 
     EXPECT_DOUBLE_EQ(limited_value[0][0], 0.0);
     EXPECT_DOUBLE_EQ(limited_value[0][1], -4.0);
@@ -234,8 +226,8 @@ TEST(MinmodTypeLimiterSlopes, 2D)
 {
   constexpr int dim = 2;
 
-  MeltPoolDG::Utilities::LimiterData<double> limiter_data;
-  limiter_data.type = MeltPoolDG::Utilities::LimiterType::tvd_minmod;
+  MeltPoolDG::HyperbolicPDETools::LimiterData<double> limiter_data;
+  limiter_data.type = MeltPoolDG::HyperbolicPDETools::LimiterType::tvd_minmod;
 
   // Create the triangulation
   dealii::Triangulation<dim> triangulation;
@@ -263,11 +255,10 @@ TEST(MinmodTypeLimiterSlopes, 2D)
 
   {
     SCOPED_TRACE("Cell in the middle of the domain.");
-    auto limited_value =
-      MeltPoolDG::Utilities::compute_minmod_type_limited_slopes(cell_average_values,
-                                                                triangulation.create_cell_iterator(
-                                                                  dealii::CellId("0_2:03")),
-                                                                limiter_data);
+    auto limited_value = MeltPoolDG::HyperbolicPDETools::compute_minmod_type_limited_slopes(
+      cell_average_values,
+      triangulation.create_cell_iterator(dealii::CellId("0_2:03")),
+      limiter_data);
 
     EXPECT_DOUBLE_EQ(limited_value[0][0], 0.0);
     EXPECT_DOUBLE_EQ(limited_value[0][1], -1.0);
@@ -280,11 +271,10 @@ TEST(MinmodTypeLimiterSlopes, 2D)
 
   {
     SCOPED_TRACE("Cell at domain boundary.");
-    auto limited_value =
-      MeltPoolDG::Utilities::compute_minmod_type_limited_slopes(cell_average_values,
-                                                                triangulation.create_cell_iterator(
-                                                                  dealii::CellId("0_2:00")),
-                                                                limiter_data);
+    auto limited_value = MeltPoolDG::HyperbolicPDETools::compute_minmod_type_limited_slopes(
+      cell_average_values,
+      triangulation.create_cell_iterator(dealii::CellId("0_2:00")),
+      limiter_data);
 
     EXPECT_DOUBLE_EQ(limited_value[0][0], 0.0);
     EXPECT_DOUBLE_EQ(limited_value[0][1], -1.0);
@@ -318,8 +308,8 @@ TEST(MinmodTypeLimiterSlopes, 2D_local_mesh_refinement)
 {
   constexpr int dim = 2;
 
-  MeltPoolDG::Utilities::LimiterData<double> limiter_data;
-  limiter_data.type = MeltPoolDG::Utilities::LimiterType::tvd_minmod;
+  MeltPoolDG::HyperbolicPDETools::LimiterData<double> limiter_data;
+  limiter_data.type = MeltPoolDG::HyperbolicPDETools::LimiterType::tvd_minmod;
 
   // Create the triangulation
   dealii::Triangulation<dim> triangulation;
@@ -355,11 +345,10 @@ TEST(MinmodTypeLimiterSlopes, 2D_local_mesh_refinement)
 
   {
     SCOPED_TRACE("Finer cell neighbors");
-    auto limited_value =
-      MeltPoolDG::Utilities::compute_minmod_type_limited_slopes(cell_average_values,
-                                                                triangulation.create_cell_iterator(
-                                                                  dealii::CellId("3_0:0")),
-                                                                limiter_data);
+    auto limited_value = MeltPoolDG::HyperbolicPDETools::compute_minmod_type_limited_slopes(
+      cell_average_values,
+      triangulation.create_cell_iterator(dealii::CellId("3_0:0")),
+      limiter_data);
 
     EXPECT_DOUBLE_EQ(limited_value[0][0], 0.0);
     EXPECT_DOUBLE_EQ(limited_value[0][1], -1.0);
@@ -391,11 +380,10 @@ TEST(MinmodTypeLimiterSlopes, 2D_local_mesh_refinement)
                           ->active_cell_index()]
       .first[2] = 20.0;
 
-    auto limited_value =
-      MeltPoolDG::Utilities::compute_minmod_type_limited_slopes(cell_average_values,
-                                                                triangulation.create_cell_iterator(
-                                                                  dealii::CellId("4_1:2")),
-                                                                limiter_data);
+    auto limited_value = MeltPoolDG::HyperbolicPDETools::compute_minmod_type_limited_slopes(
+      cell_average_values,
+      triangulation.create_cell_iterator(dealii::CellId("4_1:2")),
+      limiter_data);
 
     EXPECT_DOUBLE_EQ(limited_value[0][0], 0.0);
     EXPECT_DOUBLE_EQ(limited_value[0][1], -5.5);

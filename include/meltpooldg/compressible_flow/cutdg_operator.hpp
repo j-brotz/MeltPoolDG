@@ -6,7 +6,7 @@
 #include <meltpooldg/compressible_flow/explicit_time_integration_utils.hpp>
 #include <meltpooldg/compressible_flow/kernels.hpp>
 #include <meltpooldg/compressible_flow/operation_scratch_data.hpp>
-#include <meltpooldg/utilities/dg_generic_convection_diffusion_worker.hpp>
+#include <meltpooldg/hyperbolic_pde_tools/dg_generic_convection_diffusion_worker.hpp>
 
 namespace MeltPoolDG::CompressibleFlow
 {
@@ -30,13 +30,13 @@ namespace MeltPoolDG::CompressibleFlow
     using ConservedVariablesGradient = ConservedVariablesGradientType<dim, number>;
 
     using ConvectionDiffusionOperator =
-      Utils::DGConvectionDiffusionOperator<dim,
-                                           number,
-                                           ConvectiveFlux<dim, number>,
-                                           DiffusiveFlux<dim, number>>;
+      HyperbolicPDETools::DGConvectionDiffusionOperator<dim,
+                                                        number,
+                                                        ConvectiveFlux<dim, number>,
+                                                        DiffusiveFlux<dim, number>>;
 
     using ConvectionOperator =
-      Utils::DGConvectionOperator<dim, number, ConvectiveFlux<dim, number>>;
+      HyperbolicPDETools::DGConvectionOperator<dim, number, ConvectiveFlux<dim, number>>;
 
     /**
      * @brief Constructor.

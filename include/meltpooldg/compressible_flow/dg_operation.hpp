@@ -12,13 +12,13 @@
 #include <meltpooldg/compressible_flow/output_post_processor.hpp>
 #include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
+#include <meltpooldg/hyperbolic_pde_tools/generic_limiter.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/time_integration/bdf_time_integration.hpp>
 #include <meltpooldg/time_integration/explicit_low_storage_runge_kutta_integrator.hpp>
 #include <meltpooldg/time_integration/implicit_explicit_integrator.hpp>
 #include <meltpooldg/time_integration/solution_history.hpp>
 #include <meltpooldg/time_integration/time_integrator_base.hpp>
-#include <meltpooldg/utilities/generic_limiter.hpp>
 
 #include <memory>
 #include <string>
@@ -200,7 +200,7 @@ namespace MeltPoolDG::CompressibleFlow
     /// Object containing the data post processor for the different output options
     OutputManager<dim, number> output_manager;
 
-    Utilities::Limiter<dim, n_conserved_variables<dim, n_species>, number> limiter;
+    HyperbolicPDETools::Limiter<dim, n_conserved_variables<dim, n_species>, number> limiter;
 
     /**
      * @brief Compute the convective time step limit for the current mesh and flow field.

@@ -6,6 +6,7 @@
 
 #include <deal.II/matrix_free/matrix_free.h>
 
+#include <meltpooldg/hyperbolic_pde_tools/limiter_data.hpp>
 #include <meltpooldg/utilities/better_enum.hpp>
 #include <meltpooldg/utilities/dealii_tensor.hpp>
 #include <meltpooldg/utilities/matrix_free_util.hpp>
@@ -13,56 +14,8 @@
 #include <array>
 #include <vector>
 
-namespace MeltPoolDG::Utilities
+namespace MeltPoolDG::HyperbolicPDETools
 {
-  /**
-   * An enumeration of the available limiters.
-   *
-   * - `tvd_minmod`: Standard TVD (total variation diminishing) minmod limiter
-   * - `tvb_minmod`: TVB (total variation bounded) minmod limiter, which relaxes the TVD criteria
-   * near smooth extrema to avoid unnecessary clipping of physical peaks.
-   */
-  BETTER_ENUM(LimiterType, char, tvd_minmod, tvb_minmod)
-
-  BETTER_ENUM(TroubledCellMarkingType,
-              char,
-              inter_cell_numerical_admissibility,
-              local_cell_numerical_admissibility,
-              physical_admissibility)
-
-  /**
-   * A struct to hold the data for the limiters.
-   */
-  template <typename number>
-  struct LimiterData
-  {
-    /// Boolean flag indicating whether to apply the limiter or not.
-    bool apply_limiter = false;
-
-    /// The TVB constant used in the TVB minmod limiter.
-    std::vector<number> tvb_constant;
-
-    /// The types of troubled cell marking to use for the limiter.
-    std::vector<TroubledCellMarkingType> troubled_cell_marking_types;
-
-    /// The type of limiter to apply.
-    LimiterType type = LimiterType::tvd_minmod;
-
-    /**
-     * Add the limiter parameters to the parameter handler.
-     *
-     * @param prm The parameter handler to which the limiter parameters will be added.
-     */
-    void
-    add_parameters(dealii::ParameterHandler &prm);
-
-    /**
-     * Check the input parameters for validity.
-     */
-    void
-    check_input_parameters() const;
-  };
-
   /**
    * This function computes the component-wise minmod operator over all tensors in the
    * given container. The standard minmod calculation for each component index $i$ is:
@@ -166,4 +119,4 @@ namespace MeltPoolDG::Utilities
                             const VectorType                     &src,
                             const LimiterData<number>            &limiter_data);
 
-} // namespace MeltPoolDG::Utilities
+} // namespace MeltPoolDG::HyperbolicPDETools
