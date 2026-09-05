@@ -127,25 +127,42 @@ namespace MeltPoolDG::CompressibleFlow
   template <int dim, typename number, int n_species>
   auto
   DGOperatorExplicit<dim, number, n_species>::compute_numerical_flux(
-    const ConservedVariables &w_m,
-    const ConservedVariables &w_p) const -> FlowFluxType
+    const ConservedVariables                                      &w_m,
+    const ConservedVariables                                      &w_p,
+    const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal) const
+    -> FaceFluxType<dim, number, n_species>
   {
     // TODO: Reuse existing code
     // TODO: Viscous flux terms
-    const ConvectiveKernel kernel(flow_scratch_data.material.data);
 
-    const FlowFluxType flux_m = kernel.flux(w_m);
-    const FlowFluxType flux_p = kernel.flux(w_p);
+    if (is_viscous_flow<number, n_species>(flow_scratch_data.material.data))
+      {
+        // TODO: That does not seem to be correct
+        return ConvectionDiffusionOperator::face(
+                 w_m,
+                 w_p,
+                 ConservedVariablesGradientType<dim, number, n_species>(),
+                 ConservedVariablesGradientType<dim, number, n_species>(),
+                 normal,
+                 0.,
+                 ConvectiveKernel(flow_scratch_data.material.data),
+                 DiffusiveKernel(flow_scratch_data.material.data))
+          .outer_face_value;
+      }
+    else
+      {
+        return ConvectionOperator::face(w_m,
+                                        w_p,
+                                        normal,
+                                        ConvectiveKernel(flow_scratch_data.material.data))
+          .outer_face_value;
+      }
 
-    const auto local_maximum_wave_speed = kernel.local_maximum_wave_speed(w_m, w_p);
-
-    FlowFluxType numerical_flux;
-    for (unsigned int c = 0; c < n_conserved_variables<dim, n_species>; ++c)
-      for (unsigned int d = 0; d < dim; ++d)
-        numerical_flux[c][d] =
-          0.5 * (flux_m[c][d] + flux_p[c][d]) + 0.5 * local_maximum_wave_speed * (w_m[c] - w_p[c]);
-
-    return numerical_flux;
+    return ConvectionOperator::face(w_m,
+                                    w_p,
+                                    normal,
+                                    ConvectiveKernel(flow_scratch_data.material.data))
+      .outer_face_value;
   }
 
   template <int dim, typename number, int n_species>

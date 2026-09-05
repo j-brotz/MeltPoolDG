@@ -167,13 +167,20 @@ namespace MeltPoolDG::TimeIntegration
                 });
 
     // TODO: Is ci[0] correct?
+    solution_history.get_current_solution().update_ghost_values();
     if (stage_post_processing)
-      stage_post_processing(current_time + bi[0] * time_step,
-                            bi[0] * time_step,
-                            n_stages == 1 ? solution_history.get_current_solution() :
-                                            rk_register_ri,
-                            n_stages == 1 ? solution_history.get_current_solution() :
-                                            rk_register_ri);
+      {
+        rk_register_ri = 0;
+        stage_post_processing(current_time + bi[0] * time_step,
+                              bi[0] * time_step,
+                              rk_register_ri,
+                              solution_history.get_current_solution());
+        solution_history.get_current_solution() = rk_register_ri;
+        solution_history.get_current_solution().update_ghost_values();
+      }
+
+    if (n_stages == 1)
+      return;
 
     for (unsigned int stage = 1; stage < bi.size(); ++stage)
       {
