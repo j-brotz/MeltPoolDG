@@ -257,13 +257,13 @@ namespace MeltPoolDG::CompressibleFlow
           {
             is_admissible = dealii::compare_and_apply_mask<dealii::SIMDComparison::greater_than>(
               w_view.mass_fraction(species),
-              dealii::VectorizedArray<number>(0.),
+              dealii::VectorizedArray<number>(0. - std::numeric_limits<number>::epsilon()),
               is_admissible,
               dealii::VectorizedArray<number>(0.));
 
             is_admissible = dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than>(
               w_view.mass_fraction(species),
-              dealii::VectorizedArray<number>(1.),
+              dealii::VectorizedArray<number>(1. + std::numeric_limits<number>::epsilon()),
               is_admissible,
               dealii::VectorizedArray<number>(0.));
           }
@@ -274,7 +274,7 @@ namespace MeltPoolDG::CompressibleFlow
 
         is_admissible = dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than>(
           mass_fraction_sum,
-          dealii::VectorizedArray<number>(1.0),
+          dealii::VectorizedArray<number>(1. + std::numeric_limits<number>::epsilon()),
           is_admissible,
           dealii::VectorizedArray<number>(0.));
 
