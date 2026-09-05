@@ -8,8 +8,8 @@
 #include <meltpooldg/compressible_flow/multiphase_level_set_advection.hpp>
 #include <meltpooldg/cut/util.hpp>
 #include <meltpooldg/flow/darcy_damping_model.hpp>
+#include <meltpooldg/hyperbolic_pde_tools/dg_generic_convection_diffusion_worker.hpp>
 #include <meltpooldg/phase_change/evaporation_model_knight.hpp>
-#include <meltpooldg/utilities/dg_generic_convection_diffusion_worker.hpp>
 #include <meltpooldg/utilities/vector_tools.hpp>
 
 namespace MeltPoolDG::Multiphase
@@ -42,10 +42,11 @@ namespace MeltPoolDG::Multiphase
     using DiffusiveKernel = CompressibleFlow::
       DiffusiveFlux<dim, number, ConservedVariablesType, ConservedVariablesGradType, FlowFluxType>;
 
-    using ConvectionDiffusionOperator =
-      Utils::DGConvectionDiffusionOperator<dim, number, ConvectiveKernel, DiffusiveKernel>;
+    using ConvectionDiffusionOperator = HyperbolicPDETools::
+      DGConvectionDiffusionOperator<dim, number, ConvectiveKernel, DiffusiveKernel>;
 
-    using ConvectionOperator = Utils::DGConvectionOperator<dim, number, ConvectiveKernel>;
+    using ConvectionOperator =
+      HyperbolicPDETools::DGConvectionOperator<dim, number, ConvectiveKernel>;
 
     using DofValueView = CompressibleFlow::DofValueView<dim, ConservedVariablesType>;
     using DofPrimitiveValueView =

@@ -11,7 +11,7 @@
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/matrix_free_util.hpp>
 
-namespace MeltPoolDG::Utilities
+namespace MeltPoolDG::HyperbolicPDETools
 {
   /**
    * This class provides a convenient interface for evaluating subcell values on a single finite
@@ -216,4 +216,4 @@ namespace MeltPoolDG::Utilities
     unsigned int
     subcell_index_to_padded_index(unsigned int subcell_index) const;
   };
-} // namespace MeltPoolDG::Utilities
+} // namespace MeltPoolDG::HyperbolicPDETools

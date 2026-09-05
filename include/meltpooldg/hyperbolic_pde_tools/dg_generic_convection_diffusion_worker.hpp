@@ -30,7 +30,7 @@
  * - Cell contributions (volume integrals), and
  * - Face contributions (numerical fluxes across interfaces).
  */
-namespace MeltPoolDG::Utils
+namespace MeltPoolDG::HyperbolicPDETools
 {
 
   /**
@@ -313,4 +313,4 @@ namespace MeltPoolDG::Utils
     }
   };
 
-} // namespace MeltPoolDG::Utils
+} // namespace MeltPoolDG::HyperbolicPDETools

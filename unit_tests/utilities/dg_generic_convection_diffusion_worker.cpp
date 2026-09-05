@@ -2,8 +2,8 @@
 
 #include <deal.II/base/tensor.h>
 
+#include <meltpooldg/hyperbolic_pde_tools/dg_generic_convection_diffusion_worker.hpp>
 #include <meltpooldg/utilities/dealii_tensor.hpp>
-#include <meltpooldg/utilities/dg_generic_convection_diffusion_worker.hpp>
 
 #include <numbers>
 
@@ -63,9 +63,9 @@ TEST(DGConvectionDiffusionWorkerTest, ConvectiveWorker)
 
   {
     SCOPED_TRACE("Cell worker");
-    const FakeFluxType flux =
-      MeltPoolDG::Utils::DGConvectionOperator<dim, number, ConvectiveKernelFake, number>::cell(
-        conserved_variables, kernel);
+    const FakeFluxType flux = MeltPoolDG::HyperbolicPDETools::
+      DGConvectionOperator<dim, number, ConvectiveKernelFake, number>::cell(conserved_variables,
+                                                                            kernel);
 
     FakeFluxType expected_flux;
     expected_flux[0] = FakeFluxType::value_type({1., 2., 3.});
@@ -80,9 +80,11 @@ TEST(DGConvectionDiffusionWorkerTest, ConvectiveWorker)
     FakeConservedType              u_p = 2. * conserved_variables;
     dealii::Tensor<1, dim, number> normal(
       {1. / std::numbers::sqrt3, 1. / std::numbers::sqrt3, 1. / std::numbers::sqrt3});
-    const auto [flux_m, flux_p] =
-      MeltPoolDG::Utils::DGConvectionOperator<dim, number, ConvectiveKernelFake, number>::face(
-        u_m, u_p, normal, kernel);
+    const auto [flux_m, flux_p] = MeltPoolDG::HyperbolicPDETools::
+      DGConvectionOperator<dim, number, ConvectiveKernelFake, number>::face(u_m,
+                                                                            u_p,
+                                                                            normal,
+                                                                            kernel);
 
     FakeConservedType expected_flux_m({-4.1961524227066329, -8.3923048454132658});
     FakeConservedType expected_flux_p = -expected_flux_m;
@@ -106,9 +108,10 @@ TEST(DGConvectionDiffusionWorkerTest, DiffusiveWorker)
 
   {
     SCOPED_TRACE("Cell worker");
-    const FakeFluxType flux =
-      MeltPoolDG::Utils::DGDiffusionOperator<dim, number, DiffusiveKernelFake, number>::cell(
-        conserved_variables, grad_conserved_variables, kernel);
+    const FakeFluxType flux = MeltPoolDG::HyperbolicPDETools::
+      DGDiffusionOperator<dim, number, DiffusiveKernelFake, number>::cell(conserved_variables,
+                                                                          grad_conserved_variables,
+                                                                          kernel);
 
     FakeFluxType expected_flux;
     expected_flux[0] =
@@ -128,9 +131,9 @@ TEST(DGConvectionDiffusionWorkerTest, DiffusiveWorker)
     dealii::Tensor<1, dim, number> normal(
       {1. / std::numbers::sqrt3, 1. / std::numbers::sqrt3, 1. / std::numbers::sqrt3});
 
-    constexpr number penalty_parameter = 3.0;
-    const auto [flux_m, flux_p, grad_flux_m, grad_flux_p] =
-      MeltPoolDG::Utils::DGDiffusionOperator<dim, number, DiffusiveKernelFake, number>::face(
+    constexpr number penalty_parameter                    = 3.0;
+    const auto [flux_m, flux_p, grad_flux_m, grad_flux_p] = MeltPoolDG::HyperbolicPDETools::
+      DGDiffusionOperator<dim, number, DiffusiveKernelFake, number>::face(
         u_m, u_p, grad_u_m, grad_u_p, normal, penalty_parameter, kernel);
 
     FakeConservedType expected_flux_m({22.364916731037088, 44.729833462074176});
@@ -170,15 +173,15 @@ TEST(DGConvectionDiffusionWorkerTest, ConvectiveDiffusiveWorker)
 
   {
     SCOPED_TRACE("Cell worker");
-    const FakeFluxType flux =
-      MeltPoolDG::Utils::DGConvectionDiffusionOperator<dim,
-                                                       number,
-                                                       ConvectiveKernelFake,
-                                                       DiffusiveKernelFake,
-                                                       number>::cell(conserved_variables,
-                                                                     grad_conserved_variables,
-                                                                     convective_kernel,
-                                                                     diffusive_kernel);
+    const FakeFluxType flux = MeltPoolDG::HyperbolicPDETools::DGConvectionDiffusionOperator<
+      dim,
+      number,
+      ConvectiveKernelFake,
+      DiffusiveKernelFake,
+      number>::cell(conserved_variables,
+                    grad_conserved_variables,
+                    convective_kernel,
+                    diffusive_kernel);
 
     FakeFluxType expected_flux;
     expected_flux[0] =
@@ -200,18 +203,18 @@ TEST(DGConvectionDiffusionWorkerTest, ConvectiveDiffusiveWorker)
 
     constexpr number penalty_parameter = 3.0;
     const auto [flux_m, flux_p, grad_flux_m, grad_flux_p] =
-      MeltPoolDG::Utils::DGConvectionDiffusionOperator<dim,
-                                                       number,
-                                                       ConvectiveKernelFake,
-                                                       DiffusiveKernelFake,
-                                                       number>::face(u_m,
-                                                                     u_p,
-                                                                     grad_u_m,
-                                                                     grad_u_p,
-                                                                     normal,
-                                                                     penalty_parameter,
-                                                                     convective_kernel,
-                                                                     diffusive_kernel);
+      MeltPoolDG::HyperbolicPDETools::DGConvectionDiffusionOperator<dim,
+                                                                    number,
+                                                                    ConvectiveKernelFake,
+                                                                    DiffusiveKernelFake,
+                                                                    number>::face(u_m,
+                                                                                  u_p,
+                                                                                  grad_u_m,
+                                                                                  grad_u_p,
+                                                                                  normal,
+                                                                                  penalty_parameter,
+                                                                                  convective_kernel,
+                                                                                  diffusive_kernel);
 
     FakeConservedType expected_flux_m({18.168764308330456, 36.337528616660911});
     FakeConservedType expected_flux_p = -expected_flux_m;

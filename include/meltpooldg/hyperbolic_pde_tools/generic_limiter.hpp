@@ -12,11 +12,11 @@
 #include <deal.II/matrix_free/matrix_free.h>
 #include <deal.II/matrix_free/operators.h>
 
-#include "meltpooldg/utilities/fe_subcell_evaluation.hpp"
+#include <meltpooldg/hyperbolic_pde_tools/fe_subcell_evaluation.hpp>
+#include <meltpooldg/hyperbolic_pde_tools/fe_subcell_evaluation.templates.hpp>
+#include <meltpooldg/hyperbolic_pde_tools/limiter_data.hpp>
 #include <meltpooldg/post_processing/generic_data_out.hpp>
 #include <meltpooldg/utilities/dealii_tensor.hpp>
-#include <meltpooldg/utilities/fe_subcell_evaluation.templates.hpp>
-#include <meltpooldg/utilities/limiters.templates.hpp>
 #include <meltpooldg/utilities/matrix_free_util.hpp>
 
 #include <meltpooldg/utilities/cpp23_functions.h>
@@ -29,7 +29,7 @@
 #include <optional>
 #include <utility>
 
-namespace MeltPoolDG::Utilities
+namespace MeltPoolDG::HyperbolicPDETools
 {
 
   template <int dim, typename cell_data_type>
@@ -813,4 +813,4 @@ namespace MeltPoolDG::Utilities
 
     data_out.add_element_wise_data_vector(troubled_cells_output, "limited_cells");
   }
-} // namespace MeltPoolDG::Utilities
+} // namespace MeltPoolDG::HyperbolicPDETools

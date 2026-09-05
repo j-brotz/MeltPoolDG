@@ -15,11 +15,11 @@
 #include <meltpooldg/compressible_flow/dg_operator_implicit_explicit.hpp>
 #include <meltpooldg/compressible_flow/operation_scratch_data.hpp>
 #include <meltpooldg/compressible_flow/state_views_n_species.hpp>
+#include <meltpooldg/hyperbolic_pde_tools/generic_limiter.hpp>
 #include <meltpooldg/species_transport/output_post_processor.hpp>
 #include <meltpooldg/time_integration/bdf_time_integration.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/fe_util.hpp>
-#include <meltpooldg/utilities/generic_limiter.hpp>
 #include <meltpooldg/utilities/vector_tools.templates.hpp>
 
 #include <algorithm>
