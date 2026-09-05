@@ -128,22 +128,25 @@ namespace MeltPoolDG::CompressibleFlow
 
     std::function<void(number, number, VectorType &, const VectorType &)> stage_post_processing =
       [&](number, number time_step, VectorType &dst, const VectorType &src) {
-        const std::function<FluxType<dim, number, n_species>(
-          const ConservedVariablesType<dim, number, n_species> &w_m,
-          const ConservedVariablesType<dim, number, n_species> &w_p)>
-          numerical_flux = [&](const ConservedVariablesType<dim, number, n_species> &w_m,
-                               const ConservedVariablesType<dim, number, n_species> &w_p) {
-            return std::visit(
-              [&](auto &comp_flow_operator) {
-                using T = std::decay_t<decltype(comp_flow_operator)>;
-                if constexpr (std::is_same_v<DGOperatorExplicit<dim, number, n_species>, T>)
-                  return comp_flow_operator.compute_numerical_flux(w_m, w_p);
-                else
-                  AssertThrow(false, dealii::ExcInternalError());
-                return FluxType<dim, number, n_species>(); // to avoid compiler warning
-              },
-              flow_operator);
-          };
+        const std::function<FaceFluxType<dim, number, n_species>(
+          const ConservedVariablesType<dim, number, n_species>          &w_m,
+          const ConservedVariablesType<dim, number, n_species>          &w_p,
+          const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal)>
+          numerical_flux =
+            [&](const ConservedVariablesType<dim, number, n_species>          &w_m,
+                const ConservedVariablesType<dim, number, n_species>          &w_p,
+                const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal) {
+              return std::visit(
+                [&](auto &comp_flow_operator) {
+                  using T = std::decay_t<decltype(comp_flow_operator)>;
+                  if constexpr (std::is_same_v<DGOperatorExplicit<dim, number, n_species>, T>)
+                    return comp_flow_operator.compute_numerical_flux(w_m, w_p, normal);
+                  else
+                    AssertThrow(false, dealii::ExcInternalError());
+                  return FaceFluxType<dim, number, n_species>(); // to avoid compiler warning
+                },
+                flow_operator);
+            };
 
         const std::function<dealii::VectorizedArray<number>(
           const ConservedVariablesType<dim, number, n_species> &w)>
@@ -196,7 +199,6 @@ namespace MeltPoolDG::CompressibleFlow
           return w_p;
         };
 
-        std::cout << "Applying limiter with time step: " << time_step << std::endl;
         if (flow_scratch_data.flow_data.limiter_data.apply_limiter)
           limiter.apply_limiting(
             time_step, numerical_flux, get_boundary_value, dst, src, admissibility_check);

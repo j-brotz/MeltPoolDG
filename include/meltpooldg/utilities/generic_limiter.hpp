@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <functional>
+#include <iostream>
 #include <limits>
 #include <optional>
 #include <utility>
@@ -115,7 +116,7 @@ namespace MeltPoolDG::Utilities
     using VectorType          = dealii::LinearAlgebra::distributed::Vector<number>;
     using VectorizedArrayType = dealii::VectorizedArray<number>;
     using ValueType           = dealii::Tensor<1, n_components, VectorizedArrayType>;
-    using FluxType = dealii::Tensor<1, n_components, dealii::Tensor<1, dim, VectorizedArrayType>>;
+    using FluxType            = dealii::Tensor<1, n_components, VectorizedArrayType>;
 
   public:
     Limiter(const LimiterData<number>             &limiter_data,
@@ -143,7 +144,10 @@ namespace MeltPoolDG::Utilities
     unsigned int
     apply_limiting(
       const number                                                              time_step,
-      const std::function<FluxType(const ValueType &w_m, const ValueType &w_p)> numerical_flux,
+      const std::function<FluxType(
+        const ValueType                                               &w_m,
+        const ValueType                                               &w_p,
+        const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal)> numerical_flux,
       std::function<ValueType(const dealii::Point<dim, dealii::VectorizedArray<number>> &,
                               dealii::types::boundary_id,
                               const ValueType &)>                               get_boundary_value,
@@ -677,7 +681,10 @@ namespace MeltPoolDG::Utilities
   unsigned int
   Limiter<dim, n_components, number>::apply_limiting(
     const number                                                              time_step,
-    const std::function<FluxType(const ValueType &w_m, const ValueType &w_p)> numerical_flux,
+    const std::function<FluxType(
+      const ValueType                                               &w_m,
+      const ValueType                                               &w_p,
+      const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal)> numerical_flux,
     std::function<ValueType(const dealii::Point<dim, dealii::VectorizedArray<number>> &,
                             dealii::types::boundary_id,
                             const ValueType &)>                               get_boundary_value,
@@ -685,13 +692,15 @@ namespace MeltPoolDG::Utilities
     const VectorType                                                         &solution,
     const std::function<dealii::VectorizedArray<number>(const ValueType &)>  &admissibility_check)
   {
+    limited_solution = solution;
     if (limited_solution.has_ghost_elements())
       limited_solution.zero_out_ghost_values();
 
     const unsigned int n_cells_to_limit =
       mark_cells_for_limiting(solution, get_boundary_value, admissibility_check);
 
-    std::cout << "Number of cells to limit: " << n_cells_to_limit << std::endl;
+    if (dealii::Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0)
+      std::cout << "Number of cells to limit: " << n_cells_to_limit << std::endl;
 
     std::function<void(const dealii::MatrixFree<dim, number> &,
                        VectorType &,
@@ -737,19 +746,16 @@ namespace MeltPoolDG::Utilities
                     // by "own vs. neighbor". On the negative-direction (e.g. west) face, the
                     // neighbor is the left state and our own subcell is the right state; on the
                     // positive-direction (e.g. east) face it's the other way around.
-                    const bool      is_negative_side = (subcell_face % 2 == 0);
                     const ValueType neighbor =
                       subcell_evaluator.get_subcell_neighbor_value(subcell, subcell_face);
-                    const FluxType flux = is_negative_side ? numerical_flux(neighbor, w_old) :
-                                                             numerical_flux(w_old, neighbor);
-
                     const dealii::Tensor<1, dim, VectorizedArrayType> normal =
                       subcell_evaluator.subcell_face_normal(subcell, subcell_face);
+                    const FluxType flux = numerical_flux(w_old, neighbor, normal);
+
                     for (unsigned int c = 0; c < n_components; ++c)
-                      for (unsigned int d = 0; d < dim; ++d)
-                        fv_subcell_average[c] -=
-                          prefactor * subcell_evaluator.subcell_face_size(subcell, subcell_face) *
-                          flux[c][d] * normal[d];
+                      fv_subcell_average[c] -=
+                        prefactor * subcell_evaluator.subcell_face_size(subcell, subcell_face) *
+                        flux[c];
                   }
 
                 ValueType w_new = subcell_evaluator.get_subcell_value(subcell);

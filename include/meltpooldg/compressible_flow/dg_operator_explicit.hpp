@@ -96,8 +96,11 @@ namespace MeltPoolDG::CompressibleFlow
     void
     add_external_force(std::shared_ptr<ExternalFlowForce<dim, number, n_species>> external_force);
 
-    FlowFluxType
-    compute_numerical_flux(const ConservedVariables &w_m, const ConservedVariables &w_p) const;
+    FaceFluxType<dim, number, n_species>
+    compute_numerical_flux(
+      const ConservedVariables                                      &w_m,
+      const ConservedVariables                                      &w_p,
+      const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal) const;
 
   private:
     /// Scratch data for compressible flows
