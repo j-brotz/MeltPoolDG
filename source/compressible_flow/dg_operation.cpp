@@ -155,7 +155,7 @@ namespace MeltPoolDG::CompressibleFlow
                                      n_species,
                                      number,
                                      const ConservedVariablesType<dim, number, n_species>>
-              flux_view(w, flow_scratch_data.material.data);
+              flux_view(w, flow_scratch_data.material);
             return is_physical_admissible<number, decltype(flux_view), n_species>(flux_view);
           };
 
@@ -193,8 +193,8 @@ namespace MeltPoolDG::CompressibleFlow
             point,
             dummy_normal,
             boundary_id,
-            DofReaderType(w_m, grad_w_m, flow_scratch_data.material.data),
-            DofWriteType(w_p, grad_w_p, flow_scratch_data.material.data));
+            DofReaderType(w_m, grad_w_m, flow_scratch_data.material),
+            DofWriteType(w_p, grad_w_p, flow_scratch_data.material));
 
           return w_p;
         };
