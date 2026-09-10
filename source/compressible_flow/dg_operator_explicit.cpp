@@ -135,7 +135,7 @@ namespace MeltPoolDG::CompressibleFlow
     // TODO: Reuse existing code
     // TODO: Viscous flux terms
 
-    if (is_viscous_flow<number, n_species>(flow_scratch_data.material.data))
+    if (is_viscous_flow<number, n_species>(flow_scratch_data.material))
       {
         // TODO: That does not seem to be correct
         return ConvectionDiffusionOperator::face(
@@ -145,8 +145,8 @@ namespace MeltPoolDG::CompressibleFlow
                  ConservedVariablesGradientType<dim, number, n_species>(),
                  normal,
                  0.,
-                 ConvectiveKernel(flow_scratch_data.material.data),
-                 DiffusiveKernel(flow_scratch_data.material.data))
+                 ConvectiveKernel(flow_scratch_data.material),
+                 DiffusiveKernel(flow_scratch_data.material))
           .outer_face_value;
       }
     else
@@ -154,14 +154,11 @@ namespace MeltPoolDG::CompressibleFlow
         return ConvectionOperator::face(w_m,
                                         w_p,
                                         normal,
-                                        ConvectiveKernel(flow_scratch_data.material.data))
+                                        ConvectiveKernel(flow_scratch_data.material))
           .outer_face_value;
       }
 
-    return ConvectionOperator::face(w_m,
-                                    w_p,
-                                    normal,
-                                    ConvectiveKernel(flow_scratch_data.material.data))
+    return ConvectionOperator::face(w_m, w_p, normal, ConvectiveKernel(flow_scratch_data.material))
       .outer_face_value;
   }
 
