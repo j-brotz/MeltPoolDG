@@ -202,6 +202,8 @@ namespace MeltPoolDG::CompressibleFlow
         if (flow_scratch_data.flow_data.limiter_data.apply_limiter)
           limiter.apply_limiting(
             time_step, numerical_flux, get_boundary_value, dst, src, admissibility_check);
+        else
+          dst = src;
       };
 
     time_integrator->perform_time_step(current_time,
