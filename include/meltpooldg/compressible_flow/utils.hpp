@@ -16,12 +16,15 @@
 #include <deal.II/lac/affine_constraints.h>
 #include <deal.II/lac/la_parallel_vector.h>
 
-#include "meltpooldg/compressible_flow/material.hpp"
 #include <meltpooldg/compressible_flow/data_types.hpp>
+#include <meltpooldg/compressible_flow/material.hpp>
 #include <meltpooldg/compressible_flow/state_views.hpp>
 #include <meltpooldg/core/scratch_data.hpp>
 #include <meltpooldg/utilities/better_enum.hpp>
 #include <meltpooldg/utilities/matrix_free_util.hpp>
+
+#include <bitset>
+#include <string>
 
 namespace MeltPoolDG::CompressibleFlow
 {
@@ -48,6 +51,26 @@ namespace MeltPoolDG::CompressibleFlow
     const std::string                                      &domain_representation_type,
     const unsigned int                                      dof_index      = 0,
     const Number                                            scaling_factor = 1.0);
+
+  /**
+   * This function checks whether the given primitive variable state is physically admissible. The
+   * check is performed for each lane of the vectorized array, and a bitset is returned indicating
+   * which lanes are admissible. For admissible lanes, the corresponding bit is set to 1, while for
+   * non-admissible lanes, the bit is set to 0.
+   *
+   * A state is considered physically admissible if the density and the pressure are positive. For
+   * multi-species flows, the mass fractions of all species must be between 0 and 1, and their sum
+   * must be equal to 1.
+   *
+   * @param w_view View of the primitive variable state to be checked.
+   * @param n_active_lanes Number of active lanes in the vectorized array to be checked. Non-active
+   * lanes are set to zero in the returned bitset.
+   */
+  template <typename number, int n_species, typename PrimitiveVariablesView>
+  inline std::bitset<dealii::VectorizedArray<number>::size()>
+  physical_admissibility_mask(
+    const PrimitiveVariablesView &w_view,
+    const unsigned int            n_active_lanes = dealii::VectorizedArray<number>::size());
 
   /**
    * @brief Update the primitive variable solution according to the current solution vector.
@@ -229,6 +252,59 @@ namespace MeltPoolDG::CompressibleFlow
         return true;
     return false;
   }
+
+  template <typename number, int n_species, typename PrimitiveVariablesView>
+  inline std::bitset<dealii::VectorizedArray<number>::size()>
+  physical_admissibility_mask(const PrimitiveVariablesView &w_view,
+                              const unsigned int            n_active_lanes)
+  {
+    dealii::VectorizedArray<number> is_admissible = 1.;
+
+    const auto require_greater_than = [&](const dealii::VectorizedArray<number> &value,
+                                          const dealii::VectorizedArray<number> &threshold) {
+      is_admissible = dealii::compare_and_apply_mask<dealii::SIMDComparison::greater_than>(
+        value, threshold, is_admissible, dealii::VectorizedArray<number>(0.));
+    };
+
+    const auto require_less_than = [&](const dealii::VectorizedArray<number> &value,
+                                       const dealii::VectorizedArray<number> &threshold) {
+      is_admissible = dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than>(
+        value, threshold, is_admissible, dealii::VectorizedArray<number>(0.));
+    };
+
+    require_greater_than(w_view.density(), dealii::VectorizedArray<number>(0.));
+    require_greater_than(w_view.pressure(), dealii::VectorizedArray<number>(0.));
+
+    if constexpr (n_species > 1)
+      {
+        dealii::VectorizedArray<number> tolerance = 1e-12;
+        for (unsigned int species = 0; species < n_species; ++species)
+          {
+            // mass fractions must be between 0 and 1, with a small tolerance to account for
+            // numerical errors
+            require_greater_than(w_view.mass_fraction(species), -tolerance);
+            require_less_than(w_view.mass_fraction(species),
+                              dealii::VectorizedArray<number>(1.) + tolerance);
+          }
+
+        // sum of mass fractions must be equal to 1, with a small tolerance to account for numerical
+        // errors
+        dealii::VectorizedArray<number> mass_fraction_sum = 0.0;
+        for (unsigned int species = 0; species < n_species; ++species)
+          mass_fraction_sum += w_view.mass_fraction(species);
+
+        is_admissible =
+          require_greater_than(mass_fraction_sum, dealii::VectorizedArray<number>(1.) - tolerance);
+        is_admissible =
+          require_less_than(mass_fraction_sum, dealii::VectorizedArray<number>(1.) + tolerance);
+      }
+
+    std::bitset<dealii::VectorizedArray<number>::size()> admissibility_mask;
+    for (unsigned int lane = 0; lane < n_active_lanes; ++lane)
+      admissibility_mask.set(lane, is_admissible[lane] > 0.);
+    return admissibility_mask;
+  }
+
 
   template <int dim, typename Number>
   void
