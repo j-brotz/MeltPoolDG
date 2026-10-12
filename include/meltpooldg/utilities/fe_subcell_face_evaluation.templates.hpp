@@ -29,7 +29,7 @@ namespace MeltPoolDG
     : matrix_free(matrix_free)
     , is_interior_face(is_interior_face)
     , fe_cell_evaluator(matrix_free, dof_no, quad_no)
-    , fe_face_evaluator(matrix_free, true, dof_no, quad_no)
+    , fe_face_evaluator(matrix_free, is_interior_face, dof_no, quad_no)
   {
     setup_internal_data_structures();
   }
@@ -183,6 +183,17 @@ namespace MeltPoolDG
     Assert(is_reinitialized, dealii::ExcNotInitialized());
     AssertIndexRange(subcell_index, n_subcells_face);
     return subcell_locations[subcell_index];
+  }
+
+  template <int dim, int n_components, typename number>
+  auto
+  FESubcellFaceEvaluation<dim, n_components, number>::subcell_face_location(
+    const unsigned int subcell_index) const -> dealii::Point<dim, VectorizedArrayType>
+  {
+    Assert(is_reinitialized, dealii::ExcNotInitialized());
+    AssertIndexRange(subcell_index, n_subcells_face);
+    AssertThrow(false, dealii::ExcNotImplemented());
+    return dealii::Point<dim, VectorizedArrayType>();
   }
 
   template <int dim, int n_components, typename number>

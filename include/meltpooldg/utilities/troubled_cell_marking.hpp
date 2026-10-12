@@ -63,7 +63,7 @@ namespace MeltPoolDG
                   subcell_state = fe_subcell_evaluator.get_value(subcell);
                 cells_marked |= ~admissibility_check(subcell_state);
               }
-            marked_cells[cell] = cells_marked;
+            fe_subcell_evaluator.set_cell_data(marked_cells, cells_marked);
           }
       };
 

@@ -293,10 +293,8 @@ namespace MeltPoolDG::CompressibleFlow
         for (unsigned int species = 0; species < n_species; ++species)
           mass_fraction_sum += w_view.mass_fraction(species);
 
-        is_admissible =
-          require_greater_than(mass_fraction_sum, dealii::VectorizedArray<number>(1.) - tolerance);
-        is_admissible =
-          require_less_than(mass_fraction_sum, dealii::VectorizedArray<number>(1.) + tolerance);
+        require_greater_than(mass_fraction_sum, dealii::VectorizedArray<number>(1.) - tolerance);
+        require_less_than(mass_fraction_sum, dealii::VectorizedArray<number>(1.) + tolerance);
       }
 
     std::bitset<dealii::VectorizedArray<number>::size()> admissibility_mask;

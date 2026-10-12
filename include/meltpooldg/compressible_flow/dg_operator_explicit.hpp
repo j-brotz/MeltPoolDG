@@ -11,6 +11,7 @@
 #include <meltpooldg/compressible_flow/viscous_kernels.hpp>
 #include <meltpooldg/utilities/dg_generic_convection_diffusion_worker.hpp>
 
+#include <bitset>
 #include <functional>
 #include <memory>
 #include <utility>
@@ -88,6 +89,18 @@ namespace MeltPoolDG::CompressibleFlow
                    const VectorType                                      &src,
                    const std::function<void(unsigned int, unsigned int)> &func) const;
 
+    void
+    apply_fv_subcell_limiter(number            time,
+                             number            time_step,
+                             VectorType       &dst,
+                             const VectorType &src) const;
+
+    void
+    prepare_fv_subcell_limiter(const VectorType &old_solution)
+    {
+      old_solution_cache = old_solution;
+    }
+
     /**
      * Add additional fluid forces provided by the user of the class (e.g. gravity, ...).
      *
@@ -103,6 +116,12 @@ namespace MeltPoolDG::CompressibleFlow
     /// This pointer may hold an instance of an external fluid force contribution
     /// (e.g., gravity, body forces, or user - defined source terms)
     std::vector<std::shared_ptr<ExternalFlowForce<dim, number, n_species>>> external_forces;
+
+    ///
+    mutable dealii::AlignedVector<std::bitset<dealii::VectorizedArray<number>::size()>>
+      troubled_cell_mask;
+
+    dealii::LinearAlgebra::distributed::Vector<number> old_solution_cache;
 
     /// Current time step size
     mutable number current_time_step;
@@ -157,5 +176,26 @@ namespace MeltPoolDG::CompressibleFlow
                               VectorType                                  &dst,
                               const VectorType                            &src,
                               const std::pair<unsigned int, unsigned int> &face_range) const;
+
+    void
+    fv_subcell_limiter_local_apply_cell(
+      const dealii::MatrixFree<dim, number>       &matrix_free,
+      VectorType                                  &dst,
+      const VectorType                            &old_solution,
+      const std::pair<unsigned int, unsigned int> &cell_range) const;
+
+    void
+    fv_subcell_limiter_local_apply_face(
+      const dealii::MatrixFree<dim, number>       &matrix_free,
+      VectorType                                  &dst,
+      const VectorType                            &old_solution,
+      const std::pair<unsigned int, unsigned int> &face_range) const;
+
+    void
+    fv_subcell_limiter_local_apply_boundary_face(
+      const dealii::MatrixFree<dim, number>       &matrix_free,
+      VectorType                                  &dst,
+      const VectorType                            &old_solution,
+      const std::pair<unsigned int, unsigned int> &face_range) const;
   };
 } // namespace MeltPoolDG::CompressibleFlow

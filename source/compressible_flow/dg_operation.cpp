@@ -120,7 +120,7 @@ namespace MeltPoolDG::CompressibleFlow
     flow_scratch_data.solution_history.update_ghost_values();
 
     std::function<void(number, number, VectorType &, const VectorType &)> stage_pre_processing =
-      [&](number time, number, VectorType &, const VectorType &) {
+      [&](number time, number, VectorType &, const VectorType &current_solution) {
         ScopedName         scope_stage_pre("stage_pre_processing");
         TimerOutput::Scope t(flow_scratch_data.scratch_data.get_timer(), scope_stage_pre);
         flow_scratch_data.boundary_conditions.update_boundary_conditions(time);
@@ -132,12 +132,32 @@ namespace MeltPoolDG::CompressibleFlow
               comp_flow_operator.set_preconditioner_time_step(time_step);
           },
           flow_operator);
+
+        std::visit(
+          [&](auto &comp_flow_operator) {
+            using T = std::decay_t<decltype(comp_flow_operator)>;
+
+            if constexpr (std::is_same_v<DGOperatorExplicit<dim, number, n_species>, T>)
+              {
+                if (flow_scratch_data.flow_data.limiter_data.apply_limiter)
+                  comp_flow_operator.prepare_fv_subcell_limiter(current_solution);
+              }
+            else
+              {
+                AssertThrow(
+                  false,
+                  dealii::ExcNotImplemented(
+                    "The finite volume subcell limiter is only implemented for explicit time integration."));
+              }
+          },
+          flow_operator);
       };
 
     std::function<void(number, number, VectorType &, const VectorType &)> stage_post_processing =
-      [&](number, number, VectorType &dst, const VectorType &src) {
+      [&](number time, number time_step, VectorType &dst, const VectorType &src) {
         ScopedName         scope_stage_post("stage_post_processing");
         TimerOutput::Scope t(flow_scratch_data.scratch_data.get_timer(), scope_stage_post);
+        /*
         Utilities::apply_minmod_type_limiter<dim, n_conserved_variables<dim, n_species>, number>(
           {flow_scratch_data.scratch_data.get_matrix_free(),
            flow_scratch_data.dof_idx,
@@ -145,6 +165,25 @@ namespace MeltPoolDG::CompressibleFlow
           dst,
           src,
           flow_scratch_data.flow_data.limiter_data);
+        */
+        std::visit(
+          [&](auto &comp_flow_operator) {
+            using T = std::decay_t<decltype(comp_flow_operator)>;
+
+            if constexpr (std::is_same_v<DGOperatorExplicit<dim, number, n_species>, T>)
+              {
+                if (flow_scratch_data.flow_data.limiter_data.apply_limiter)
+                  comp_flow_operator.apply_fv_subcell_limiter(time, time_step, dst, src);
+              }
+            else
+              {
+                AssertThrow(
+                  false,
+                  dealii::ExcNotImplemented(
+                    "The finite volume subcell limiter is only implemented for explicit time integration."));
+              }
+          },
+          flow_operator);
       };
 
     time_integrator->perform_time_step(current_time,

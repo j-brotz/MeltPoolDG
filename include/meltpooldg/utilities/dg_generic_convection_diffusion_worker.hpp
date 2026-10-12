@@ -4,6 +4,7 @@
 #include <deal.II/base/vectorization.h>
 
 #include <meltpooldg/utilities/dealii_tensor.hpp>
+#include <meltpooldg/utilities/riemann_solvers.hpp>
 
 /**
  * @file
@@ -96,7 +97,7 @@ namespace MeltPoolDG::Utils
      *
      * @param u_m Local values of the conserved variables on the inner face.
      * @param u_p Local values of the conserved variables on the outer face.
-     * @param normal Outer facing normal vector at the face quadrature point.
+     * @param normal Outer facing unit normal vector at the face quadrature point.
      * @param kernel User-provided kernel defining how to compute the convective flux from the
      * local solution values.
      *
@@ -109,13 +110,13 @@ namespace MeltPoolDG::Utils
          const dealii::Tensor<1, dim, VectorizedArrayType> &normal,
          const Kernel                                      &kernel)
     {
-      const FluxType flux_m = kernel.flux(u_m);
-      const FluxType flux_p = kernel.flux(u_p);
-
-      const auto local_maximum_wave_speed = kernel.local_maximum_wave_speed(u_m, u_p);
-
-      const auto lax_friedrichs_flux = contract_average_tensor_with_vector(flux_m, flux_p, normal) +
-                                       0.5 * local_maximum_wave_speed * (u_m - u_p);
+      const auto lax_friedrichs_flux =
+        MeltPoolDG::lax_friedrichs_flux(u_m,
+                                        u_p,
+                                        kernel.flux(u_m),
+                                        kernel.flux(u_p),
+                                        normal,
+                                        kernel.local_maximum_wave_speed(u_m, u_p));
 
       return FaceFlux{.inner_face_value = -lax_friedrichs_flux,
                       .outer_face_value = lax_friedrichs_flux};
