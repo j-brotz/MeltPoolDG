@@ -137,7 +137,8 @@ namespace MeltPoolDG::CompressibleFlow
                 new_solution.reinit(cell);
 
                 const std::bitset<dealii::VectorizedArray<number>::size()> cell_mask =
-                  new_solution.read_cell_data(troubled_cell_mask);
+                  vectorized_mask_to_bitset(new_solution.read_cell_data(troubled_cell_mask),
+                                            matrix_free.n_active_entries_per_cell_batch(cell));
 
                 if (cell_mask.none())
                   continue;
@@ -434,7 +435,8 @@ namespace MeltPoolDG::CompressibleFlow
         subcell_evaluation.reinit(cell);
 
         const std::bitset<dealii::VectorizedArray<number>::size()> mask =
-          subcell_evaluation.read_cell_data(troubled_cell_mask);
+          vectorized_mask_to_bitset(subcell_evaluation.read_cell_data(troubled_cell_mask),
+                                    matrix_free.n_active_entries_per_cell_batch(cell));
         if (mask.none())
           continue;
 
@@ -503,8 +505,10 @@ namespace MeltPoolDG::CompressibleFlow
         phi_m.reinit(face);
         phi_p.reinit(face);
 
+        const unsigned int n_active_lanes = matrix_free.n_active_entries_per_face_batch(face);
         const std::bitset<dealii::VectorizedArray<number>::size()> mask =
-          phi_m.read_cell_data(troubled_cell_mask) | phi_p.read_cell_data(troubled_cell_mask);
+          vectorized_mask_to_bitset(phi_m.read_cell_data(troubled_cell_mask), n_active_lanes) |
+          vectorized_mask_to_bitset(phi_p.read_cell_data(troubled_cell_mask), n_active_lanes);
         if (mask.none())
           continue;
 
@@ -566,7 +570,8 @@ namespace MeltPoolDG::CompressibleFlow
       {
         phi_m.reinit(face);
         const std::bitset<dealii::VectorizedArray<number>::size()> mask =
-          phi_m.read_cell_data(troubled_cell_mask);
+          vectorized_mask_to_bitset(phi_m.read_cell_data(troubled_cell_mask),
+                                    matrix_free.n_active_entries_per_face_batch(face));
         if (mask.none())
           continue;
 

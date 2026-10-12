@@ -11,7 +11,6 @@
 #include <meltpooldg/compressible_flow/viscous_kernels.hpp>
 #include <meltpooldg/utilities/dg_generic_convection_diffusion_worker.hpp>
 
-#include <bitset>
 #include <functional>
 #include <memory>
 #include <utility>
@@ -117,9 +116,9 @@ namespace MeltPoolDG::CompressibleFlow
     /// (e.g., gravity, body forces, or user - defined source terms)
     std::vector<std::shared_ptr<ExternalFlowForce<dim, number, n_species>>> external_forces;
 
-    ///
-    mutable dealii::AlignedVector<std::bitset<dealii::VectorizedArray<number>::size()>>
-      troubled_cell_mask;
+    /// Troubled cell markers with one vectorized array per cell batch, including ghost cell
+    /// batches: lane v is 1 if the cell is troubled and 0 otherwise.
+    mutable dealii::AlignedVector<dealii::VectorizedArray<number>> troubled_cell_mask;
 
     dealii::LinearAlgebra::distributed::Vector<number> old_solution_cache;
 
