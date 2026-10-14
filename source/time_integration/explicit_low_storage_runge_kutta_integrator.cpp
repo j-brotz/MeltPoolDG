@@ -147,7 +147,7 @@ namespace MeltPoolDG::TimeIntegration
     rk_register_ri = 0.;
     if (stage_pre_processing)
       stage_pre_processing(current_time,
-                           ci[0] * time_step,
+                           n_stages == 1 ? time_step : ci[0] * time_step,
                            rk_register_ri,
                            solution_history.get_current_solution());
     compute_rhs(current_time,
@@ -167,8 +167,8 @@ namespace MeltPoolDG::TimeIntegration
                 });
 
     if (stage_post_processing)
-      stage_post_processing(current_time + ci[0] * time_step,
-                            ci[0] * time_step,
+      stage_post_processing(current_time + (n_stages == 1 ? time_step : ci[0] * time_step),
+                            n_stages == 1 ? time_step : ci[0] * time_step,
                             n_stages == 1 ? solution_history.get_current_solution() :
                                             rk_register_ri,
                             n_stages == 1 ? solution_history.get_current_solution() :

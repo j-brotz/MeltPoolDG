@@ -122,7 +122,8 @@ namespace MeltPoolDG::CompressibleFlow
     /// batches: lane v is 1 if the cell is troubled and 0 otherwise.
     mutable ParallelDistributedCellData<dim, number> troubled_cell_mask;
 
-    dealii::LinearAlgebra::distributed::Vector<number> old_solution_cache;
+    dealii::LinearAlgebra::distributed::Vector<number>         old_solution_cache;
+    mutable dealii::LinearAlgebra::distributed::Vector<number> fv_rhs;
 
     /// Current time step size
     mutable number current_time_step;

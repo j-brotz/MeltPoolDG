@@ -37,6 +37,7 @@ namespace MeltPoolDG::CompressibleFlow
       {
         troubled_cell_mask.reinit(flow_scratch_data.scratch_data.get_matrix_free());
         flow_scratch_data.scratch_data.get_matrix_free().initialize_dof_vector(old_solution_cache);
+        flow_scratch_data.scratch_data.get_matrix_free().initialize_dof_vector(fv_rhs);
       }
   }
 
@@ -82,11 +83,18 @@ namespace MeltPoolDG::CompressibleFlow
 
   template <int dim, typename number, int n_species>
   void
-  DGOperatorExplicit<dim, number, n_species>::apply_fv_subcell_limiter(number,
-                                                                       number,
-                                                                       VectorType       &dst,
-                                                                       const VectorType &src) const
+  DGOperatorExplicit<dim, number, n_species>::apply_fv_subcell_limiter(
+    number,
+    number            time_step,
+    VectorType       &dst,
+    const VectorType &candidate_solution) const
   {
+    AssertThrow(
+      flow_scratch_data.flow_data.time_integrator.integrator_type ==
+        TimeIntegration::TimeIntegratorSchemes::LSRK_stage_1_order_1,
+      ExcMessage(
+        "The finite volume subcell limiter is only implemented for explicit Euler time integration."));
+    current_time_step        = time_step;
     using local_applier_type = std::function<void(const dealii::MatrixFree<dim, number> &,
                                                   VectorType       &dst,
                                                   const VectorType &src,
@@ -109,8 +117,10 @@ namespace MeltPoolDG::CompressibleFlow
            flow_scratch_data.dof_idx,
            flow_scratch_data.quad_idx},
           troubled_cell_mask.cell_data_vector(),
-          src,
+          candidate_solution,
           is_admissible);
+
+        troubled_cell_mask.update_ghost_values();
 
         local_applier_type cell = MPDG_LAMBDA_WRAPPER(this->fv_subcell_limiter_local_apply_cell);
         local_applier_type face = MPDG_LAMBDA_WRAPPER(this->fv_subcell_limiter_local_apply_face);
@@ -118,7 +128,7 @@ namespace MeltPoolDG::CompressibleFlow
           MPDG_LAMBDA_WRAPPER(this->fv_subcell_limiter_local_apply_boundary_face);
 
         flow_scratch_data.scratch_data.get_matrix_free().loop(
-          cell, face, boundary_face, dst, old_solution_cache, false);
+          cell, face, boundary_face, fv_rhs, old_solution_cache, true);
 
         const local_applier_type apply_time_step =
           [this](const dealii::MatrixFree<dim, number>       &matrix_free,
@@ -160,7 +170,8 @@ namespace MeltPoolDG::CompressibleFlow
               }
           };
 
-        flow_scratch_data.scratch_data.get_matrix_free().cell_loop(apply_time_step, dst, dst);
+        dst.zero_out_ghost_values();
+        flow_scratch_data.scratch_data.get_matrix_free().cell_loop(apply_time_step, dst, fv_rhs);
       }
   }
 
