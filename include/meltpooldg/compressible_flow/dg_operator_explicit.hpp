@@ -10,10 +10,12 @@
 #include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/compressible_flow/viscous_kernels.hpp>
 #include <meltpooldg/utilities/dg_generic_convection_diffusion_worker.hpp>
+#include <meltpooldg/utilities/matrix_free_util.hpp>
 
 #include <functional>
 #include <memory>
 #include <utility>
+#include <vector>
 
 namespace MeltPoolDG::CompressibleFlow
 {
@@ -118,7 +120,7 @@ namespace MeltPoolDG::CompressibleFlow
 
     /// Troubled cell markers with one vectorized array per cell batch, including ghost cell
     /// batches: lane v is 1 if the cell is troubled and 0 otherwise.
-    mutable dealii::AlignedVector<dealii::VectorizedArray<number>> troubled_cell_mask;
+    mutable ParallelDistributedCellData<dim, number> troubled_cell_mask;
 
     dealii::LinearAlgebra::distributed::Vector<number> old_solution_cache;
 

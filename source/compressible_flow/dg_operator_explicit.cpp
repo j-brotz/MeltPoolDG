@@ -13,8 +13,8 @@
 #include <meltpooldg/utilities/fe_subcell_face_evaluation.templates.hpp>
 #include <meltpooldg/utilities/matrix_free_util.hpp>
 #include <meltpooldg/utilities/preprocessor_directives.hpp>
-#include <meltpooldg/utilities/scoped_name.hpp>
 #include <meltpooldg/utilities/riemann_solvers.hpp>
+#include <meltpooldg/utilities/scoped_name.hpp>
 #include <meltpooldg/utilities/troubled_cell_marking.hpp>
 #include <meltpooldg/utilities/vector_tools.templates.hpp>
 
@@ -35,8 +35,7 @@ namespace MeltPoolDG::CompressibleFlow
   {
     if (flow_scratch_data.flow_data.limiter_data.apply_limiter)
       {
-        flow_scratch_data.scratch_data.get_matrix_free().initialize_cell_data_vector(
-          troubled_cell_mask);
+        troubled_cell_mask.reinit(flow_scratch_data.scratch_data.get_matrix_free());
         flow_scratch_data.scratch_data.get_matrix_free().initialize_dof_vector(old_solution_cache);
       }
   }
@@ -109,7 +108,7 @@ namespace MeltPoolDG::CompressibleFlow
           {flow_scratch_data.scratch_data.get_matrix_free(),
            flow_scratch_data.dof_idx,
            flow_scratch_data.quad_idx},
-          troubled_cell_mask,
+          troubled_cell_mask.cell_data_vector(),
           src,
           is_admissible);
 
@@ -137,7 +136,8 @@ namespace MeltPoolDG::CompressibleFlow
                 new_solution.reinit(cell);
 
                 const std::bitset<dealii::VectorizedArray<number>::size()> cell_mask =
-                  vectorized_mask_to_bitset(new_solution.read_cell_data(troubled_cell_mask),
+                  vectorized_mask_to_bitset(new_solution.read_cell_data(
+                                              troubled_cell_mask.cell_data_vector()),
                                             matrix_free.n_active_entries_per_cell_batch(cell));
 
                 if (cell_mask.none())
@@ -435,7 +435,8 @@ namespace MeltPoolDG::CompressibleFlow
         subcell_evaluation.reinit(cell);
 
         const std::bitset<dealii::VectorizedArray<number>::size()> mask =
-          vectorized_mask_to_bitset(subcell_evaluation.read_cell_data(troubled_cell_mask),
+          vectorized_mask_to_bitset(subcell_evaluation.read_cell_data(
+                                      troubled_cell_mask.cell_data_vector()),
                                     matrix_free.n_active_entries_per_cell_batch(cell));
         if (mask.none())
           continue;
@@ -507,8 +508,10 @@ namespace MeltPoolDG::CompressibleFlow
 
         const unsigned int n_active_lanes = matrix_free.n_active_entries_per_face_batch(face);
         const std::bitset<dealii::VectorizedArray<number>::size()> mask =
-          vectorized_mask_to_bitset(phi_m.read_cell_data(troubled_cell_mask), n_active_lanes) |
-          vectorized_mask_to_bitset(phi_p.read_cell_data(troubled_cell_mask), n_active_lanes);
+          vectorized_mask_to_bitset(phi_m.read_cell_data(troubled_cell_mask.cell_data_vector()),
+                                    n_active_lanes) |
+          vectorized_mask_to_bitset(phi_p.read_cell_data(troubled_cell_mask.cell_data_vector()),
+                                    n_active_lanes);
         if (mask.none())
           continue;
 
@@ -570,7 +573,7 @@ namespace MeltPoolDG::CompressibleFlow
       {
         phi_m.reinit(face);
         const std::bitset<dealii::VectorizedArray<number>::size()> mask =
-          vectorized_mask_to_bitset(phi_m.read_cell_data(troubled_cell_mask),
+          vectorized_mask_to_bitset(phi_m.read_cell_data(troubled_cell_mask.cell_data_vector()),
                                     matrix_free.n_active_entries_per_face_batch(face));
         if (mask.none())
           continue;
