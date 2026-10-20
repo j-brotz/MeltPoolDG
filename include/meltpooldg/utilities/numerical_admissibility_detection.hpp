@@ -309,6 +309,15 @@ namespace MeltPoolDG
     const std::vector<MaskType> &
     admissible_cell_vector() const;
 
+    /**
+     * Returns for each locally owned cell batch the lanes in which the candidate is admissible
+     * according to the relaxed discrete maximum principle. The result is only valid after
+     * evaluate() has been called and until the next call to submit_cell(). Only the bits of the
+     * active lanes of each cell batch are meaningful.
+     */
+    const std::vector<std::bitset<VectorizedArrayType::size()>> &
+    admissible_cells() const;
+
   private:
     static constexpr unsigned int n_lanes        = VectorizedArrayType::size();
     static constexpr unsigned int faces_per_cell = dealii::GeometryInfo<dim>::faces_per_cell;

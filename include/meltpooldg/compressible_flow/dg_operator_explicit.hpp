@@ -295,7 +295,7 @@ namespace MeltPoolDG::CompressibleFlow
       const VectorType                                             &old_solution,
       const std::pair<unsigned int, unsigned int>                  &face_range,
       const dealii::AlignedVector<dealii::VectorizedArray<number>> &troubled_cells) const;
-
+      
     /**
      * @brief Convective numerical flux across a finite volume subcell face.
      *
