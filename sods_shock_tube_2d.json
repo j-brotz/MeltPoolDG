@@ -1,0 +1,80 @@
+{
+  "base": {
+    "case name": "generic_hyper_rectangle_domain",
+    "dimension": 2,
+    "do print parameters": false,
+    "verbosity level": 1,
+    "global refinements": 0,
+    "fe": {
+      "degree": 4,
+      "type": "FE_DGQ"
+    }
+  },
+  "case specific": {
+    "boundaries": {
+      "x min": {
+        "type": "inflow",
+        "density": 1.0,
+        "velocity": "0.0; 0.0",
+        "energy": 2.5
+      },
+      "x max": {
+        "type": "inflow",
+        "density": 0.125,
+        "velocity": "0.0; 0.0",
+        "energy": 2.0
+      },
+      "y min": {
+        "type": "slip_wall"
+      },
+      "y max": {
+        "type": "slip_wall"
+      }
+    },
+    "initial conditions": {
+      "density": "1.0 * (x < 0.5) + 0.125 * (x >= 0.5)",
+      "velocity": "0.0; 0.0",
+      "energy": "2.5 * (x < 0.5) + 2.0 * (x >= 0.5)"
+    },
+    "domain": {
+      "size": "1.0, 0.05",
+      "base grid resolution": "20, 1"
+    }
+  },
+  "time stepping": {
+    "start time": 0.0,
+    "end time": 0.01
+  },
+  "output": {
+    "write frequency": 1,
+    "do user defined postprocessing": true
+  },
+  "compressible navier stokes": {
+    "numerical flux type": "lax_friedrichs_modified",
+    "use cfl criteria": true,
+    "courant number": 0.1,
+    "gravity constant": 0.0,
+    "time integration": {
+      "type": "SSP_RK_stage_2_order_2"
+    },
+    "limiter": {
+      "apply": true,
+      "type": "fv_subcell",
+      "troubled cell marking strategy": "pad, subcell_nad"
+    }
+  },
+  "material": {
+    "gas": {
+      "number of species": 1,
+      "eos type": "ideal_gas",
+      "reference density": 1.0,
+      "species 1": {
+        "name": "air",
+        "dynamic viscosity": 0.0,
+        "gamma": 1.4,
+        "specific gas constant": 287.0,
+        "specific isobaric heat": 1004.5
+      }
+    }
+  }
+}

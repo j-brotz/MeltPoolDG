@@ -37,6 +37,9 @@ namespace MeltPoolDG
         Utils::contains(limiter_data.troubled_cell_marking_strategy,
                         Utilities::TroubledCellMarkingStrategy::pad))
   {
+    // TODO: This should be somewhere else
+    if (!limiter_data.apply_limiter or !(limiter_data.type == Utilities::LimiterType::fv_subcell))
+      return;
     AssertThrow(!limiter_data.troubled_cell_marking_strategy.empty(),
                 dealii::ExcMessage(
                   "You must at least specify one troubled cell marking strategy."));

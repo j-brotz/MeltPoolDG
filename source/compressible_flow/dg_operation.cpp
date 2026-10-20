@@ -6,7 +6,7 @@
 
 #include <deal.II/numerics/data_component_interpretation.h>
 
-#include "meltpooldg/time_integration/bdf_time_integration.hpp"
+#include "meltpooldg/utilities/limiters.hpp"
 #include <meltpooldg/compressible_flow/data_types.hpp>
 #include <meltpooldg/compressible_flow/dg_operation.hpp>
 #include <meltpooldg/compressible_flow/dg_operator_explicit.hpp>
@@ -135,16 +135,44 @@ namespace MeltPoolDG::CompressibleFlow
       };
 
     std::function<void(number, number, VectorType &, const VectorType &)> stage_post_processing =
-      [&](number, number, VectorType &dst, const VectorType &src) {
+      [&](number time, number stage_time_step, VectorType &dst, const VectorType &src) {
         ScopedName         scope_stage_post("stage_post_processing");
         TimerOutput::Scope t(flow_scratch_data.scratch_data.get_timer(), scope_stage_post);
-        Utilities::apply_minmod_type_limiter<dim, n_conserved_variables<dim, n_species>, number>(
-          {flow_scratch_data.scratch_data.get_matrix_free(),
-           flow_scratch_data.dof_idx,
-           flow_scratch_data.quad_idx},
-          dst,
-          src,
-          flow_scratch_data.flow_data.limiter_data);
+        if (flow_scratch_data.flow_data.limiter_data.apply_limiter and
+            (flow_scratch_data.flow_data.limiter_data.type == Utilities::LimiterType::tvd_minmod or
+             flow_scratch_data.flow_data.limiter_data.type == Utilities::LimiterType::tvb_minmod))
+          {
+            Utilities::
+              apply_minmod_type_limiter<dim, n_conserved_variables<dim, n_species>, number>(
+                {flow_scratch_data.scratch_data.get_matrix_free(),
+                 flow_scratch_data.dof_idx,
+                 flow_scratch_data.quad_idx},
+                dst,
+                src,
+                flow_scratch_data.flow_data.limiter_data);
+          }
+
+        std::visit(
+          [&](auto &comp_flow_operator) {
+            using T = std::decay_t<decltype(comp_flow_operator)>;
+
+            if (flow_scratch_data.flow_data.limiter_data.apply_limiter and
+                flow_scratch_data.flow_data.limiter_data.type == Utilities::LimiterType::fv_subcell)
+              {
+                if constexpr (std::is_same_v<DGOperatorExplicit<dim, number, n_species>, T>)
+                  {
+                    comp_flow_operator.apply_fv_subcell_limiter(time, stage_time_step, dst, src);
+                  }
+                else
+                  {
+                    AssertThrow(
+                      false,
+                      dealii::ExcNotImplemented(
+                        "The finite volume subcell limiter is only implemented for explicit time integration."));
+                  }
+              }
+          },
+          flow_operator);
       };
 
     time_integrator->perform_time_step(current_time,

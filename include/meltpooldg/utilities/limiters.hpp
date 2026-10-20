@@ -21,8 +21,9 @@ namespace MeltPoolDG::Utilities
    * - `tvd_minmod`: Standard TVD (total variation diminishing) minmod limiter
    * - `tvb_minmod`: TVB (total variation bounded) minmod limiter, which relaxes the TVD criteria
    * near smooth extrema to avoid unnecessary clipping of physical peaks.
+   * - `fv_subcell`: Finite volume subcell limiter
    */
-  BETTER_ENUM(LimiterType, char, tvd_minmod, tvb_minmod)
+  BETTER_ENUM(LimiterType, char, tvd_minmod, tvb_minmod, fv_subcell)
 
   /**
    * An enumeration for the available troubled cell marking strategies. The following strategies are

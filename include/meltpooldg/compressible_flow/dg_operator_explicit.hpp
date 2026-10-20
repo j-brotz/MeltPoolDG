@@ -10,6 +10,7 @@
 #include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/compressible_flow/viscous_kernels.hpp>
 #include <meltpooldg/utilities/dg_generic_convection_diffusion_worker.hpp>
+#include <meltpooldg/utilities/troubled_cell_marker.hpp>
 
 #include <functional>
 #include <memory>
@@ -88,6 +89,13 @@ namespace MeltPoolDG::CompressibleFlow
                    const VectorType                                      &src,
                    const std::function<void(unsigned int, unsigned int)> &func) const;
 
+    void
+    apply_fv_subcell_limiter(number            time,
+                             number            time_step,
+                             VectorType       &candidate_solution,
+                             const VectorType &previous_solution) const;
+
+
     /**
      * Add additional fluid forces provided by the user of the class (e.g. gravity, ...).
      *
@@ -106,6 +114,15 @@ namespace MeltPoolDG::CompressibleFlow
 
     /// Current time step size
     mutable number current_time_step;
+
+    mutable dealii::LinearAlgebra::distributed::Vector<number> fv_rhs;
+
+    /// Correction of the update of the untroubled cells adjacent to troubled cells, which replaces
+    /// the DG flux by the finite volume flux at their common faces to retain conservation.
+    mutable dealii::LinearAlgebra::distributed::Vector<number> fv_neighbor_correction;
+
+    mutable TroubledCellMarker<dim, n_conserved_variables<dim, n_species>, number>
+      troubled_cell_marker;
 
     /**
      * @brief Local cell applier.
@@ -157,5 +174,50 @@ namespace MeltPoolDG::CompressibleFlow
                               VectorType                                  &dst,
                               const VectorType                            &src,
                               const std::pair<unsigned int, unsigned int> &face_range) const;
+
+    void
+    fv_subcell_limiter_local_apply_cell(
+      const dealii::MatrixFree<dim, number>       &matrix_free,
+      VectorType                                  &dst,
+      const VectorType                            &old_solution,
+      const std::pair<unsigned int, unsigned int> &cell_range) const;
+
+    void
+    fv_subcell_limiter_local_apply_face(
+      const dealii::MatrixFree<dim, number>       &matrix_free,
+      VectorType                                  &dst,
+      const VectorType                            &old_solution,
+      const std::pair<unsigned int, unsigned int> &face_range) const;
+
+    void
+    fv_subcell_limiter_local_apply_boundary_face(
+      const dealii::MatrixFree<dim, number>       &matrix_free,
+      VectorType                                  &dst,
+      const VectorType                            &old_solution,
+      const std::pair<unsigned int, unsigned int> &face_range) const;
+
+    /**
+     * @brief Local face applier for the conservation correction of the finite volume subcell
+     * limiter.
+     *
+     * At a face between a troubled and an untroubled cell, the troubled cell is updated with the
+     * finite volume flux, while the DG update of the untroubled cell contains the DG flux. For
+     * the untroubled cell, this function computes the face integral of the difference between the
+     * two fluxes, which replaces the DG flux by the finite volume flux once the inverse mass matrix
+     * is applied. Both fluxes are evaluated with the same Riemann solver as the DG scheme, from the
+     * subcell values and from the DG solution on the face, respectively. Only the convective flux
+     * is corrected.
+     *
+     * @param matrix_free Matrix free object on which the applier works on.
+     * @param dst Destination vector to which the face integrals are added.
+     * @param old_solution Solution at the beginning of the time step.
+     * @param face_range Face range which is considered in the applier.
+     */
+    void
+    fv_subcell_limiter_local_apply_neighbor_correction(
+      const dealii::MatrixFree<dim, number>       &matrix_free,
+      VectorType                                  &dst,
+      const VectorType                            &old_solution,
+      const std::pair<unsigned int, unsigned int> &face_range) const;
   };
 } // namespace MeltPoolDG::CompressibleFlow

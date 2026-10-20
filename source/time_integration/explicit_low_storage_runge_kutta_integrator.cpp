@@ -167,8 +167,8 @@ namespace MeltPoolDG::TimeIntegration
                 });
 
     if (stage_post_processing)
-      stage_post_processing(current_time + ci[0] * time_step,
-                            ci[0] * time_step,
+      stage_post_processing(current_time + (n_stages == 1 ? time_step : ci[0] * time_step),
+                            n_stages == 1 ? time_step : ci[0] * time_step,
                             n_stages == 1 ? solution_history.get_current_solution() :
                                             rk_register_ri,
                             n_stages == 1 ? solution_history.get_current_solution() :
