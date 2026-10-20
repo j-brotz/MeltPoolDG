@@ -34,7 +34,8 @@ namespace MeltPoolDG
     for (unsigned int c = 0; c < n_components; ++c)
       for (unsigned int lane = 0; lane < dealii::VectorizedArray<number>::size(); ++lane)
         {
-          const number delta = std::max(delta_0, epsilon * (M[c][lane] - m[c][lane]));
+          const number delta = std::max(delta_0 * std::max(M[c][lane], m[c][lane]),
+                                        epsilon * (M[c][lane] - m[c][lane]));
           if (lower[c][lane] < m[c][lane] - delta or upper[c][lane] > M[c][lane] + delta)
             mask.reset(lane);
         }

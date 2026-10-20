@@ -99,8 +99,9 @@ namespace MeltPoolDG::CompressibleFlow
      *
      * In the troubled cells, the candidate solution is replaced by a forward Euler step of the
      * finite volume subcell scheme starting from @p previous_solution. The finite volume
-     * right-hand side contains the convective fluxes and the external forces. Viscous terms are
-     * not considered yet.
+     * right-hand side contains the convective fluxes, the external forces and, for viscous flows,
+     * the viscous fluxes, which are computed from the finite difference gradients of the subcell
+     * values.
      *
      * In the untroubled neighbors of troubled cells, the update is corrected such that it uses the
      * finite volume flux instead of the DG flux at the faces shared with troubled cells. Thus, both
@@ -155,6 +156,13 @@ namespace MeltPoolDG::CompressibleFlow
     /// Correction of the update of the untroubled cells adjacent to troubled cells, which replaces
     /// the DG flux by the finite volume flux at their common faces to retain conservation.
     mutable dealii::LinearAlgebra::distributed::Vector<number> fv_neighbor_correction;
+
+    std::function<
+      ConservedVariables(const dealii::Point<dim, dealii::VectorizedArray<number>> &,
+                         const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &,
+                         const dealii::types::boundary_id,
+                         const ConservedVariables &)>
+      fv_boundary_value_function;
 
     /**
      * @brief Local cell applier.
@@ -211,8 +219,8 @@ namespace MeltPoolDG::CompressibleFlow
      * @brief Local cell applier of the finite volume subcell limiter.
      *
      * For the troubled cells, computes the external forces on the subcells and the convective
-     * numerical fluxes across the subcell faces inside the cell from @p old_solution. Untroubled
-     * cells are skipped.
+     * and, for viscous flows, viscous numerical fluxes across the subcell faces inside the cell
+     * from @p old_solution. Untroubled cells are skipped.
      *
      * @param matrix_free Matrix free object on which the applier works on.
      * @param dst Destination vector to which the result is added.
@@ -231,9 +239,9 @@ namespace MeltPoolDG::CompressibleFlow
     /**
      * @brief Local face applier of the finite volume subcell limiter.
      *
-     * For faces adjacent to at least one troubled cell, computes the convective numerical fluxes
-     * across the subcell faces on the face from @p old_solution and adds them to both cells. Only
-     * the contributions to the troubled cells are used.
+     * For faces adjacent to at least one troubled cell, computes the convective and, for viscous
+     * flows, viscous numerical fluxes across the subcell faces on the face from @p old_solution
+     * and adds them to both cells. Only the contributions to the troubled cells are used.
      *
      * @param matrix_free Matrix free object on which the applier works on.
      * @param dst Destination vector to which the result is added.
@@ -253,9 +261,9 @@ namespace MeltPoolDG::CompressibleFlow
     /**
      * @brief Local boundary face applier of the finite volume subcell limiter.
      *
-     * For boundary faces of troubled cells, computes the convective numerical fluxes across the
-     * subcell faces on the boundary from @p old_solution, with the exterior state given by the
-     * boundary conditions.
+     * For boundary faces of troubled cells, computes the convective and, for viscous flows,
+     * viscous numerical fluxes across the subcell faces on the boundary from @p old_solution, with
+     * the exterior state given by the boundary conditions.
      *
      * @param matrix_free Matrix free object on which the applier works on.
      * @param dst Destination vector to which the result is added.
@@ -279,7 +287,9 @@ namespace MeltPoolDG::CompressibleFlow
      * finite volume flux, while the DG update of the untroubled cell contains the DG flux. For
      * the untroubled cell, this function computes the face integral of the difference between the
      * two fluxes, which replaces the DG flux by the finite volume flux once the inverse mass matrix
-     * is applied.
+     * is applied. For viscous flows, only the flux tested with the values is replaced, while the
+     * symmetric interior penalty term tested with the gradients is kept, since it does not affect
+     * the cell mean and thus the conservation.
      *
      * @param matrix_free Matrix free object on which the applier works on.
      * @param dst Destination vector to which the face integrals are added.
@@ -312,6 +322,28 @@ namespace MeltPoolDG::CompressibleFlow
     fv_subcell_convective_numerical_flux(
       const ConservedVariablesType<dim, number, n_species>          &w_m,
       const ConservedVariablesType<dim, number, n_species>          &w_p,
+      const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal) const;
+
+    /**
+     * @brief Viscous numerical flux across a finite volume subcell face.
+     *
+     * Evaluates the physical diffusive flux with the state and the gradient on the subcell face.
+     * Since the subcell face gradient is single-valued, no penalty term is needed. Used by the
+     * finite volume subcell limiter.
+     *
+     * @param w_face State on the subcell face, i.e. the arithmetic mean of the two adjacent
+     * subcell values on inner faces and the boundary value on boundary faces.
+     * @param grad_w Gradient of the conserved variables on the subcell face.
+     * @param normal Unit normal vector of the face.
+     *
+     * @return Viscous contribution to the numerical flux in the direction of @p normal, i.e. the
+     * negative diffusive flux contracted with @p normal, such that it is added to the result of
+     * fv_subcell_convective_numerical_flux().
+     */
+    ConservedVariablesType<dim, number, n_species>
+    fv_subcell_viscous_numerical_flux(
+      const ConservedVariablesType<dim, number, n_species>          &w_face,
+      const ConservedVariablesGradientType<dim, number, n_species>  &grad_w,
       const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal) const;
   };
 } // namespace MeltPoolDG::CompressibleFlow
