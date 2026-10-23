@@ -10,6 +10,8 @@
 #include <boost/signals2/signal.hpp>
 
 #include <chrono>
+#include <functional>
+#include <string>
 
 
 namespace MeltPoolDG::Profiling
@@ -42,16 +44,28 @@ namespace MeltPoolDG::Profiling
           const MPI_Comm            &mpi_communicator) const;
 
     /**
-     * Subscribe to the profiling monitor. The subscribed callback function will be called whenever
-     * profiling output is generated. The idea is to allow other parts of the code to react to
-     * profiling output and write there own information to the output stream. The callback function
-     * should take a single argument of type ConditionalOStream, which is the output stream to which
-     * profiling information is written.
-     *
-     * @param callback The callback function to be called when profiling output is generated.
+     * Returns the verbosity of the profiling as set in the profiling data struct.
      */
-    void
-    subscribe(const std::function<void(const ConditionalOStream &)> &callback);
+    ProfilingVerbosity
+    get_verbosity() const;
+
+    /**
+     * Subscribe to the profiling monitor. The subscribed callback function will be called whenever
+     * the statistics summary is printed. The idea is to allow other parts of the code to add their
+     * own section to the statistics summary.
+     *
+     * @param title Title of the section. It is prefixed by the number of the section within the
+     * statistics summary and passed to @p callback.
+     * @param callback The callback function printing the section to the given output stream with the
+     * given title.
+     *
+     * @return The connection to the profiling monitor. Store it in a
+     * boost::signals2::scoped_connection to unsubscribe automatically when the subscriber is
+     * destroyed.
+     */
+    boost::signals2::connection
+    subscribe(const std::string                                                          &title,
+              const std::function<void(const ConditionalOStream &, const std::string &)> &callback);
 
   private:
     /// The profiling data struct which contains the relevant information for profiling.
@@ -66,8 +80,10 @@ namespace MeltPoolDG::Profiling
     /// Real time at object construction
     std::chrono::time_point<std::chrono::system_clock> real_time_start;
 
-    /// Signal to notify subscribers when profiling output is generated.
-    boost::signals2::signal<void(const ConditionalOStream &pcout)> notify_signal;
+    /// Signal to notify subscribers when the statistics summary is printed. The section number is
+    /// incremented by each subscriber.
+    boost::signals2::signal<void(const ConditionalOStream &pcout, int &section_number)>
+      notify_signal;
 
     number
     compute_current_time() const;

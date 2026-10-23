@@ -143,6 +143,15 @@ namespace MeltPoolDG
     void
     evaluate(std::vector<MaskType> &troubled_cells_mask);
 
+    /**
+     * Returns for each locally owned cell batch the lanes in which the candidate is admissible
+     * according to the relaxed discrete maximum principle. The result is only valid after
+     * evaluate() has been called and until the next call to submit_cell(). Only the bits of the
+     * active lanes of each cell batch are meaningful.
+     */
+    const std::vector<MaskType> &
+    admissible_cells() const;
+
   private:
     static constexpr unsigned int n_lanes = VectorizedArrayType::size();
 
@@ -292,6 +301,15 @@ namespace MeltPoolDG
     void
     evaluate(std::vector<std::bitset<VectorizedArrayType::size()>> &troubled_cells_mask);
 
+    /**
+     * Returns for each locally owned cell batch the lanes in which the candidate is admissible
+     * according to the relaxed discrete maximum principle. The result is only valid after
+     * evaluate() has been called and until the next call to submit_cell(). Only the bits of the
+     * active lanes of each cell batch are meaningful.
+     */
+    const std::vector<std::bitset<VectorizedArrayType::size()>> &
+    admissible_cells() const;
+
   private:
     static constexpr unsigned int n_lanes        = VectorizedArrayType::size();
     static constexpr unsigned int faces_per_cell = dealii::GeometryInfo<dim>::faces_per_cell;
@@ -349,7 +367,7 @@ namespace MeltPoolDG
     /// admissible according to the relaxed discrete maximum principle criterion. The bits are set
     /// to 1 for admissible lanes and 0 for inadmissible lanes. Lanes with deferred subcells are
     /// only final after evaluate().
-    dealii::AlignedVector<std::bitset<VectorizedArrayType::size()>> subcell_admissibility;
+    std::vector<std::bitset<VectorizedArrayType::size()>> subcell_admissibility;
 
     /// Component-wise minimum and maximum of the old solution over the layer of subcells at each
     /// face of each locally owned and ghost cell batch. The extrema of face `f` of cell batch

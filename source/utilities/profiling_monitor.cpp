@@ -80,18 +80,31 @@ namespace MeltPoolDG::Profiling
         ++section_number;
       }
 
-    notify_signal(pcout);
+    notify_signal(pcout, section_number);
 
     Journal::print_header(pcout, "End of statistics summary");
     pcout << std::endl;
   }
 
   template <typename number>
-  void
-  ProfilingMonitor<number>::subscribe(
-    const std::function<void(const ConditionalOStream &)> &callback)
+  ProfilingVerbosity
+  ProfilingMonitor<number>::get_verbosity() const
   {
-    notify_signal.connect(callback);
+    return data.verbosity;
+  }
+
+  template <typename number>
+  boost::signals2::connection
+  ProfilingMonitor<number>::subscribe(
+    const std::string                                                          &title,
+    const std::function<void(const ConditionalOStream &, const std::string &)> &callback)
+  {
+    return notify_signal.connect(
+      [title, callback](const ConditionalOStream &pcout, int &section_number) {
+        callback(pcout, std::to_string(section_number) + ". " + title);
+        pcout << std::endl;
+        ++section_number;
+      });
   }
 
   template <typename number>

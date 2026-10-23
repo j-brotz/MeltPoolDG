@@ -66,4 +66,13 @@ namespace MeltPoolDG
       troubled_cells_mask[cell] |= ~physically_admissible[cell];
     n_cell_batches_submitted = 0;
   }
+
+  template <int dim, int n_components, typename number>
+  const std::vector<typename PhysicalAdmissibility<dim, n_components, number>::MaskType> &
+  PhysicalAdmissibility<dim, n_components, number>::admissible_cells() const
+  {
+    Assert(n_cell_batches_submitted == 0,
+           dealii::ExcMessage("The admissibility is only available after evaluate() was called."));
+    return physically_admissible;
+  }
 } // namespace MeltPoolDG

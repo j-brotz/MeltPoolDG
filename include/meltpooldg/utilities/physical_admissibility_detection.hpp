@@ -74,6 +74,15 @@ namespace MeltPoolDG
     void
     evaluate(std::vector<MaskType> &troubled_cells_mask);
 
+    /**
+     * Returns for each locally owned cell batch the lanes in which the candidate is physically
+     * admissible in all subcells. The result is only valid after evaluate() has been called and
+     * until the next call to submit_cell(). Only the bits of the active lanes of each cell batch
+     * are meaningful.
+     */
+    const std::vector<MaskType> &
+    admissible_cells() const;
+
   private:
     /// Function returning for a vectorized subcell state the bits of the physically admissible
     /// lanes.

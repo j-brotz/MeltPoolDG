@@ -23,6 +23,7 @@
 #include <meltpooldg/utilities/preprocessor_directives.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
 #include <meltpooldg/utilities/troubled_cell_marker.templates.hpp>
+#include <meltpooldg/utilities/troubled_cell_monitor.templates.hpp>
 #include <meltpooldg/utilities/vector_tools.templates.hpp>
 
 #include <meltpooldg/utilities/matrix_type_wrapper.h>
@@ -63,6 +64,7 @@ namespace MeltPoolDG::CompressibleFlow
                                  const ConservedVariablesType<dim, number, n_species>>(
               subcell_state, material));
         })
+    , troubled_cell_monitor(troubled_cell_marker, flow_scratch_data.flow_data.limiter_data)
   {
     setup_time_integrator();
 
@@ -117,6 +119,16 @@ namespace MeltPoolDG::CompressibleFlow
       troubled_cell_marker.reinit({flow_scratch_data.scratch_data.get_matrix_free(),
                                    flow_scratch_data.dof_idx,
                                    flow_scratch_data.quad_idx});
+  }
+
+  template <int dim, typename number, int n_species>
+  void
+  DGOperation<dim, number, n_species>::register_monitors(
+    Profiling::ProfilingMonitor<number> &profiling_monitor)
+  {
+    if (flow_scratch_data.flow_data.limiter_data.apply_limiter and
+        flow_scratch_data.flow_data.limiter_data.type == Utilities::LimiterType::fv_subcell)
+      troubled_cell_monitor.subscribe(profiling_monitor, "Troubled cell statistics");
   }
 
   template <int dim, typename number, int n_species>
@@ -189,6 +201,10 @@ namespace MeltPoolDG::CompressibleFlow
                                                 dst,
                                                 src);
                     }
+                    troubled_cell_monitor.add_info(
+                      {flow_scratch_data.scratch_data.get_matrix_free(),
+                       flow_scratch_data.dof_idx,
+                       flow_scratch_data.quad_idx});
                     comp_flow_operator.apply_fv_subcell_limiter(
                       time, stage_time_step, dst, src, troubled_cell_marker.troubled_cells());
                   }

@@ -80,6 +80,28 @@ namespace MeltPoolDG
     const dealii::AlignedVector<VectorizedArrayType> &
     troubled_cells() const;
 
+    /**
+     * Returns for each locally owned cell batch the lanes in which the candidate of the last call
+     * to mark() is physically admissible, see PhysicalAdmissibility::admissible_cells(). Only the
+     * bits of the active lanes of each cell batch are meaningful.
+     *
+     * @note Only available if the physical admissibility check is applied.
+     */
+    const std::vector<MaskType> &
+    physically_admissible_cells() const;
+
+    /**
+     * Returns for each locally owned cell batch the lanes in which the candidate of the last call
+     * to mark() is numerically admissible according to the applied cellwise or subcellwise check,
+     * see CellwiseNumericalAdmissibility::admissible_cells() and
+     * SubcellNumericalAdmissibility::admissible_cells(). Only the bits of the active lanes of each
+     * cell batch are meaningful.
+     *
+     * @note Only available if a numerical admissibility check is applied.
+     */
+    const std::vector<MaskType> &
+    numerically_admissible_cells() const;
+
   private:
     /// The limiter data holding the information which marking strategy to use for the troubled cell
     /// detection.
