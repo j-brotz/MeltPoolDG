@@ -12,7 +12,6 @@
 #include <meltpooldg/utilities/matrix_free_util.hpp>
 #include <meltpooldg/utilities/preprocessor_directives.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
-#include <meltpooldg/utilities/troubled_cell_marker.templates.hpp>
 #include <meltpooldg/utilities/vector_tools.templates.hpp>
 
 
@@ -24,13 +23,6 @@ namespace MeltPoolDG::CompressibleFlow
   DGOperatorExplicit<dim, number, n_species>::DGOperatorExplicit(
     OperationScratchData<dim, number> &flow_scratch_data)
     : flow_scratch_data(flow_scratch_data)
-    , troubled_cell_marker(
-        flow_scratch_data.flow_data.limiter_data,
-        [&material = flow_scratch_data.material](const ConservedVariables &subcell_state) {
-          return physical_admissibility_mask<number, n_species>(
-            NSpeciesDofStateView<dim, n_species, number, const ConservedVariables>(subcell_state,
-                                                                                   material));
-        })
   {}
 
   template <int dim, typename number, int n_species>
@@ -40,9 +32,6 @@ namespace MeltPoolDG::CompressibleFlow
     if (flow_scratch_data.flow_data.limiter_data.apply_limiter and
         flow_scratch_data.flow_data.limiter_data.type == Utilities::LimiterType::fv_subcell)
       {
-        troubled_cell_marker.reinit({flow_scratch_data.scratch_data.get_matrix_free(),
-                                     flow_scratch_data.dof_idx,
-                                     flow_scratch_data.quad_idx});
         flow_scratch_data.scratch_data.get_matrix_free().initialize_dof_vector(fv_rhs);
         flow_scratch_data.scratch_data.get_matrix_free().initialize_dof_vector(
           fv_neighbor_correction);
@@ -91,9 +80,10 @@ namespace MeltPoolDG::CompressibleFlow
   void
   DGOperatorExplicit<dim, number, n_species>::apply_fv_subcell_limiter(
     number,
-    number            time_step,
-    VectorType       &candidate_solution,
-    const VectorType &previous_solution) const
+    number                                                        time_step,
+    VectorType                                                   &candidate_solution,
+    const VectorType                                             &previous_solution,
+    const dealii::AlignedVector<dealii::VectorizedArray<number>> &troubled_cells) const
   {
     ScopedName         scope_apply_operator("limiter");
     TimerOutput::Scope t(flow_scratch_data.scratch_data.get_timer(), scope_apply_operator);
@@ -112,119 +102,131 @@ namespace MeltPoolDG::CompressibleFlow
                                                   const VectorType &src,
                                                   const std::pair<unsigned int, unsigned int> &)>;
 
-    if (flow_scratch_data.flow_data.limiter_data.apply_limiter)
-      {
-        {
-          ScopedName         scope_apply_operator("troubled_cell_marker");
-          TimerOutput::Scope t(flow_scratch_data.scratch_data.get_timer(), scope_apply_operator);
-          troubled_cell_marker.mark({flow_scratch_data.scratch_data.get_matrix_free(),
-                                     flow_scratch_data.dof_idx,
-                                     flow_scratch_data.quad_idx},
-                                    candidate_solution,
-                                    previous_solution);
-        }
+    const local_applier_type cell =
+      [this, &troubled_cells](const dealii::MatrixFree<dim, number>       &matrix_free,
+                              VectorType                                  &dst,
+                              const VectorType                            &src,
+                              const std::pair<unsigned int, unsigned int> &cell_range) {
+        fv_subcell_limiter_local_apply_cell(matrix_free, dst, src, cell_range, troubled_cells);
+      };
+    const local_applier_type face =
+      [this, &troubled_cells](const dealii::MatrixFree<dim, number>       &matrix_free,
+                              VectorType                                  &dst,
+                              const VectorType                            &src,
+                              const std::pair<unsigned int, unsigned int> &face_range) {
+        fv_subcell_limiter_local_apply_face(matrix_free, dst, src, face_range, troubled_cells);
+      };
+    const local_applier_type boundary_face =
+      [this, &troubled_cells](const dealii::MatrixFree<dim, number>       &matrix_free,
+                              VectorType                                  &dst,
+                              const VectorType                            &src,
+                              const std::pair<unsigned int, unsigned int> &face_range) {
+        fv_subcell_limiter_local_apply_boundary_face(
+          matrix_free, dst, src, face_range, troubled_cells);
+      };
 
-        local_applier_type cell = MPDG_LAMBDA_WRAPPER(this->fv_subcell_limiter_local_apply_cell);
-        local_applier_type face = MPDG_LAMBDA_WRAPPER(this->fv_subcell_limiter_local_apply_face);
-        local_applier_type boundary_face =
-          MPDG_LAMBDA_WRAPPER(this->fv_subcell_limiter_local_apply_boundary_face);
+    {
+      ScopedName         scope_apply_operator("finite_volume_rhs");
+      TimerOutput::Scope t(flow_scratch_data.scratch_data.get_timer(), scope_apply_operator);
+      flow_scratch_data.scratch_data.get_matrix_free().loop(
+        cell, face, boundary_face, fv_rhs, previous_solution, true);
+    }
 
-        {
-          ScopedName         scope_apply_operator("finite_volume_rhs");
-          TimerOutput::Scope t(flow_scratch_data.scratch_data.get_timer(), scope_apply_operator);
-          flow_scratch_data.scratch_data.get_matrix_free().loop(
-            cell, face, boundary_face, fv_rhs, previous_solution, true);
-        }
+    {
+      ScopedName         scope_apply_operator("DG_neighbor_correction");
+      TimerOutput::Scope t(flow_scratch_data.scratch_data.get_timer(), scope_apply_operator);
+      // Correct the DG update of the untroubled cells adjacent to troubled cells, such that
+      // both cells use the finite volume flux at their common faces and the scheme stays
+      // conservative.
+      const local_applier_type no_operation = [](const dealii::MatrixFree<dim, number> &,
+                                                 VectorType &,
+                                                 const VectorType &,
+                                                 const std::pair<unsigned int, unsigned int> &) {};
+      const local_applier_type neighbor_correction =
+        [this, &troubled_cells](const dealii::MatrixFree<dim, number>       &matrix_free,
+                                VectorType                                  &dst,
+                                const VectorType                            &src,
+                                const std::pair<unsigned int, unsigned int> &face_range) {
+          fv_subcell_limiter_local_apply_neighbor_correction(
+            matrix_free, dst, src, face_range, troubled_cells);
+        };
+      flow_scratch_data.scratch_data.get_matrix_free().loop(no_operation,
+                                                            neighbor_correction,
+                                                            no_operation,
+                                                            fv_neighbor_correction,
+                                                            previous_solution,
+                                                            true);
 
-        {
-          ScopedName         scope_apply_operator("DG_neighbor_correction");
-          TimerOutput::Scope t(flow_scratch_data.scratch_data.get_timer(), scope_apply_operator);
-          // Correct the DG update of the untroubled cells adjacent to troubled cells, such that
-          // both cells use the finite volume flux at their common faces and the scheme stays
-          // conservative.
-          const local_applier_type no_operation =
-            [](const dealii::MatrixFree<dim, number> &,
-               VectorType &,
-               const VectorType &,
-               const std::pair<unsigned int, unsigned int> &) {};
-          const local_applier_type neighbor_correction =
-            MPDG_LAMBDA_WRAPPER(this->fv_subcell_limiter_local_apply_neighbor_correction);
-          flow_scratch_data.scratch_data.get_matrix_free().loop(no_operation,
-                                                                neighbor_correction,
-                                                                no_operation,
-                                                                fv_neighbor_correction,
-                                                                previous_solution,
-                                                                true);
+      const local_applier_type inverse_mass_matrix =
+        [dof_idx = flow_scratch_data.dof_idx,
+         quad_idx =
+           flow_scratch_data.quad_idx](const MatrixFree<dim, number>               &matrix_free,
+                                       VectorType                                  &dst,
+                                       const VectorType                            &src,
+                                       const std::pair<unsigned int, unsigned int> &cell_range) {
+          Utilities::MatrixFree::
+            local_apply_inverse_mass_matrix<dim, n_conserved_variables<dim, n_species>, number>(
+              matrix_free, dst, src, cell_range, dof_idx, quad_idx);
+        };
 
-          const local_applier_type inverse_mass_matrix =
-            [dof_idx = flow_scratch_data.dof_idx, quad_idx = flow_scratch_data.quad_idx](
-              const MatrixFree<dim, number>               &matrix_free,
-              VectorType                                  &dst,
-              const VectorType                            &src,
-              const std::pair<unsigned int, unsigned int> &cell_range) {
-              Utilities::MatrixFree::
-                local_apply_inverse_mass_matrix<dim, n_conserved_variables<dim, n_species>, number>(
-                  matrix_free, dst, src, cell_range, dof_idx, quad_idx);
-            };
+      flow_scratch_data.scratch_data.get_matrix_free().cell_loop(inverse_mass_matrix,
+                                                                 fv_neighbor_correction,
+                                                                 fv_neighbor_correction);
+    }
 
-          flow_scratch_data.scratch_data.get_matrix_free().cell_loop(inverse_mass_matrix,
-                                                                     fv_neighbor_correction,
-                                                                     fv_neighbor_correction);
-        }
+    // Take the computed finite volume right-hand side and perform a forward Euler time
+    // integration step to update the solution in the troubled cells.
+    const local_applier_type apply_time_step =
+      [this,
+       &previous_solution,
+       &troubled_cells](const dealii::MatrixFree<dim, number>       &matrix_free,
+                        VectorType                                  &limited_solution,
+                        const VectorType                            &rhs,
+                        const std::pair<unsigned int, unsigned int> &cell_range) {
+        FECellIntegrator<dim, n_conserved_variables<dim, n_species>, number> old_solution(
+          matrix_free, flow_scratch_data.dof_idx, flow_scratch_data.quad_idx);
+        FECellIntegrator<dim, n_conserved_variables<dim, n_species>, number> new_solution(
+          matrix_free, flow_scratch_data.dof_idx, flow_scratch_data.quad_idx);
 
-        // Take the computed finite volume right-hand side and perform a forward Euler time
-        // integration step to update the solution in the troubled cells.
-        const local_applier_type apply_time_step =
-          [this, &previous_solution](const dealii::MatrixFree<dim, number>       &matrix_free,
-                                     VectorType                                  &limited_solution,
-                                     const VectorType                            &rhs,
-                                     const std::pair<unsigned int, unsigned int> &cell_range) {
-            FECellIntegrator<dim, n_conserved_variables<dim, n_species>, number> old_solution(
-              matrix_free, flow_scratch_data.dof_idx, flow_scratch_data.quad_idx);
-            FECellIntegrator<dim, n_conserved_variables<dim, n_species>, number> new_solution(
-              matrix_free, flow_scratch_data.dof_idx, flow_scratch_data.quad_idx);
+        for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
+          {
+            old_solution.reinit(cell);
+            new_solution.reinit(cell);
 
-            for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
+            const std::bitset<dealii::VectorizedArray<number>::size()> cell_mask =
+              vectorized_mask_to_bitset(new_solution.read_cell_data(troubled_cells),
+                                        matrix_free.n_active_entries_per_cell_batch(cell));
+
+            if (cell_mask.none())
+              continue;
+
+            old_solution.read_dof_values(previous_solution, 0, cell_mask);
+            new_solution.read_dof_values(rhs, 0, cell_mask);
+
+            for (unsigned int dof = 0; dof < old_solution.dofs_per_component; ++dof)
               {
-                old_solution.reinit(cell);
-                new_solution.reinit(cell);
+                const ConservedVariables old_value = old_solution.get_dof_value(dof);
+                const ConservedVariables new_value = new_solution.get_dof_value(dof);
 
-                const std::bitset<dealii::VectorizedArray<number>::size()> cell_mask =
-                  vectorized_mask_to_bitset(new_solution.read_cell_data(
-                                              troubled_cell_marker.troubled_cells()),
-                                            matrix_free.n_active_entries_per_cell_batch(cell));
+                const ConservedVariables updated_value =
+                  old_value + new_value * current_time_step; // Forward Euler time integration
 
-                if (cell_mask.none())
-                  continue;
-
-                old_solution.read_dof_values(previous_solution, 0, cell_mask);
-                new_solution.read_dof_values(rhs, 0, cell_mask);
-
-                for (unsigned int dof = 0; dof < old_solution.dofs_per_component; ++dof)
-                  {
-                    const ConservedVariables old_value = old_solution.get_dof_value(dof);
-                    const ConservedVariables new_value = new_solution.get_dof_value(dof);
-
-                    const ConservedVariables updated_value =
-                      old_value + new_value * current_time_step; // Forward Euler time integration
-
-                    new_solution.submit_dof_value(updated_value, dof);
-                  }
-                new_solution.set_dof_values(limited_solution, 0, cell_mask);
+                new_solution.submit_dof_value(updated_value, dof);
               }
-          };
+            new_solution.set_dof_values(limited_solution, 0, cell_mask);
+          }
+      };
 
-        {
-          ScopedName         scope_apply_operator("finite_volume_correction");
-          TimerOutput::Scope t(flow_scratch_data.scratch_data.get_timer(), scope_apply_operator);
-          candidate_solution.zero_out_ghost_values();
-          // the correction is zero in the troubled cells, which are overwritten afterwards
-          candidate_solution.add(current_time_step, fv_neighbor_correction);
-          flow_scratch_data.scratch_data.get_matrix_free().cell_loop(apply_time_step,
-                                                                     candidate_solution,
-                                                                     fv_rhs);
-        }
-      }
+    {
+      ScopedName         scope_apply_operator("finite_volume_correction");
+      TimerOutput::Scope t(flow_scratch_data.scratch_data.get_timer(), scope_apply_operator);
+      candidate_solution.zero_out_ghost_values();
+      // the correction is zero in the troubled cells, which are overwritten afterwards
+      candidate_solution.add(current_time_step, fv_neighbor_correction);
+      flow_scratch_data.scratch_data.get_matrix_free().cell_loop(apply_time_step,
+                                                                 candidate_solution,
+                                                                 fv_rhs);
+    }
   }
 
   template <int dim, typename number, int n_species>
@@ -491,10 +493,11 @@ namespace MeltPoolDG::CompressibleFlow
   template <int dim, typename number, int n_species>
   void
   DGOperatorExplicit<dim, number, n_species>::fv_subcell_limiter_local_apply_cell(
-    const dealii::MatrixFree<dim, number>       &matrix_free,
-    VectorType                                  &dst,
-    const VectorType                            &old_solution,
-    const std::pair<unsigned int, unsigned int> &cell_range) const
+    const dealii::MatrixFree<dim, number>                        &matrix_free,
+    VectorType                                                   &dst,
+    const VectorType                                             &old_solution,
+    const std::pair<unsigned int, unsigned int>                  &cell_range,
+    const dealii::AlignedVector<dealii::VectorizedArray<number>> &troubled_cells) const
   {
     FESubcellEvaluation<dim, n_conserved_variables<dim, n_species>, number> subcell_evaluation(
       matrix_free, flow_scratch_data.dof_idx, flow_scratch_data.quad_idx);
@@ -504,8 +507,7 @@ namespace MeltPoolDG::CompressibleFlow
         subcell_evaluation.reinit(cell);
 
         const std::bitset<dealii::VectorizedArray<number>::size()> mask =
-          vectorized_mask_to_bitset(subcell_evaluation.read_cell_data(
-                                      troubled_cell_marker.troubled_cells()),
+          vectorized_mask_to_bitset(subcell_evaluation.read_cell_data(troubled_cells),
                                     matrix_free.n_active_entries_per_cell_batch(cell));
         if (mask.none())
           continue;
@@ -588,10 +590,11 @@ namespace MeltPoolDG::CompressibleFlow
   template <int dim, typename number, int n_species>
   void
   DGOperatorExplicit<dim, number, n_species>::fv_subcell_limiter_local_apply_face(
-    const dealii::MatrixFree<dim, number>       &matrix_free,
-    VectorType                                  &dst,
-    const VectorType                            &old_solution,
-    const std::pair<unsigned int, unsigned int> &face_range) const
+    const dealii::MatrixFree<dim, number>                        &matrix_free,
+    VectorType                                                   &dst,
+    const VectorType                                             &old_solution,
+    const std::pair<unsigned int, unsigned int>                  &face_range,
+    const dealii::AlignedVector<dealii::VectorizedArray<number>> &troubled_cells) const
   {
     FESubcellFaceEvaluation<dim, n_conserved_variables<dim, n_species>, number> phi_m(
       matrix_free, true, flow_scratch_data.dof_idx, flow_scratch_data.quad_idx);
@@ -605,10 +608,8 @@ namespace MeltPoolDG::CompressibleFlow
 
         const unsigned int n_active_lanes = matrix_free.n_active_entries_per_face_batch(face);
         const std::bitset<dealii::VectorizedArray<number>::size()> mask =
-          vectorized_mask_to_bitset(phi_m.read_cell_data(troubled_cell_marker.troubled_cells()),
-                                    n_active_lanes) |
-          vectorized_mask_to_bitset(phi_p.read_cell_data(troubled_cell_marker.troubled_cells()),
-                                    n_active_lanes);
+          vectorized_mask_to_bitset(phi_m.read_cell_data(troubled_cells), n_active_lanes) |
+          vectorized_mask_to_bitset(phi_p.read_cell_data(troubled_cells), n_active_lanes);
         if (mask.none())
           continue;
 
@@ -670,10 +671,11 @@ namespace MeltPoolDG::CompressibleFlow
   template <int dim, typename number, int n_species>
   void
   DGOperatorExplicit<dim, number, n_species>::fv_subcell_limiter_local_apply_boundary_face(
-    const dealii::MatrixFree<dim, number>       &matrix_free,
-    VectorType                                  &dst,
-    const VectorType                            &old_solution,
-    const std::pair<unsigned int, unsigned int> &face_range) const
+    const dealii::MatrixFree<dim, number>                        &matrix_free,
+    VectorType                                                   &dst,
+    const VectorType                                             &old_solution,
+    const std::pair<unsigned int, unsigned int>                  &face_range,
+    const dealii::AlignedVector<dealii::VectorizedArray<number>> &troubled_cells) const
   {
     FESubcellFaceEvaluation<dim, n_conserved_variables<dim, n_species>, number> phi_m(
       matrix_free, true, flow_scratch_data.dof_idx, flow_scratch_data.quad_idx);
@@ -697,7 +699,7 @@ namespace MeltPoolDG::CompressibleFlow
       {
         phi_m.reinit(face);
         const std::bitset<dealii::VectorizedArray<number>::size()> mask =
-          vectorized_mask_to_bitset(phi_m.read_cell_data(troubled_cell_marker.troubled_cells()),
+          vectorized_mask_to_bitset(phi_m.read_cell_data(troubled_cells),
                                     matrix_free.n_active_entries_per_face_batch(face));
         if (mask.none())
           continue;
@@ -784,10 +786,11 @@ namespace MeltPoolDG::CompressibleFlow
   template <int dim, typename number, int n_species>
   void
   DGOperatorExplicit<dim, number, n_species>::fv_subcell_limiter_local_apply_neighbor_correction(
-    const dealii::MatrixFree<dim, number>       &matrix_free,
-    VectorType                                  &dst,
-    const VectorType                            &old_solution,
-    const std::pair<unsigned int, unsigned int> &face_range) const
+    const dealii::MatrixFree<dim, number>                        &matrix_free,
+    VectorType                                                   &dst,
+    const VectorType                                             &old_solution,
+    const std::pair<unsigned int, unsigned int>                  &face_range,
+    const dealii::AlignedVector<dealii::VectorizedArray<number>> &troubled_cells) const
   {
     FESubcellFaceEvaluation<dim, n_conserved_variables<dim, n_species>, number> subcell_m(
       matrix_free, true, flow_scratch_data.dof_idx, flow_scratch_data.quad_idx);
@@ -813,11 +816,9 @@ namespace MeltPoolDG::CompressibleFlow
         // the untroubled cells on either side of the face which have a troubled neighbor across it
         const unsigned int n_active_lanes = matrix_free.n_active_entries_per_face_batch(face);
         const std::bitset<dealii::VectorizedArray<number>::size()> troubled_m =
-          vectorized_mask_to_bitset(subcell_m.read_cell_data(troubled_cell_marker.troubled_cells()),
-                                    n_active_lanes);
+          vectorized_mask_to_bitset(subcell_m.read_cell_data(troubled_cells), n_active_lanes);
         const std::bitset<dealii::VectorizedArray<number>::size()> troubled_p =
-          vectorized_mask_to_bitset(subcell_p.read_cell_data(troubled_cell_marker.troubled_cells()),
-                                    n_active_lanes);
+          vectorized_mask_to_bitset(subcell_p.read_cell_data(troubled_cells), n_active_lanes);
         const std::bitset<dealii::VectorizedArray<number>::size()> correct_m =
           troubled_p & ~troubled_m;
         const std::bitset<dealii::VectorizedArray<number>::size()> correct_p =

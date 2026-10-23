@@ -18,6 +18,7 @@
 #include <meltpooldg/time_integration/explicit_low_storage_runge_kutta_integrator.hpp>
 #include <meltpooldg/time_integration/implicit_explicit_integrator.hpp>
 #include <meltpooldg/time_integration/solution_history.hpp>
+#include <meltpooldg/utilities/troubled_cell_marker.hpp>
 
 #include <memory>
 #include <string>
@@ -205,6 +206,9 @@ namespace MeltPoolDG::CompressibleFlow
                  DGOperatorImplicit<dim, number>,
                  DGOperatorImplicitExplicit<dim, number>>
       flow_operator;
+
+    /// Marker of the troubled cells to which the finite volume subcell limiter is applied.
+    TroubledCellMarker<dim, n_conserved_variables<dim, n_species>, number> troubled_cell_marker;
 
     /// Object containing the data post processor for the different output options
     OutputManager<dim, number> output_manager;

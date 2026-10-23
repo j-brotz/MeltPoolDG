@@ -22,6 +22,7 @@
 #include <meltpooldg/utilities/journal.hpp>
 #include <meltpooldg/utilities/preprocessor_directives.hpp>
 #include <meltpooldg/utilities/scoped_name.hpp>
+#include <meltpooldg/utilities/troubled_cell_marker.templates.hpp>
 #include <meltpooldg/utilities/vector_tools.templates.hpp>
 
 #include <meltpooldg/utilities/matrix_type_wrapper.h>
@@ -51,6 +52,17 @@ namespace MeltPoolDG::CompressibleFlow
     const unsigned int                   flow_quad_idx)
     : flow_scratch_data(flow_data, material_data, scratch_data, flow_dof_idx, flow_quad_idx)
     , flow_operator(setup_operator(flow_scratch_data))
+    , troubled_cell_marker(
+        flow_scratch_data.flow_data.limiter_data,
+        [&material = flow_scratch_data.material](
+          const ConservedVariablesType<dim, number, n_species> &subcell_state) {
+          return physical_admissibility_mask<number, n_species>(
+            NSpeciesDofStateView<dim,
+                                 n_species,
+                                 number,
+                                 const ConservedVariablesType<dim, number, n_species>>(
+              subcell_state, material));
+        })
   {
     setup_time_integrator();
 
@@ -99,6 +111,12 @@ namespace MeltPoolDG::CompressibleFlow
     flow_scratch_data.reinit(time_integrator->required_solution_history_size());
     time_integrator->reinit(flow_scratch_data.solution_history);
     std::visit([&](auto &operator_variant) { operator_variant.reinit(); }, flow_operator);
+
+    if (flow_scratch_data.flow_data.limiter_data.apply_limiter and
+        flow_scratch_data.flow_data.limiter_data.type == Utilities::LimiterType::fv_subcell)
+      troubled_cell_marker.reinit({flow_scratch_data.scratch_data.get_matrix_free(),
+                                   flow_scratch_data.dof_idx,
+                                   flow_scratch_data.quad_idx});
   }
 
   template <int dim, typename number, int n_species>
@@ -161,7 +179,18 @@ namespace MeltPoolDG::CompressibleFlow
               {
                 if constexpr (std::is_same_v<DGOperatorExplicit<dim, number, n_species>, T>)
                   {
-                    comp_flow_operator.apply_fv_subcell_limiter(time, stage_time_step, dst, src);
+                    {
+                      ScopedName         scope_marker("troubled_cell_marker");
+                      TimerOutput::Scope t(flow_scratch_data.scratch_data.get_timer(),
+                                           scope_marker);
+                      troubled_cell_marker.mark({flow_scratch_data.scratch_data.get_matrix_free(),
+                                                 flow_scratch_data.dof_idx,
+                                                 flow_scratch_data.quad_idx},
+                                                dst,
+                                                src);
+                    }
+                    comp_flow_operator.apply_fv_subcell_limiter(
+                      time, stage_time_step, dst, src, troubled_cell_marker.troubled_cells());
                   }
                 else
                   {

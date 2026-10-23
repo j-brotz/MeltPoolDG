@@ -1,5 +1,8 @@
 #pragma once
 
+#include <deal.II/base/aligned_vector.h>
+#include <deal.II/base/vectorization.h>
+
 #include <deal.II/lac/la_parallel_vector.h>
 
 #include <deal.II/matrix_free/matrix_free.h>
@@ -10,7 +13,6 @@
 #include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/compressible_flow/viscous_kernels.hpp>
 #include <meltpooldg/utilities/dg_generic_convection_diffusion_worker.hpp>
-#include <meltpooldg/utilities/troubled_cell_marker.hpp>
 
 #include <functional>
 #include <memory>
@@ -89,12 +91,30 @@ namespace MeltPoolDG::CompressibleFlow
                    const VectorType                                      &src,
                    const std::function<void(unsigned int, unsigned int)> &func) const;
 
+    /**
+     * @brief Replace the candidate solution in the troubled cells by a forward Euler step of the
+     * finite volume subcell scheme starting from @p previous_solution.
+     *
+     * The untroubled neighbors of troubled cells are corrected such that both cells use the finite
+     * volume flux at their common faces, which keeps the scheme conservative.
+     *
+     * @param time The current time.
+     * @param time_step The time step size of the forward Euler step.
+     * @param candidate_solution The candidate solution, which is overwritten in the troubled cells
+     * and corrected in their untroubled neighbors.
+     * @param previous_solution The solution from which the forward Euler step is performed.
+     * @param troubled_cells Cell data vector marking the troubled cells. It is read per cell batch
+     * via read_cell_data(), where a nonzero entry in a lane marks the corresponding cell as
+     * troubled and a zero entry as untroubled. It must be sized and filled for both the locally
+     * owned and the ghost cell batches.
+     */
     void
-    apply_fv_subcell_limiter(number            time,
-                             number            time_step,
-                             VectorType       &candidate_solution,
-                             const VectorType &previous_solution) const;
-
+    apply_fv_subcell_limiter(
+      number                                                        time,
+      number                                                        time_step,
+      VectorType                                                   &candidate_solution,
+      const VectorType                                             &previous_solution,
+      const dealii::AlignedVector<dealii::VectorizedArray<number>> &troubled_cells) const;
 
     /**
      * Add additional fluid forces provided by the user of the class (e.g. gravity, ...).
@@ -120,9 +140,6 @@ namespace MeltPoolDG::CompressibleFlow
     /// Correction of the update of the untroubled cells adjacent to troubled cells, which replaces
     /// the DG flux by the finite volume flux at their common faces to retain conservation.
     mutable dealii::LinearAlgebra::distributed::Vector<number> fv_neighbor_correction;
-
-    mutable TroubledCellMarker<dim, n_conserved_variables<dim, n_species>, number>
-      troubled_cell_marker;
 
     /**
      * @brief Local cell applier.
@@ -177,24 +194,27 @@ namespace MeltPoolDG::CompressibleFlow
 
     void
     fv_subcell_limiter_local_apply_cell(
-      const dealii::MatrixFree<dim, number>       &matrix_free,
-      VectorType                                  &dst,
-      const VectorType                            &old_solution,
-      const std::pair<unsigned int, unsigned int> &cell_range) const;
+      const dealii::MatrixFree<dim, number>                        &matrix_free,
+      VectorType                                                   &dst,
+      const VectorType                                             &old_solution,
+      const std::pair<unsigned int, unsigned int>                  &cell_range,
+      const dealii::AlignedVector<dealii::VectorizedArray<number>> &troubled_cells) const;
 
     void
     fv_subcell_limiter_local_apply_face(
-      const dealii::MatrixFree<dim, number>       &matrix_free,
-      VectorType                                  &dst,
-      const VectorType                            &old_solution,
-      const std::pair<unsigned int, unsigned int> &face_range) const;
+      const dealii::MatrixFree<dim, number>                        &matrix_free,
+      VectorType                                                   &dst,
+      const VectorType                                             &old_solution,
+      const std::pair<unsigned int, unsigned int>                  &face_range,
+      const dealii::AlignedVector<dealii::VectorizedArray<number>> &troubled_cells) const;
 
     void
     fv_subcell_limiter_local_apply_boundary_face(
-      const dealii::MatrixFree<dim, number>       &matrix_free,
-      VectorType                                  &dst,
-      const VectorType                            &old_solution,
-      const std::pair<unsigned int, unsigned int> &face_range) const;
+      const dealii::MatrixFree<dim, number>                        &matrix_free,
+      VectorType                                                   &dst,
+      const VectorType                                             &old_solution,
+      const std::pair<unsigned int, unsigned int>                  &face_range,
+      const dealii::AlignedVector<dealii::VectorizedArray<number>> &troubled_cells) const;
 
     /**
      * @brief Local face applier for the conservation correction of the finite volume subcell
@@ -212,12 +232,15 @@ namespace MeltPoolDG::CompressibleFlow
      * @param dst Destination vector to which the face integrals are added.
      * @param old_solution Solution at the beginning of the time step.
      * @param face_range Face range which is considered in the applier.
+     * @param troubled_cells Cell data vector marking the troubled cells, including the ghost cell
+     * batches.
      */
     void
     fv_subcell_limiter_local_apply_neighbor_correction(
-      const dealii::MatrixFree<dim, number>       &matrix_free,
-      VectorType                                  &dst,
-      const VectorType                            &old_solution,
-      const std::pair<unsigned int, unsigned int> &face_range) const;
+      const dealii::MatrixFree<dim, number>                        &matrix_free,
+      VectorType                                                   &dst,
+      const VectorType                                             &old_solution,
+      const std::pair<unsigned int, unsigned int>                  &face_range,
+      const dealii::AlignedVector<dealii::VectorizedArray<number>> &troubled_cells) const;
   };
 } // namespace MeltPoolDG::CompressibleFlow
