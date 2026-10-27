@@ -72,8 +72,8 @@
 <area shape="poly" id="edge64_Node000001_Node000204" title=" " alt="" coords="4327,30,4437,36,4568,48,4708,67,4847,95,4898,115,4893,114,4846,101,4707,72,4567,53,4437,41,4327,35"/>
 <area shape="rect" id="Node000206" href="$fe__subcell__evaluation_8hpp.html" title=" " alt="" coords="3490,225,3637,286"/>
 <area shape="poly" id="edge68_Node000001_Node000206" title=" " alt="" coords="4104,35,3966,48,3813,61,3683,79,3639,89,3615,100,3592,127,3578,160,3570,194,3566,226,3562,222,3565,193,3573,158,3588,124,3611,96,3637,84,3682,74,3812,56,3966,42,4110,35"/>
-<area shape="rect" id="Node000214" href="$matrix__free__util_8hpp.html" title=" " alt="" coords="3625,106,3780,168"/>
-<area shape="poly" id="edge70_Node000001_Node000214" title=" " alt="" coords="4110,51,3780,122,3780,117,4105,52"/>
+<area shape="rect" id="Node000216" href="$matrix__free__util_8hpp.html" title=" " alt="" coords="3625,106,3780,168"/>
+<area shape="poly" id="edge70_Node000001_Node000216" title=" " alt="" coords="4110,51,3780,122,3780,117,4105,52"/>
 <area shape="rect" id="Node000063" href="$brinkman__penalization_8cpp.html" title=" " alt="" coords="3763,225,3927,286"/>
 <area shape="poly" id="edge84_Node000001_Node000063" title=" " alt="" coords="4171,58,3895,227,3894,222,4166,59"/>
 <area shape="rect" id="Node000035" href="$multiphase__operation_8cpp.html" title=" " alt="" coords="6563,115,6791,160"/>
@@ -133,11 +133,11 @@
 <area shape="poly" id="edge65_Node000204_Node000124" title=" " alt="" coords="5004,164,5152,233,5147,232,5003,169"/>
 <area shape="poly" id="edge67_Node000204_Node000157" title=" " alt="" coords="4955,172,4973,234,4968,231,4951,176"/>
 <area shape="poly" id="edge66_Node000204_Node000090" title=" " alt="" coords="5009,163,5044,174,5114,191,5170,200,5296,222,5333,233,5327,232,5295,227,5169,206,5113,196,5043,179,5009,168"/>
-<area shape="poly" id="edge75_Node000214_Node000008" title=" " alt="" coords="3613,169,3421,235,3420,230,3607,170"/>
-<area shape="poly" id="edge76_Node000214_Node000009" title=" " alt="" coords="3699,182,3683,238,3670,265,3651,288,3629,306,3605,321,3552,341,3551,336,3602,316,3626,302,3647,284,3665,262,3679,236,3695,185"/>
-<area shape="poly" id="edge74_Node000214_Node000097" title=" " alt="" coords="3612,152,3395,179,3245,190,3118,194,2902,195,2687,199,2561,209,2412,227,2369,235,2368,230,2411,222,2560,204,2686,194,2902,189,3118,189,3245,184,3394,174,3607,152"/>
-<area shape="poly" id="edge71_Node000214_Node000203" title=" " alt="" coords="3795,166,3990,233,3985,232,3794,172"/>
-<area shape="poly" id="edge72_Node000214_Node000195" title=" " alt="" coords="3707,182,3721,237,3734,263,3752,284,3778,300,3818,314,3919,338,3913,337,3816,319,3776,305,3749,288,3730,265,3716,239,3704,186"/>
-<area shape="poly" id="edge73_Node000214_Node000206" title=" " alt="" coords="3657,177,3601,227,3599,222,3652,179"/>
-<area shape="poly" id="edge77_Node000214_Node000063" title=" " alt="" coords="3752,176,3811,225,3806,223,3750,181"/>
+<area shape="poly" id="edge75_Node000216_Node000008" title=" " alt="" coords="3613,169,3421,235,3420,230,3607,170"/>
+<area shape="poly" id="edge76_Node000216_Node000009" title=" " alt="" coords="3699,182,3683,238,3670,265,3651,288,3629,306,3605,321,3552,341,3551,336,3602,316,3626,302,3647,284,3665,262,3679,236,3695,185"/>
+<area shape="poly" id="edge74_Node000216_Node000097" title=" " alt="" coords="3612,152,3395,179,3245,190,3118,194,2902,195,2687,199,2561,209,2412,227,2369,235,2368,230,2411,222,2560,204,2686,194,2902,189,3118,189,3245,184,3394,174,3607,152"/>
+<area shape="poly" id="edge71_Node000216_Node000203" title=" " alt="" coords="3795,166,3990,233,3985,232,3794,172"/>
+<area shape="poly" id="edge72_Node000216_Node000195" title=" " alt="" coords="3707,182,3721,237,3734,263,3752,284,3778,300,3818,314,3919,338,3913,337,3816,319,3776,305,3749,288,3730,265,3716,239,3704,186"/>
+<area shape="poly" id="edge73_Node000216_Node000206" title=" " alt="" coords="3657,177,3601,227,3599,222,3652,179"/>
+<area shape="poly" id="edge77_Node000216_Node000063" title=" " alt="" coords="3752,176,3811,225,3806,223,3750,181"/>
 </map>
