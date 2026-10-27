@@ -1,9 +1,9 @@
 <map id="MeltPoolDG::Heat::LaserData&lt; number &gt;" name="MeltPoolDG::Heat::LaserData&lt; number &gt;">
-<area shape="rect" id="Node000001" title=" " alt="" coords="455,85,667,125"/>
-<area shape="rect" id="Node000002" href="$structMeltPoolDG_1_1LevelSet_1_1DeltaApproximationPhaseWeightedData.html" title=" " alt="" coords="5,5,267,60"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="280,54,455,84,454,89,280,60"/>
-<area shape="rect" id="Node000003" href="$structMeltPoolDG_1_1Heat_1_1LaserData_1_1GusarovData.html" title=" " alt="" coords="30,85,242,125"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="256,102,455,102,455,107,256,107"/>
-<area shape="rect" id="Node000004" href="$structMeltPoolDG_1_1Heat_1_1LaserData_1_1AnalyticalData.html" title=" " alt="" coords="30,149,242,189"/>
-<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="255,148,430,122,454,118,455,124,431,127,256,154"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="457,91,668,136"/>
+<area shape="rect" id="Node000002" href="$structMeltPoolDG_1_1LevelSet_1_1DeltaApproximationPhaseWeightedData.html" title=" " alt="" coords="5,5,266,67"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="281,54,433,80,471,90,466,91,432,85,281,59"/>
+<area shape="rect" id="Node000003" href="$structMeltPoolDG_1_1Heat_1_1LaserData_1_1GusarovData.html" title=" " alt="" coords="30,91,241,136"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="257,111,459,112,454,115,257,116"/>
+<area shape="rect" id="Node000004" href="$structMeltPoolDG_1_1Heat_1_1LaserData_1_1AnalyticalData.html" title=" " alt="" coords="30,160,241,205"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="256,167,432,141,466,137,471,136,433,146,257,172"/>
 </map>

@@ -1,11 +1,11 @@
 <map id="MeltPoolDG::Heat::LaserOperation&lt; dim, number &gt;" name="MeltPoolDG::Heat::LaserOperation&lt; dim, number &gt;">
-<area shape="rect" id="Node000001" title=" " alt="" coords="683,37,928,77"/>
-<area shape="rect" id="Node000002" href="$classMeltPoolDG_1_1ScratchData.html" title=" " alt="" coords="347,5,534,45"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="548,32,683,44,682,49,548,37"/>
-<area shape="rect" id="Node000003" href="$structMeltPoolDG_1_1Heat_1_1LaserData.html" title=" " alt="" coords="335,69,547,109"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="560,76,682,65,683,71,561,82"/>
-<area shape="rect" id="Node000004" href="$structMeltPoolDG_1_1Heat_1_1LaserData_1_1GusarovData.html" title=" " alt="" coords="5,37,217,77"/>
-<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="231,66,335,76,334,82,230,72"/>
-<area shape="rect" id="Node000005" href="$structMeltPoolDG_1_1Heat_1_1LaserData_1_1AnalyticalData.html" title=" " alt="" coords="5,101,217,141"/>
-<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="230,107,334,97,335,102,231,112"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="687,40,931,85"/>
+<area shape="rect" id="Node000002" href="$classMeltPoolDG_1_1ScratchData.html" title=" " alt="" coords="350,5,535,50"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="550,35,689,50,684,51,550,40"/>
+<area shape="rect" id="Node000003" href="$structMeltPoolDG_1_1Heat_1_1LaserData.html" title=" " alt="" coords="337,75,548,119"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="563,84,663,75,689,75,684,76,663,81,564,90"/>
+<area shape="rect" id="Node000004" href="$structMeltPoolDG_1_1Heat_1_1LaserData_1_1GusarovData.html" title=" " alt="" coords="5,40,217,85"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="232,72,339,85,334,87,232,78"/>
+<area shape="rect" id="Node000005" href="$structMeltPoolDG_1_1Heat_1_1LaserData_1_1AnalyticalData.html" title=" " alt="" coords="5,109,217,154"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="232,118,312,110,339,110,334,110,313,115,232,124"/>
 </map>

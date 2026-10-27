@@ -1,15 +1,15 @@
 <map id="MeltPoolDG::Multiphase::CompressibleFlowPhaseCouplingData&lt; number &gt;" name="MeltPoolDG::Multiphase::CompressibleFlowPhaseCouplingData&lt; number &gt;">
-<area shape="rect" id="Node000001" title="Data structure, which contains parameters specifically for the phase coupling of compressible multiph..." alt="" coords="849,124,1096,179"/>
-<area shape="rect" id="Node000002" href="$structMeltPoolDG_1_1Multiphase_1_1CompressibleFlowPhaseCouplingData_1_1LaserHeatSource.html" title="Parameters for the laser heat source." alt="" coords="427,5,677,60"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="670,61,826,105,883,121,881,127,825,110,668,66"/>
-<area shape="rect" id="Node000003" href="$structMeltPoolDG_1_1Multiphase_1_1CompressibleFlowPhaseCouplingData_1_1Penalty.html" title="Parameters specifically for the penalty interface numerical method." alt="" coords="429,84,675,139"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="689,122,849,137,849,142,689,127"/>
-<area shape="rect" id="Node000004" href="$structMeltPoolDG_1_1Multiphase_1_1CompressibleFlowPhaseCouplingData_1_1Penalty_1_1Coefficients.html" title=" " alt="" coords="8,45,283,100"/>
-<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="297,84,429,97,428,102,296,90"/>
-<area shape="rect" id="Node000005" href="$structMeltPoolDG_1_1Multiphase_1_1CompressibleFlowPhaseCouplingData_1_1Penalty_1_1TargetValues.html" title=" " alt="" coords="5,124,285,179"/>
-<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="299,134,428,121,429,126,300,139"/>
-<area shape="rect" id="Node000006" href="$structMeltPoolDG_1_1Multiphase_1_1CompressibleFlowPhaseCouplingData_1_1HLLP0__SIPG.html" title="Parameters specifically for the HLLP0 and SIPG interface numerical method." alt="" coords="429,163,675,217"/>
-<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="689,180,825,169,849,166,849,171,826,174,689,185"/>
-<area shape="rect" id="Node000007" href="$structMeltPoolDG_1_1Multiphase_1_1CompressibleFlowPhaseCouplingData_1_1HLLP0__penalty.html" title="Parameters specifically for the HLLP0 and penalty interface numerical method." alt="" coords="429,241,675,296"/>
-<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="684,235,825,198,893,176,895,181,826,203,685,241"/>
+<area shape="rect" id="Node000001" title="Data structure, which contains parameters specifically for the phase coupling of compressible multiph..." alt="" coords="855,133,1100,195"/>
+<area shape="rect" id="Node000002" href="$structMeltPoolDG_1_1Multiphase_1_1CompressibleFlowPhaseCouplingData_1_1LaserHeatSource.html" title="Parameters for the laser heat source." alt="" coords="430,5,680,67"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="695,66,832,104,905,133,899,133,830,109,695,71"/>
+<area shape="rect" id="Node000003" href="$structMeltPoolDG_1_1Multiphase_1_1CompressibleFlowPhaseCouplingData_1_1Penalty.html" title="Parameters specifically for the penalty interface numerical method." alt="" coords="432,91,678,152"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="693,133,857,151,852,152,693,138"/>
+<area shape="rect" id="Node000004" href="$structMeltPoolDG_1_1Multiphase_1_1CompressibleFlowPhaseCouplingData_1_1Penalty_1_1Coefficients.html" title=" " alt="" coords="8,48,282,110"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="296,92,434,108,429,110,297,97"/>
+<area shape="rect" id="Node000005" href="$structMeltPoolDG_1_1Multiphase_1_1CompressibleFlowPhaseCouplingData_1_1Penalty_1_1TargetValues.html" title=" " alt="" coords="5,133,285,195"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="300,145,434,133,429,135,301,151"/>
+<area shape="rect" id="Node000006" href="$structMeltPoolDG_1_1Multiphase_1_1CompressibleFlowPhaseCouplingData_1_1HLLP0__SIPG.html" title="Parameters specifically for the HLLP0 and SIPG interface numerical method." alt="" coords="432,176,678,238"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="692,191,831,177,857,177,852,178,831,182,693,196"/>
+<area shape="rect" id="Node000007" href="$structMeltPoolDG_1_1Multiphase_1_1CompressibleFlowPhaseCouplingData_1_1HLLP0__penalty.html" title="Parameters specifically for the HLLP0 and penalty interface numerical method." alt="" coords="432,261,678,323"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="692,259,830,220,901,196,906,195,832,225,693,264"/>
 </map>
