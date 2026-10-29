@@ -1,13 +1,9 @@
 <map id="include/meltpooldg/utilities/create_triangulation_with_marching_cube_algorithm.hpp" name="include/meltpooldg/utilities/create_triangulation_with_marching_cube_algorithm.hpp">
-<area shape="rect" id="Node000001" title=" " alt="" coords="199,5,459,67"/>
-<area shape="rect" id="Node000002" href="$vortex__bubble_8hpp.html" title=" " alt="" coords="5,124,218,168"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="253,76,157,125,154,121,256,72"/>
-<area shape="rect" id="Node000004" href="$film__boiling_8hpp.html" title=" " alt="" coords="241,115,416,177"/>
-<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="330,80,331,116,326,113,327,85"/>
-<area shape="rect" id="Node000006" href="$create__triangulation__with__marching__cube__algorithm_8cpp.html" title=" " alt="" coords="440,115,655,177"/>
-<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="404,72,489,114,483,115,404,77"/>
-<area shape="rect" id="Node000003" href="$vortex__bubble_8cpp.html" title=" " alt="" coords="6,233,217,278"/>
-<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="113,182,114,233,109,232,110,186"/>
-<area shape="rect" id="Node000005" href="$film__boiling_8cpp.html" title=" " alt="" coords="241,225,416,286"/>
-<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="331,190,331,226,327,223,327,194"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="72,5,332,67"/>
+<area shape="rect" id="Node000002" href="$film__boiling_8hpp.html" title=" " alt="" coords="5,115,181,177"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="160,80,126,116,122,113,163,76"/>
+<area shape="rect" id="Node000004" href="$create__triangulation__with__marching__cube__algorithm_8cpp.html" title=" " alt="" coords="204,115,419,177"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="244,75,284,114,278,115,243,80"/>
+<area shape="rect" id="Node000003" href="$film__boiling_8cpp.html" title=" " alt="" coords="5,225,181,286"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="95,190,96,225,90,223,91,194"/>
 </map>
