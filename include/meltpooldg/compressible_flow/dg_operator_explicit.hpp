@@ -99,8 +99,9 @@ namespace MeltPoolDG::CompressibleFlow
      *
      * In the troubled cells, the candidate solution is replaced by a forward Euler step of the
      * finite volume subcell scheme starting from @p previous_solution. The finite volume
-     * right-hand side contains the convective fluxes and the external forces. Viscous terms are
-     * not considered yet.
+     * right-hand side contains the convective fluxes and the external forces. For viscous flows,
+     * the viscous terms are not discretized on the subcells. Instead, the DG viscous terms of the
+     * troubled cells are evaluated from @p previous_solution and added to their update.
      *
      * In the untroubled neighbors of troubled cells, the update is corrected such that it uses the
      * finite volume flux instead of the DG flux at the faces shared with troubled cells. Thus, both
@@ -152,9 +153,12 @@ namespace MeltPoolDG::CompressibleFlow
     /// Right-hand side of the finite volume subcell formulation.
     mutable dealii::LinearAlgebra::distributed::Vector<number> fv_rhs;
 
-    /// Correction of the update of the untroubled cells adjacent to troubled cells, which replaces
-    /// the DG flux by the finite volume flux at their common faces to retain conservation.
-    mutable dealii::LinearAlgebra::distributed::Vector<number> fv_neighbor_correction;
+    /// Contributions of the finite volume subcell limiter that are discretized with DG, after
+    /// applying the inverse mass matrix. In the untroubled cells adjacent to troubled cells, it
+    /// holds the correction of the update, which replaces the DG flux by the finite volume flux at
+    /// their common faces to retain conservation. In the troubled cells, it holds the DG viscous
+    /// terms.
+    mutable dealii::LinearAlgebra::distributed::Vector<number> dg_rhs;
 
     /**
      * @brief Local cell applier.
@@ -290,6 +294,70 @@ namespace MeltPoolDG::CompressibleFlow
      */
     void
     fv_subcell_limiter_local_apply_neighbor_correction(
+      const dealii::MatrixFree<dim, number>                        &matrix_free,
+      VectorType                                                   &dst,
+      const VectorType                                             &old_solution,
+      const std::pair<unsigned int, unsigned int>                  &face_range,
+      const dealii::AlignedVector<dealii::VectorizedArray<number>> &troubled_cells) const;
+
+    /**
+     * @brief Local cell applier for the DG viscous terms of the finite volume subcell limiter.
+     *
+     * For the troubled cells recomputed by the finite volume subcell limiter, computes the cell
+     * integral of the DG viscous terms from @p old_solution. Untroubled cells are skipped, since
+     * their candidate solution already  contains the viscous terms.
+     *
+     * @param matrix_free Matrix free object on which the applier works on.
+     * @param dst Destination vector to which the result is added.
+     * @param old_solution Solution from which the forward Euler step starts.
+     * @param cell_range Cell range which is considered in the applier.
+     * @param troubled_cells Cell data vector marking the troubled cells.
+     */
+    void
+    fv_subcell_limiter_local_apply_viscous_cell(
+      const dealii::MatrixFree<dim, number>                        &matrix_free,
+      VectorType                                                   &dst,
+      const VectorType                                             &old_solution,
+      const std::pair<unsigned int, unsigned int>                  &cell_range,
+      const dealii::AlignedVector<dealii::VectorizedArray<number>> &troubled_cells) const;
+
+    /**
+     * @brief Local face applier for the DG viscous terms of the finite volume subcell limiter.
+     *
+     * For faces adjacent to at least one troubled cell, computes the face integral of the DG
+     * viscous terms based on the symmetric interior penalty method from @p old_solution. Only the
+     * contributions to the troubled cells are added to @p dst.
+     *
+     * @param matrix_free Matrix free object on which the applier works on.
+     * @param dst Destination vector to which the result is added.
+     * @param old_solution Solution from which the forward Euler step starts.
+     * @param face_range Face range which is considered in the applier.
+     * @param troubled_cells Cell data vector marking the troubled cells, including the ghost cell
+     * batches.
+     */
+    void
+    fv_subcell_limiter_local_apply_viscous_face(
+      const dealii::MatrixFree<dim, number>                        &matrix_free,
+      VectorType                                                   &dst,
+      const VectorType                                             &old_solution,
+      const std::pair<unsigned int, unsigned int>                  &face_range,
+      const dealii::AlignedVector<dealii::VectorizedArray<number>> &troubled_cells) const;
+
+    /**
+     * @brief Local boundary face applier for the DG viscous terms of the finite volume subcell
+     * limiter.
+     *
+     * For boundary faces of troubled cells, computes the face integral of the DG viscous terms
+     * from @p old_solution, with the exterior state given by the boundary conditions.
+     *
+     * @param matrix_free Matrix free object on which the applier works on.
+     * @param dst Destination vector to which the result is added.
+     * @param old_solution Solution from which the forward Euler step starts.
+     * @param face_range Boundary face range which is considered in the applier.
+     * @param troubled_cells Cell data vector marking the troubled cells.
+     */
+    void
+    fv_subcell_limiter_local_apply_viscous_boundary_face(
       const dealii::MatrixFree<dim, number>                        &matrix_free,
       VectorType                                                   &dst,
       const VectorType                                             &old_solution,

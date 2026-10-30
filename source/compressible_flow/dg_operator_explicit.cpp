@@ -33,8 +33,7 @@ namespace MeltPoolDG::CompressibleFlow
         flow_scratch_data.flow_data.limiter_data.type == Utilities::LimiterType::fv_subcell)
       {
         flow_scratch_data.scratch_data.get_matrix_free().initialize_dof_vector(fv_rhs);
-        flow_scratch_data.scratch_data.get_matrix_free().initialize_dof_vector(
-          fv_neighbor_correction);
+        flow_scratch_data.scratch_data.get_matrix_free().initialize_dof_vector(dg_rhs);
       }
   }
 
@@ -150,13 +149,47 @@ namespace MeltPoolDG::CompressibleFlow
           fv_subcell_limiter_local_apply_neighbor_correction(
             matrix_free, dst, src, face_range, troubled_cells);
         };
-      flow_scratch_data.scratch_data.get_matrix_free().loop(no_operation,
-                                                            neighbor_face_correction,
-                                                            no_operation,
-                                                            fv_neighbor_correction,
-                                                            previous_solution,
-                                                            true);
+      flow_scratch_data.scratch_data.get_matrix_free().loop(
+        no_operation, neighbor_face_correction, no_operation, dg_rhs, previous_solution, true);
+    }
 
+    if (is_viscous_flow<number, n_species>(flow_scratch_data.material))
+      {
+        ScopedName         scope_apply_operator("DG_viscous_terms");
+        TimerOutput::Scope t(flow_scratch_data.scratch_data.get_timer(), scope_apply_operator);
+
+        // The viscous terms of the troubled cells are discretized with DG
+        const local_applier_type viscous_cell =
+          [this, &troubled_cells](const dealii::MatrixFree<dim, number>       &matrix_free,
+                                  VectorType                                  &dst,
+                                  const VectorType                            &src,
+                                  const std::pair<unsigned int, unsigned int> &cell_range) {
+            fv_subcell_limiter_local_apply_viscous_cell(
+              matrix_free, dst, src, cell_range, troubled_cells);
+          };
+        const local_applier_type viscous_face =
+          [this, &troubled_cells](const dealii::MatrixFree<dim, number>       &matrix_free,
+                                  VectorType                                  &dst,
+                                  const VectorType                            &src,
+                                  const std::pair<unsigned int, unsigned int> &face_range) {
+            fv_subcell_limiter_local_apply_viscous_face(
+              matrix_free, dst, src, face_range, troubled_cells);
+          };
+        const local_applier_type viscous_boundary_face =
+          [this, &troubled_cells](const dealii::MatrixFree<dim, number>       &matrix_free,
+                                  VectorType                                  &dst,
+                                  const VectorType                            &src,
+                                  const std::pair<unsigned int, unsigned int> &face_range) {
+            fv_subcell_limiter_local_apply_viscous_boundary_face(
+              matrix_free, dst, src, face_range, troubled_cells);
+          };
+        flow_scratch_data.scratch_data.get_matrix_free().loop(
+          viscous_cell, viscous_face, viscous_boundary_face, dg_rhs, previous_solution, false);
+      }
+
+    {
+      ScopedName               scope_apply_operator("DG_inverse_mass_matrix");
+      TimerOutput::Scope       t(flow_scratch_data.scratch_data.get_timer(), scope_apply_operator);
       const local_applier_type inverse_mass_matrix =
         [dof_idx = flow_scratch_data.dof_idx,
          quad_idx =
@@ -170,12 +203,12 @@ namespace MeltPoolDG::CompressibleFlow
         };
 
       flow_scratch_data.scratch_data.get_matrix_free().cell_loop(inverse_mass_matrix,
-                                                                 fv_neighbor_correction,
-                                                                 fv_neighbor_correction);
+                                                                 dg_rhs,
+                                                                 dg_rhs);
     }
 
-    // Take the computed finite volume right-hand side and perform a forward Euler time
-    // integration step to update the solution in the troubled cells.
+    // Take the computed finite volume right-hand side together with the DG viscous terms and
+    // perform a forward Euler time integration step to update the solution in the troubled cells.
     const local_applier_type apply_time_step =
       [this,
        &previous_solution,
@@ -187,11 +220,14 @@ namespace MeltPoolDG::CompressibleFlow
           matrix_free, flow_scratch_data.dof_idx, flow_scratch_data.quad_idx);
         FECellIntegrator<dim, n_conserved_variables<dim, n_species>, number> new_solution(
           matrix_free, flow_scratch_data.dof_idx, flow_scratch_data.quad_idx);
+        FECellIntegrator<dim, n_conserved_variables<dim, n_species>, number> viscous_terms(
+          matrix_free, flow_scratch_data.dof_idx, flow_scratch_data.quad_idx);
 
         for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
           {
             old_solution.reinit(cell);
             new_solution.reinit(cell);
+            viscous_terms.reinit(cell);
 
             const LaneMask cell_mask =
               vectorized_mask_to_bitset(new_solution.read_cell_data(troubled_cells),
@@ -202,11 +238,14 @@ namespace MeltPoolDG::CompressibleFlow
 
             old_solution.read_dof_values(previous_solution, 0, cell_mask);
             new_solution.read_dof_values(rhs, 0, cell_mask);
+            // in the troubled cells, dg_rhs only contains the DG viscous terms
+            viscous_terms.read_dof_values(dg_rhs, 0, cell_mask);
 
             for (unsigned int dof = 0; dof < old_solution.dofs_per_component; ++dof)
               {
                 const ConservedVariables old_value = old_solution.get_dof_value(dof);
-                const ConservedVariables new_value = new_solution.get_dof_value(dof);
+                const ConservedVariables new_value =
+                  new_solution.get_dof_value(dof) + viscous_terms.get_dof_value(dof);
 
                 const ConservedVariables updated_value =
                   old_value + new_value * current_time_step; // Forward Euler time integration
@@ -221,8 +260,9 @@ namespace MeltPoolDG::CompressibleFlow
       ScopedName         scope_apply_operator("finite_volume_correction");
       TimerOutput::Scope t(flow_scratch_data.scratch_data.get_timer(), scope_apply_operator);
       candidate_solution.zero_out_ghost_values();
-      // the correction is zero in the troubled cells, which are overwritten afterwards
-      candidate_solution.add(current_time_step, fv_neighbor_correction);
+      // in the untroubled cells, dg_rhs only contains the neighbor correction, while the troubled
+      // cells are overwritten afterwards
+      candidate_solution.add(current_time_step, dg_rhs);
       flow_scratch_data.scratch_data.get_matrix_free().cell_loop(apply_time_step,
                                                                  candidate_solution,
                                                                  fv_rhs);
@@ -752,6 +792,186 @@ namespace MeltPoolDG::CompressibleFlow
         phi_m.distribute_local_to_global(dst, 0, correct_m);
         phi_p.integrate(EvaluationFlags::values);
         phi_p.distribute_local_to_global(dst, 0, correct_p);
+      }
+  }
+
+  template <int dim, typename number, int n_species>
+  void
+  DGOperatorExplicit<dim, number, n_species>::fv_subcell_limiter_local_apply_viscous_cell(
+    const dealii::MatrixFree<dim, number>                        &matrix_free,
+    VectorType                                                   &dst,
+    const VectorType                                             &old_solution,
+    const std::pair<unsigned int, unsigned int>                  &cell_range,
+    const dealii::AlignedVector<dealii::VectorizedArray<number>> &troubled_cells) const
+  {
+    FECellIntegrator<dim, n_conserved_variables<dim, n_species>, number> phi(
+      matrix_free, flow_scratch_data.dof_idx, flow_scratch_data.quad_idx);
+
+    const DiffusiveKernel diffusive_kernel(flow_scratch_data.material);
+
+    for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
+      {
+        phi.reinit(cell);
+
+        const LaneMask mask =
+          vectorized_mask_to_bitset(phi.read_cell_data(troubled_cells),
+                                    matrix_free.n_active_entries_per_cell_batch(cell));
+        if (mask.none())
+          continue;
+
+        phi.gather_evaluate(old_solution, EvaluationFlags::values | EvaluationFlags::gradients);
+
+        for (const unsigned int q : phi.quadrature_point_indices())
+          phi.submit_gradient(ConvectionDiffusionOperator::DiffusionOperator::cell(
+                                phi.get_value(q), phi.get_gradient(q), diffusive_kernel),
+                              q);
+
+        phi.integrate(EvaluationFlags::gradients);
+        phi.distribute_local_to_global(dst, 0, mask);
+      }
+  }
+
+  template <int dim, typename number, int n_species>
+  void
+  DGOperatorExplicit<dim, number, n_species>::fv_subcell_limiter_local_apply_viscous_face(
+    const dealii::MatrixFree<dim, number>                        &matrix_free,
+    VectorType                                                   &dst,
+    const VectorType                                             &old_solution,
+    const std::pair<unsigned int, unsigned int>                  &face_range,
+    const dealii::AlignedVector<dealii::VectorizedArray<number>> &troubled_cells) const
+  {
+    FEFaceIntegrator<dim, n_conserved_variables<dim, n_species>, number> phi_m(
+      matrix_free, true, flow_scratch_data.dof_idx, flow_scratch_data.quad_idx);
+    FEFaceIntegrator<dim, n_conserved_variables<dim, n_species>, number> phi_p(
+      matrix_free, false, flow_scratch_data.dof_idx, flow_scratch_data.quad_idx);
+
+    const DiffusiveKernel diffusive_kernel(flow_scratch_data.material);
+
+    for (unsigned int face = face_range.first; face < face_range.second; ++face)
+      {
+        phi_m.reinit(face);
+        phi_p.reinit(face);
+
+        const unsigned int n_active_lanes = matrix_free.n_active_entries_per_face_batch(face);
+        const LaneMask     troubled_m =
+          vectorized_mask_to_bitset(phi_m.read_cell_data(troubled_cells), n_active_lanes);
+        const LaneMask troubled_p =
+          vectorized_mask_to_bitset(phi_p.read_cell_data(troubled_cells), n_active_lanes);
+        if (troubled_m.none() and troubled_p.none())
+          continue;
+
+        // the viscous flux of a troubled cell also needs the state of an untroubled neighbor
+        phi_m.gather_evaluate(old_solution, EvaluationFlags::values | EvaluationFlags::gradients);
+        phi_p.gather_evaluate(old_solution, EvaluationFlags::values | EvaluationFlags::gradients);
+
+        const VectorizedArray<number> interior_penalty_parameter =
+          flow_scratch_data.material.reference_dynamic_viscosity /
+          flow_scratch_data.material.reference_density *
+          std::max(phi_m.read_cell_data(flow_scratch_data.interior_penalty_parameter),
+                   phi_p.read_cell_data(flow_scratch_data.interior_penalty_parameter));
+
+        for (const unsigned int q : phi_m.quadrature_point_indices())
+          {
+            const typename ConvectionDiffusionOperator::DiffusionOperator::FaceFlux flux =
+              ConvectionDiffusionOperator::DiffusionOperator::face(phi_m.get_value(q),
+                                                                   phi_p.get_value(q),
+                                                                   phi_m.get_gradient(q),
+                                                                   phi_p.get_gradient(q),
+                                                                   phi_m.normal_vector(q),
+                                                                   interior_penalty_parameter,
+                                                                   diffusive_kernel);
+
+            phi_m.submit_value(flux.inner_face_value, q);
+            phi_p.submit_value(flux.outer_face_value, q);
+            phi_m.submit_gradient(flux.inner_face_gradient, q);
+            phi_p.submit_gradient(flux.outer_face_gradient, q);
+          }
+
+        phi_m.integrate(EvaluationFlags::values | EvaluationFlags::gradients);
+        phi_m.distribute_local_to_global(dst, 0, troubled_m);
+        phi_p.integrate(EvaluationFlags::values | EvaluationFlags::gradients);
+        phi_p.distribute_local_to_global(dst, 0, troubled_p);
+      }
+  }
+
+  template <int dim, typename number, int n_species>
+  void
+  DGOperatorExplicit<dim, number, n_species>::fv_subcell_limiter_local_apply_viscous_boundary_face(
+    const dealii::MatrixFree<dim, number>                        &matrix_free,
+    VectorType                                                   &dst,
+    const VectorType                                             &old_solution,
+    const std::pair<unsigned int, unsigned int>                  &face_range,
+    const dealii::AlignedVector<dealii::VectorizedArray<number>> &troubled_cells) const
+  {
+    FEFaceIntegrator<dim, n_conserved_variables<dim, n_species>, number> phi_m(
+      matrix_free, true, flow_scratch_data.dof_idx, flow_scratch_data.quad_idx);
+
+    const DiffusiveKernel diffusive_kernel(flow_scratch_data.material);
+
+    for (unsigned int face = face_range.first; face < face_range.second; ++face)
+      {
+        phi_m.reinit(face);
+        const LaneMask mask =
+          vectorized_mask_to_bitset(phi_m.read_cell_data(troubled_cells),
+                                    matrix_free.n_active_entries_per_face_batch(face));
+        if (mask.none())
+          continue;
+
+        phi_m.gather_evaluate(old_solution, EvaluationFlags::values | EvaluationFlags::gradients);
+
+        const VectorizedArray<number> interior_penalty_parameter =
+          flow_scratch_data.material.reference_dynamic_viscosity /
+          flow_scratch_data.material.reference_density *
+          phi_m.read_cell_data(flow_scratch_data.interior_penalty_parameter);
+
+        for (const unsigned int q : phi_m.quadrature_point_indices())
+          {
+            const ConservedVariables         w_m      = phi_m.get_value(q);
+            const ConservedVariablesGradient grad_w_m = phi_m.get_gradient(q);
+
+            ConservedVariables         w_p;
+            ConservedVariablesGradient grad_w_p;
+
+            const NSpeciesDofValueAndGradientStateView<dim,
+                                                       n_species,
+                                                       number,
+                                                       const ConservedVariables,
+                                                       const ConservedVariablesGradient>
+              inner_state(w_m, grad_w_m, flow_scratch_data.material);
+            const NSpeciesDofValueAndGradientStateView<dim,
+                                                       n_species,
+                                                       number,
+                                                       ConservedVariables,
+                                                       ConservedVariablesGradient>
+              outer_state(w_p, grad_w_p, flow_scratch_data.material);
+
+            flow_scratch_data.boundary_conditions
+              .set_conserved_variables_boundary_value_and_gradient(phi_m.quadrature_point(q),
+                                                                   phi_m.normal_vector(q),
+                                                                   phi_m.boundary_id(),
+                                                                   inner_state,
+                                                                   outer_state);
+
+            if constexpr (n_species > 1)
+              flow_scratch_data.boundary_conditions
+                .template set_partial_density_boundary_value_and_gradient<n_species>(
+                  phi_m.quadrature_point(q), phi_m.boundary_id(), inner_state, outer_state);
+
+            const typename ConvectionDiffusionOperator::DiffusionOperator::FaceFlux flux =
+              ConvectionDiffusionOperator::DiffusionOperator::face(w_m,
+                                                                   w_p,
+                                                                   grad_w_m,
+                                                                   grad_w_p,
+                                                                   phi_m.normal_vector(q),
+                                                                   interior_penalty_parameter,
+                                                                   diffusive_kernel);
+
+            phi_m.submit_value(flux.inner_face_value, q);
+            phi_m.submit_gradient(flux.inner_face_gradient, q);
+          }
+
+        phi_m.integrate(EvaluationFlags::values | EvaluationFlags::gradients);
+        phi_m.distribute_local_to_global(dst, 0, mask);
       }
   }
 
