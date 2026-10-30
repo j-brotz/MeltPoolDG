@@ -233,6 +233,7 @@ namespace MeltPoolDG::Utils
 
       const auto value = contract_average_tensor_with_vector(flux_m, flux_p, normal) -
                          penalty_parameter * (u_m - u_p);
+      value[0] = 0.;
 
 
       GradientType jump_u = jump(u_m, u_p, normal);
