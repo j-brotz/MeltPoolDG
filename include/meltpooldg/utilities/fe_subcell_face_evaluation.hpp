@@ -64,8 +64,8 @@ namespace MeltPoolDG
    * - subcell_size(s): the volume of the adjacent subcell on this object's side (its area in 2D).
    * - subcell_location(s): the location of the adjacent subcell on this object's side, see
    *   FESubcellEvaluation::subcell_location(). Note that this is not a point on the face.
-   * - subcell_face_location(s): the location of the subcell face. It lies on the face and is the
-   *   same on the interior and the exterior object.
+   * - subcell_face_location(s): the location of the subcell face, i.e. its geometric center. It
+   *   lies on the face and is the same on the interior and the exterior object.
    *
    * ## Submitting fluxes
    * submit_flux(s, flux) stores a flux for subcell face `s`, and integrate_scatter() adds the
@@ -297,7 +297,8 @@ namespace MeltPoolDG
 
     /**
      * Return the location in real space of the subcell on this object's side that is adjacent to
-     * the subcell face @p subcell_index.
+     * the subcell face @p subcell_index, i.e. its geometric center, see
+     * FESubcellEvaluation::subcell_location().
      *
      * @param subcell_index The index of the subcell face.
      */
@@ -305,11 +306,10 @@ namespace MeltPoolDG
     subcell_location(const unsigned int subcell_index) const;
 
     /**
-     * Return the location in real space of the subcell face @p subcell_index, i.e. the face
-     * quadrature point with the same index. The location lies on the face and is the same on the
-     * interior and the exterior object. As for subcell_location(), this is in general not the
-     * geometric center of the subcell face, since the subcell faces are bounded by the cumulative
-     * sums of the quadrature weights.
+     * Return the location in real space of the subcell face @p subcell_index, i.e. its geometric
+     * center, which is the center of the adjacent subcell projected onto the face. The location
+     * lies on the face and is the same on the interior and the exterior object. Note that this is
+     * in general not the face quadrature point with the same index.
      *
      * @param subcell_index The index of the subcell face.
      */
@@ -379,6 +379,10 @@ namespace MeltPoolDG
     set_cell_data(dealii::AlignedVector<T> &data, const T &value) const;
 
   private:
+    /// The SubcellMatrixFree object providing the subcell data that is the same for all loops, e.g.
+    /// the cell origins.
+    const SubcellMatrixFree<dim, number> &subcell_matrix_free;
+
     /// The subcell index data.
     const SubcellShapeInfo<dim, number> &subcell_shape_info;
 
@@ -558,15 +562,15 @@ namespace MeltPoolDG
 
     /**
      * Compute the subcell locations and store them in the corresponding member variable. The
-     * locations are the cell quadrature points adjacent to the face, which correspond to the
-     * subcells adjacent to the subcell faces.
+     * locations are the geometric centers of the subcells adjacent to the subcell faces.
      */
     void
     determine_subcell_locations();
 
     /**
      * Compute the subcell face locations and store them in the corresponding member variable. The
-     * locations are the face quadrature points, which correspond to the subcell faces.
+     * locations are the geometric centers of the subcell faces, i.e. the subcell locations
+     * projected onto the face. Requires determine_subcell_locations() to be called before.
      */
     void
     determine_subcell_face_locations();

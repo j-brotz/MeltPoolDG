@@ -28,6 +28,7 @@ namespace MeltPoolDG
     n_subcells         = dealii::Utilities::fixed_power<dim>(n_subcells_1d);
     n_subcells_face    = dealii::Utilities::fixed_power<dim - 1>(n_subcells_1d);
     n_intra_cell_faces = dim * (n_subcells_1d - 1) * n_subcells_face;
+    n_haloed_subcells  = dealii::Utilities::fixed_power<dim>(n_subcells_1d + 2);
 
     // stride of the lexicographic subcell index in each direction
     std::array<unsigned int, dim> strides;
@@ -76,12 +77,50 @@ namespace MeltPoolDG
           }
     AssertDimension(intra_cell_face_to_subcells.size(), n_intra_cell_faces);
 
+    // The subcell faces lie at the cumulative sums of the quadrature weights, and the geometric
+    // center of a subcell is the midpoint between its two faces.
     subcell_centers_1d.resize(n_subcells_1d);
     subcell_widths_1d.resize(n_subcells_1d);
+    number lower_face = 0.;
     for (unsigned int i = 0; i < n_subcells_1d; ++i)
       {
-        subcell_centers_1d[i] = quadrature_1d.point(i)[0];
         subcell_widths_1d[i]  = quadrature_1d.weight(i);
+        subcell_centers_1d[i] = lower_face + 0.5 * subcell_widths_1d[i];
+        lower_face += subcell_widths_1d[i];
+      }
+
+    subcell_cartesian_indices.resize(n_subcells);
+    for (unsigned int subcell = 0; subcell < n_subcells; ++subcell)
+      {
+        for (unsigned int d = 0; d < dim; ++d)
+          subcell_cartesian_indices[subcell][d] = (subcell / strides[d]) % n_subcells_1d;
+      }
+
+    // The haloed layout adds one halo subcell in front of and one behind the subcells of the cell
+    // in each direction, which shifts the index in each direction by one. The neighbor in the
+    // direction of the face face_no lies one stride below the subcell for even and one stride above
+    // for odd face numbers.
+    std::array<unsigned int, dim> haloed_strides;
+    unsigned int                  haloed_stride = 1;
+    for (unsigned int d = 0; d < dim; ++d)
+      {
+        haloed_strides[d] = haloed_stride;
+        haloed_stride *= n_subcells_1d + 2;
+      }
+
+    subcell_index_to_haloed_vector_index.resize(n_subcells);
+    subcell_index_to_haloed_neighbor_vector_index.reinit(n_subcells, 2 * dim);
+    for (unsigned int subcell = 0; subcell < n_subcells; ++subcell)
+      {
+        unsigned int haloed_index = 0;
+        for (unsigned int d = 0; d < dim; ++d)
+          haloed_index += ((subcell / strides[d]) % n_subcells_1d + 1) * haloed_strides[d];
+        subcell_index_to_haloed_vector_index[subcell] = haloed_index;
+
+        for (unsigned int face_no = 0; face_no < 2 * dim; ++face_no)
+          subcell_index_to_haloed_neighbor_vector_index[subcell][face_no] =
+            (face_no % 2 == 0) ? haloed_index - haloed_strides[face_no / 2] :
+                                 haloed_index + haloed_strides[face_no / 2];
       }
   }
 
@@ -114,14 +153,8 @@ namespace MeltPoolDG
 
     subcell_shape_info.reinit(matrix_free->get_shape_info(dof_no, quad_no).data[0].quadrature);
 
-    /*
-    for (unsigned int cell_batch = 0; cell_batch < matrix_free->n_cell_batches(); ++cell_batch)
-      AssertThrow(matrix_free->get_mapping_info().get_cell_type(cell_batch) ==
-                    dealii::internal::MatrixFreeFunctions::cartesian,
-                  dealii::ExcNotImplemented("SubcellMatrixFree requires Cartesian cells."));
-                  */
-
     setup_face_neighbors();
+    setup_cell_origins();
     setup_extra_cells();
   }
 
@@ -193,6 +226,33 @@ namespace MeltPoolDG
           neighbors.all_held and neighbors.cell_ids[lane] != dealii::numbers::invalid_unsigned_int;
       }
     return neighbors;
+  }
+
+  template <int dim, typename number>
+  const dealii::Point<dim, dealii::VectorizedArray<number>> &
+  SubcellMatrixFree<dim, number>::get_cell_origin(const unsigned int cell_batch) const
+  {
+    AssertIndexRange(cell_batch, cell_origins.size());
+    return cell_origins[cell_batch];
+  }
+
+  template <int dim, typename number>
+  dealii::Point<dim, dealii::VectorizedArray<number>>
+  SubcellMatrixFree<dim, number>::get_cell_origin(
+    const std::array<unsigned int, n_lanes> &cell_ids) const
+  {
+    dealii::Point<dim, VectorizedArrayType> origin;
+    for (unsigned int lane = 0; lane < n_lanes; ++lane)
+      {
+        if (cell_ids[lane] == dealii::numbers::invalid_unsigned_int)
+          continue;
+
+        const dealii::Point<dim, VectorizedArrayType> &cell_origin =
+          get_cell_origin(cell_ids[lane] / n_lanes);
+        for (unsigned int d = 0; d < dim; ++d)
+          origin[d][lane] = cell_origin[d][cell_ids[lane] % n_lanes];
+      }
+    return origin;
   }
 
   template <int dim, typename number>
@@ -341,6 +401,28 @@ namespace MeltPoolDG
               neighbors.all_held             = false;
             }
         }
+  }
+
+  template <int dim, typename number>
+  void
+  SubcellMatrixFree<dim, number>::setup_cell_origins()
+  {
+    const unsigned int n_cell_batches =
+      matrix_free->n_cell_batches() + matrix_free->n_ghost_cell_batches();
+    cell_origins.resize(n_cell_batches);
+
+    for (unsigned int cell_batch = 0; cell_batch < n_cell_batches; ++cell_batch)
+      {
+        cell_origins[cell_batch] = dealii::Point<dim, VectorizedArrayType>();
+        for (unsigned int lane = 0; lane < matrix_free->n_active_entries_per_cell_batch(cell_batch);
+             ++lane)
+          {
+            const dealii::Point<dim> vertex =
+              matrix_free->get_cell_iterator(cell_batch, lane, dof_no)->vertex(0);
+            for (unsigned int d = 0; d < dim; ++d)
+              cell_origins[cell_batch][d][lane] = vertex[d];
+          }
+      }
   }
 
   template <int dim, typename number>

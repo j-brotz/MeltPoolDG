@@ -2,8 +2,10 @@
 
 #include <deal.II/base/aligned_vector.h>
 #include <deal.II/base/partitioner.h>
+#include <deal.II/base/point.h>
 #include <deal.II/base/quadrature.h>
 #include <deal.II/base/table.h>
+#include <deal.II/base/tensor.h>
 #include <deal.II/base/types.h>
 #include <deal.II/base/vectorization.h>
 
@@ -20,16 +22,54 @@
 namespace MeltPoolDG
 {
   /**
-   * Index data of the subcells that is the same for all cells, analogous to the ShapeInfo of
-   * dealii::MatrixFree. The subcells and the intra cell subcell faces are numbered as described in
-   * FESubcellEvaluation.
+   * This class stores index and geometry data on the unit cell of the subcells that are the same
+   * for all cells, analogous to the ShapeInfo of dealii::MatrixFree. The subcells and the intra
+   * cell subcell faces are numbered as described in FESubcellEvaluation.
+   *
+   * ## Haloed Layout
+   *
+   * Some subcell stencils, e.g. the central differences of the subcell gradients in
+   * FESubcellEvaluation, reach over the faces of a cell into the adjacent subcells of its face
+   * neighbors. To apply the same stencil to all subcells, the subcell data of a cell is then stored
+   * in a haloed vector, which pads the subcells of the cell by one halo subcell in front of and one
+   * behind the cell in each direction. With `n = n_subcells_1d`, a haloed vector holds
+   * `(n + 2)^dim` entries, and the subcell with the indices `(i_0, ..., i_{dim-1})` is stored at
+   * position `sum_d (i_d + 1) * (n + 2)^d`, where the indices -1 and n denote the halo. Hence, the
+   * neighbors of an entry in direction d lie `(n + 2)^d` positions below and above it.
+   *
+   * The halo subcell across a face of the cell is the subcell of the face neighbor that is adjacent
+   * to this face. Only these face halo subcells are used. The entries across two or more faces of
+   * the cell, i.e. the corners in 2D and the edges and corners in 3D, are allocated but not used.
+   * The two-dimensional case with `n == 3` looks as follows:
+   *
+   * @verbatim
+   *     subcell indices          positions in a haloed vector
+   *
+   *                            +----+----+----+----+----+
+   *                            | 20 | 21 | 22 | 23 | 24 |
+   *    o===+===+===o           +----o====+====+====o----+
+   *    # 6 | 7 | 8 #           | 15 # 16 | 17 | 18 # 19 |
+   *    +---+---+---+           +----#----+----+----#----+
+   *    # 3 | 4 | 5 #           | 10 # 11 | 12 | 13 # 14 |
+   *    +---+---+---+           +----#----+----+----#----+
+   *    # 0 | 1 | 2 #           |  5 #  6 |  7 |  8 #  9 |
+   *    o===+===+===o           +----o====+====+====o----+
+   *                            |  0 |  1 |  2 |  3 |  4 |
+   *                            +----+----+----+----+----+
+   *
+   *    #, ==  boundary of the cell        o  vertices of the cell
+   * @endverbatim
+   *
+   * The tables #subcell_index_to_haloed_vector_index and
+   * #subcell_index_to_haloed_neighbor_vector_index map the subcell indices to these positions.
    */
   template <int dim, typename number>
   struct SubcellShapeInfo
   {
     /**
-     * Set up the index data for the subcells given by the 1D quadrature formula @p quadrature_1d,
-     * i.e. one subcell per quadrature point.
+     * Set up the index data and the geometry on the unit cell for the subcells given by the 1D
+     * quadrature formula @p quadrature_1d, i.e. one subcell per quadrature point whose width is the
+     * quadrature weight.
      */
     void
     reinit(const dealii::Quadrature<1> &quadrature_1d);
@@ -46,6 +86,10 @@ namespace MeltPoolDG
     /// Number of intra cell subcell faces, i.e. faces shared by two subcells of the same cell.
     unsigned int n_intra_cell_faces = 0;
 
+    /// Number of entries of a haloed vector, i.e. `(n_subcells_1d + 2)^dim`, see the haloed layout
+    /// in the class description.
+    unsigned int n_haloed_subcells = 0;
+
     /// [face_no][q_face]: index of the subcell adjacent to the face @p face_no of the cell, in the
     /// quadrature point order of dealii::FEFaceEvaluation for faces in standard orientation.
     std::array<std::vector<unsigned int>, 2 * dim> face_to_cell_subcell_indices;
@@ -56,11 +100,23 @@ namespace MeltPoolDG
     /// [intra cell face]: direction of the normal vector of the face.
     std::vector<unsigned int> intra_cell_face_directions;
 
-    /// Centers of the subcells on the unit interval, i.e. the 1D quadrature points.
+    /// Geometric centers of the subcells on the unit interval.
     std::vector<number> subcell_centers_1d;
 
-    /// Widths of the subcells on the unit interval, i.e. the 1D quadrature weights.
+    /// Widths of the subcells on the unit interval.
     std::vector<number> subcell_widths_1d;
+
+    /// [subcell index][d]: index of the subcell in direction d, i.e. its Cartesian index.
+    std::vector<std::array<unsigned int, dim>> subcell_cartesian_indices;
+
+    /// [subcell index]: position of the subcell in a haloed vector, see the haloed layout in the
+    /// class description.
+    std::vector<unsigned int> subcell_index_to_haloed_vector_index;
+
+    /// [subcell index][face_no]: haloed index of the neighbor of the subcell in the direction of
+    /// the face @p face_no. For details on halo subcells see the haloed layout in the class
+    /// description.
+    dealii::Table<2, unsigned int> subcell_index_to_haloed_neighbor_vector_index;
   };
 
   /**
@@ -68,12 +124,15 @@ namespace MeltPoolDG
    *
    * This class precomputes the data for FESubcellEvaluation and FESubcellFaceEvaluation that does
    * not change between the calls of a matrix-free loop, analogous to dealii::MatrixFree for
-   * dealii::FEEvaluation. It holds two kinds of data:
+   * dealii::FEEvaluation. It holds three kinds of data:
    *
-   * - The index data that is the same for all cells, see SubcellShapeInfo.
+   * - The index data and the geometry on the unit cell that are the same for all cells, including
+   *   the haloed layout used for the subcell stencils, see SubcellShapeInfo.
    * - The neighbors across each face of the locally owned and the ghost cells held by the
    *   dealii::MatrixFree object, needed for the subcell stencils that reach over the faces of a
    *   cell.
+   * - The origins of the locally owned and the ghost cells, which map the subcell geometry from the
+   *   unit cell to real space, see get_cell_origin().
    *
    * ## Neighbor Types
    *
@@ -215,11 +274,27 @@ namespace MeltPoolDG
     /**
      * Return the neighbors across the face @p face_no of the cells given by their dealii::MatrixFree
      * cell indices @p cell_ids, e.g. the cells on one side of a face batch. Lanes with an invalid
-     * cell index are skipped. Intended for the face loop.
+     * cell index are skipped.
      */
     FaceNeighbors
     get_face_neighbors(const std::array<unsigned int, n_lanes> &cell_ids,
                        const unsigned int                       face_no) const;
+
+    /**
+     * Return the origin of the cells in the batch @p cell_batch, i.e. the origin of the unit cell,
+     * which is the vertex 0 of the cell. Both locally owned and ghost cell batches are supported.
+     * The lanes without a cell are zero.
+     */
+    const dealii::Point<dim, VectorizedArrayType> &
+    get_cell_origin(const unsigned int cell_batch) const;
+
+    /**
+     * Return the origin of the cells given by their dealii::MatrixFree cell indices @p cell_ids,
+     * e.g. the cells on one side of a face batch, see get_cell_origin(). Lanes with an invalid cell
+     * index are zero.
+     */
+    dealii::Point<dim, VectorizedArrayType>
+    get_cell_origin(const std::array<unsigned int, n_lanes> &cell_ids) const;
 
     /**
      * Write the DoF values of the extra cell @p extra_cell into the lane @p lane of @p dof_values,
@@ -270,6 +345,12 @@ namespace MeltPoolDG
     setup_face_neighbors();
 
     /**
+     * Set up the origins of all held cells, see get_cell_origin().
+     */
+    void
+    setup_cell_origins();
+
+    /**
      * Set up the partitioner and the DoF positions for the exchange of the DoF values of the extra
      * cells.
      */
@@ -293,6 +374,9 @@ namespace MeltPoolDG
 
     /// [owned + ghost cell batch][face_no]: neighbors across the face.
     dealii::Table<2, FaceNeighbors> face_neighbors;
+
+    /// [owned + ghost cell batch]: origins of the cells, see get_cell_origin().
+    dealii::AlignedVector<dealii::Point<dim, VectorizedArrayType>> cell_origins;
 
     /// [extra cell]: the extra cells as DoFHandler cell iterators.
     std::vector<typename dealii::DoFHandler<dim>::cell_iterator> extra_cells;

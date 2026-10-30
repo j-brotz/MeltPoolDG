@@ -24,7 +24,8 @@ namespace MeltPoolDG
   FESubcellFaceEvaluation<dim, n_components, number>::FESubcellFaceEvaluation(
     const SubcellMatrixFree<dim, number> &subcell_matrix_free,
     const bool                            is_interior_face)
-    : subcell_shape_info(subcell_matrix_free.get_subcell_shape_info())
+    : subcell_matrix_free(subcell_matrix_free)
+    , subcell_shape_info(subcell_matrix_free.get_subcell_shape_info())
     , matrix_free(subcell_matrix_free.get_matrix_free())
     , is_interior_face(is_interior_face)
     , fe_cell_evaluator(subcell_matrix_free.get_matrix_free(),
@@ -370,11 +371,23 @@ namespace MeltPoolDG
   void
   FESubcellFaceEvaluation<dim, n_components, number>::determine_subcell_locations()
   {
-    for (const unsigned int subcell : subcell_face_indices())
+    const dealii::internal::MatrixFreeFunctions::FaceToCellTopology<n_lanes> &face_info =
+      matrix_free.get_face_info(face_batch_index);
+    const dealii::Point<dim, VectorizedArrayType> cell_origin = subcell_matrix_free.get_cell_origin(
+      is_interior_face ? face_info.cells_interior : face_info.cells_exterior);
+    const dealii::Tensor<2, dim, VectorizedArrayType> inverse_jacobian =
+      fe_cell_evaluator.inverse_jacobian(0);
+
+    for (const unsigned int subcell_face_index : subcell_face_indices())
       {
-        const unsigned int cell_q_index =
-          subcell_shape_info.face_to_cell_subcell_indices[face_no][subcell];
-        subcell_locations[subcell] = fe_cell_evaluator.quadrature_point(cell_q_index);
+        const unsigned int subcell_index =
+          subcell_shape_info.face_to_cell_subcell_indices[face_no][subcell_face_index];
+        for (unsigned int d = 0; d < dim; ++d)
+          subcell_locations[subcell_face_index][d] =
+            cell_origin[d] +
+            subcell_shape_info.subcell_centers_1d[subcell_shape_info
+                                                    .subcell_cartesian_indices[subcell_index][d]] /
+              inverse_jacobian[d][d];
       }
   }
 
@@ -382,9 +395,15 @@ namespace MeltPoolDG
   void
   FESubcellFaceEvaluation<dim, n_components, number>::determine_subcell_face_locations()
   {
+    // The center of a subcell face is the center of the adjacent subcell projected onto the face,
+    // i.e. it has the tangential coordinates of the subcell center and the normal coordinate of the
+    // face quadrature points. Requires determine_subcell_locations() to be called before.
+    const unsigned int face_normal_direction = face_no / 2;
     for (const unsigned int subcell_face : subcell_face_indices())
       {
-        subcell_face_locations[subcell_face] = fe_face_evaluator.quadrature_point(subcell_face);
+        subcell_face_locations[subcell_face] = subcell_locations[subcell_face];
+        subcell_face_locations[subcell_face][face_normal_direction] =
+          fe_face_evaluator.quadrature_point(subcell_face)[face_normal_direction];
       }
   }
 
