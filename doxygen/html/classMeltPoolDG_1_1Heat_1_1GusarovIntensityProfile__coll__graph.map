@@ -1,11 +1,9 @@
 <map id="MeltPoolDG::Heat::GusarovIntensityProfile&lt; dim, number &gt;" name="MeltPoolDG::Heat::GusarovIntensityProfile&lt; dim, number &gt;">
-<area shape="rect" id="Node000001" title=" " alt="" coords="633,32,832,93"/>
-<area shape="rect" id="Node000002" title=" " alt="" coords="360,5,524,50"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="540,37,635,50,630,51,540,42"/>
-<area shape="rect" id="Node000003" href="$structMeltPoolDG_1_1Heat_1_1LaserData.html" title=" " alt="" coords="337,75,548,119"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="563,81,609,75,635,75,630,75,609,81,564,86"/>
-<area shape="rect" id="Node000004" href="$structMeltPoolDG_1_1Heat_1_1LaserData_1_1GusarovData.html" title=" " alt="" coords="5,40,217,85"/>
-<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="232,72,339,85,334,87,232,78"/>
-<area shape="rect" id="Node000005" href="$structMeltPoolDG_1_1Heat_1_1LaserData_1_1AnalyticalData.html" title=" " alt="" coords="5,109,217,154"/>
-<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="232,118,312,110,339,110,334,110,313,115,232,124"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="9,241,208,302"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,123,170,168"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="95,181,106,240,101,240,92,185"/>
+<area shape="rect" id="Node000003" href="$structMeltPoolDG_1_1Heat_1_1LaserData.html" title=" " alt="" coords="194,123,405,168"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="256,176,157,242,154,238,251,177"/>
+<area shape="rect" id="Node000004" href="$structMeltPoolDG_1_1Heat_1_1LaserData_1_1GusarovData.html" title=" " alt="" coords="194,5,405,50"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="301,64,302,123,297,121,298,68"/>
 </map>
