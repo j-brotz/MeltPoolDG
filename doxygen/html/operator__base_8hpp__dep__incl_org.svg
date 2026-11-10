@@ -276,10 +276,10 @@
 </a>
 </g>
 </g>
-<!-- Node96 -->
-<g id="Node000096" class="node">
-<title>Node96</title>
-<g id="a_Node000096"><a xlink:href="pseudo__rte__operator_8hpp.html" target="_top" xlink:title=" ">
+<!-- Node97 -->
+<g id="Node000097" class="node">
+<title>Node97</title>
+<g id="a_Node000097"><a xlink:href="pseudo__rte__operator_8hpp.html" target="_top" xlink:title=" ">
 <polygon fill="#fff0f0" stroke="red" points="3126.88,-286.62 2987.12,-286.62 2987.12,-240.38 3126.88,-240.38 3126.88,-286.62"/>
 <text xml:space="preserve" text-anchor="start" x="2995.12" y="-273.12" font-family="Helvetica,sans-Serif" font-size="10.00">include/meltpooldg</text>
 <text xml:space="preserve" text-anchor="start" x="2995.12" y="-260.38" font-family="Helvetica,sans-Serif" font-size="10.00">/radiative_transport</text>
@@ -287,19 +287,19 @@
 </a>
 </g>
 </g>
-<!-- Node1&#45;&gt;Node96 -->
-<g id="edge76_Node000001_Node000096" class="edge">
-<title>Node1&#45;&gt;Node96</title>
-<g id="a_edge76_Node000001_Node000096"><a xlink:title=" ">
+<!-- Node1&#45;&gt;Node97 -->
+<g id="edge76_Node000001_Node000097" class="edge">
+<title>Node1&#45;&gt;Node97</title>
+<g id="a_edge76_Node000001_Node000097"><a xlink:title=" ">
 <path fill="none" stroke="#63b8ff" d="M1645.59,-345.05C1903.13,-345.55 2719.81,-343.04 2978,-293 2985.59,-291.53 2993.42,-289.45 3001.07,-287.07"/>
 <polygon fill="#63b8ff" stroke="#63b8ff" points="1645.64,-341.55 1635.63,-345.03 1645.62,-348.55 1645.64,-341.55"/>
 </a>
 </g>
 </g>
-<!-- Node105 -->
-<g id="Node000105" class="node">
-<title>Node105</title>
-<g id="a_Node000105"><a xlink:href="rte__operator_8hpp.html" target="_top" xlink:title=" ">
+<!-- Node106 -->
+<g id="Node000106" class="node">
+<title>Node106</title>
+<g id="a_Node000106"><a xlink:href="rte__operator_8hpp.html" target="_top" xlink:title=" ">
 <polygon fill="#fff0f0" stroke="red" points="3257,-286.62 3145,-286.62 3145,-240.38 3257,-240.38 3257,-286.62"/>
 <text xml:space="preserve" text-anchor="start" x="3153" y="-273.12" font-family="Helvetica,sans-Serif" font-size="10.00">include/meltpooldg</text>
 <text xml:space="preserve" text-anchor="start" x="3153" y="-260.38" font-family="Helvetica,sans-Serif" font-size="10.00">/radiative_transport</text>
@@ -307,10 +307,10 @@
 </a>
 </g>
 </g>
-<!-- Node1&#45;&gt;Node105 -->
-<g id="edge77_Node000001_Node000105" class="edge">
-<title>Node1&#45;&gt;Node105</title>
-<g id="a_edge77_Node000001_Node000105"><a xlink:title=" ">
+<!-- Node1&#45;&gt;Node106 -->
+<g id="edge77_Node000001_Node000106" class="edge">
+<title>Node1&#45;&gt;Node106</title>
+<g id="a_edge77_Node000001_Node000106"><a xlink:title=" ">
 <path fill="none" stroke="#63b8ff" d="M1645.43,-343.9C1942.64,-340.46 2990.27,-326.06 3136,-293 3142.37,-291.56 3148.89,-289.49 3155.22,-287.12"/>
 <polygon fill="#63b8ff" stroke="#63b8ff" points="1645.39,-340.4 1635.43,-344.02 1645.47,-347.4 1645.39,-340.4"/>
 </a>
@@ -1127,96 +1127,96 @@
 </a>
 </g>
 </g>
-<!-- Node90 -->
-<g id="Node000090" class="node">
-<title>Node90</title>
-<g id="a_Node000090"><a xlink:href="advection__DG__operator_8cpp.html" target="_top" xlink:title=" ">
+<!-- Node91 -->
+<g id="Node000091" class="node">
+<title>Node91</title>
+<g id="a_Node000091"><a xlink:href="advection__DG__operator_8cpp.html" target="_top" xlink:title=" ">
 <polygon fill="white" stroke="#666666" points="4074.25,-191.62 3927.75,-191.62 3927.75,-158.12 4074.25,-158.12 4074.25,-191.62"/>
 <text xml:space="preserve" text-anchor="start" x="3935.75" y="-178.12" font-family="Helvetica,sans-Serif" font-size="10.00">source/level_set/advection</text>
 <text xml:space="preserve" text-anchor="middle" x="4001" y="-165.38" font-family="Helvetica,sans-Serif" font-size="10.00">_DG_operator.cpp</text>
 </a>
 </g>
 </g>
-<!-- Node46&#45;&gt;Node90 -->
-<g id="edge68_Node000046_Node000090" class="edge">
-<title>Node46&#45;&gt;Node90</title>
-<g id="a_edge68_Node000046_Node000090"><a xlink:title=" ">
+<!-- Node46&#45;&gt;Node91 -->
+<g id="edge68_Node000046_Node000091" class="edge">
+<title>Node46&#45;&gt;Node91</title>
+<g id="a_edge68_Node000046_Node000091"><a xlink:title=" ">
 <path fill="none" stroke="#63b8ff" d="M2967.3,-236.62C2970.89,-235.62 2974.47,-234.73 2978,-234 3387.75,-148.71 3505.23,-260.91 3919,-198 3928.48,-196.56 3938.43,-194.42 3948,-192.04"/>
 <polygon fill="#63b8ff" stroke="#63b8ff" points="2966.56,-233.19 2958.04,-239.48 2968.63,-239.88 2966.56,-233.19"/>
-</a>
-</g>
-</g>
-<!-- Node91 -->
-<g id="Node000091" class="node">
-<title>Node91</title>
-<g id="a_Node000091"><a xlink:href="reinitialization__DG__diffusion__operator_8cpp.html" target="_top" xlink:title=" ">
-<polygon fill="white" stroke="#666666" points="2615.5,-191.62 2446.5,-191.62 2446.5,-158.12 2615.5,-158.12 2615.5,-191.62"/>
-<text xml:space="preserve" text-anchor="start" x="2454.5" y="-178.12" font-family="Helvetica,sans-Serif" font-size="10.00">source/level_set/reinitialization</text>
-<text xml:space="preserve" text-anchor="middle" x="2531" y="-165.38" font-family="Helvetica,sans-Serif" font-size="10.00">_DG_diffusion_operator.cpp</text>
-</a>
-</g>
-</g>
-<!-- Node46&#45;&gt;Node91 -->
-<g id="edge70_Node000046_Node000091" class="edge">
-<title>Node46&#45;&gt;Node91</title>
-<g id="a_edge70_Node000046_Node000091"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2829.51,-245.21C2773.15,-232.28 2694.23,-214.12 2625,-198 2616.84,-196.1 2608.27,-194.1 2599.78,-192.1"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2828.47,-248.57 2839,-247.39 2830.04,-241.74 2828.47,-248.57"/>
 </a>
 </g>
 </g>
 <!-- Node92 -->
 <g id="Node000092" class="node">
 <title>Node92</title>
-<g id="a_Node000092"><a xlink:href="reinitialization__DG__grad__operator_8cpp.html" target="_top" xlink:title=" ">
-<polygon fill="white" stroke="#666666" points="2802.5,-191.62 2633.5,-191.62 2633.5,-158.12 2802.5,-158.12 2802.5,-191.62"/>
-<text xml:space="preserve" text-anchor="start" x="2641.5" y="-178.12" font-family="Helvetica,sans-Serif" font-size="10.00">source/level_set/reinitialization</text>
-<text xml:space="preserve" text-anchor="middle" x="2718" y="-165.38" font-family="Helvetica,sans-Serif" font-size="10.00">_DG_grad_operator.cpp</text>
+<g id="a_Node000092"><a xlink:href="reinitialization__DG__diffusion__operator_8cpp.html" target="_top" xlink:title=" ">
+<polygon fill="white" stroke="#666666" points="2615.5,-191.62 2446.5,-191.62 2446.5,-158.12 2615.5,-158.12 2615.5,-191.62"/>
+<text xml:space="preserve" text-anchor="start" x="2454.5" y="-178.12" font-family="Helvetica,sans-Serif" font-size="10.00">source/level_set/reinitialization</text>
+<text xml:space="preserve" text-anchor="middle" x="2531" y="-165.38" font-family="Helvetica,sans-Serif" font-size="10.00">_DG_diffusion_operator.cpp</text>
 </a>
 </g>
 </g>
 <!-- Node46&#45;&gt;Node92 -->
-<g id="edge71_Node000046_Node000092" class="edge">
+<g id="edge70_Node000046_Node000092" class="edge">
 <title>Node46&#45;&gt;Node92</title>
-<g id="a_edge71_Node000046_Node000092"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2846.2,-235.26C2815.51,-221.04 2779.01,-204.14 2752.82,-192.01"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2844.44,-238.3 2854.98,-239.33 2847.38,-231.95 2844.44,-238.3"/>
+<g id="a_edge70_Node000046_Node000092"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2829.51,-245.21C2773.15,-232.28 2694.23,-214.12 2625,-198 2616.84,-196.1 2608.27,-194.1 2599.78,-192.1"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2828.47,-248.57 2839,-247.39 2830.04,-241.74 2828.47,-248.57"/>
 </a>
 </g>
 </g>
 <!-- Node93 -->
 <g id="Node000093" class="node">
 <title>Node93</title>
-<g id="a_Node000093"><a xlink:href="reinitialization__olsson__DG__operator_8cpp.html" target="_top" xlink:title=" ">
-<polygon fill="white" stroke="#666666" points="2989.5,-191.62 2820.5,-191.62 2820.5,-158.12 2989.5,-158.12 2989.5,-191.62"/>
-<text xml:space="preserve" text-anchor="start" x="2828.5" y="-178.12" font-family="Helvetica,sans-Serif" font-size="10.00">source/level_set/reinitialization</text>
-<text xml:space="preserve" text-anchor="middle" x="2905" y="-165.38" font-family="Helvetica,sans-Serif" font-size="10.00">_olsson_DG_operator.cpp</text>
+<g id="a_Node000093"><a xlink:href="reinitialization__DG__grad__operator_8cpp.html" target="_top" xlink:title=" ">
+<polygon fill="white" stroke="#666666" points="2802.5,-191.62 2633.5,-191.62 2633.5,-158.12 2802.5,-158.12 2802.5,-191.62"/>
+<text xml:space="preserve" text-anchor="start" x="2641.5" y="-178.12" font-family="Helvetica,sans-Serif" font-size="10.00">source/level_set/reinitialization</text>
+<text xml:space="preserve" text-anchor="middle" x="2718" y="-165.38" font-family="Helvetica,sans-Serif" font-size="10.00">_DG_grad_operator.cpp</text>
 </a>
 </g>
 </g>
 <!-- Node46&#45;&gt;Node93 -->
-<g id="edge74_Node000046_Node000093" class="edge">
+<g id="edge71_Node000046_Node000093" class="edge">
 <title>Node46&#45;&gt;Node93</title>
-<g id="a_edge74_Node000046_Node000093"><a xlink:title=" ">
-<path fill="none" stroke="#63b8ff" d="M2905,-229.02C2905,-216.34 2905,-202.48 2905,-192.09"/>
-<polygon fill="#63b8ff" stroke="#63b8ff" points="2901.5,-228.68 2905,-238.68 2908.5,-228.68 2901.5,-228.68"/>
+<g id="a_edge71_Node000046_Node000093"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2846.2,-235.26C2815.51,-221.04 2779.01,-204.14 2752.82,-192.01"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2844.44,-238.3 2854.98,-239.33 2847.38,-231.95 2844.44,-238.3"/>
 </a>
 </g>
 </g>
 <!-- Node94 -->
 <g id="Node000094" class="node">
 <title>Node94</title>
-<g id="a_Node000094"><a xlink:href="pseudo__rte__operation_8cpp.html" target="_top" xlink:title=" ">
+<g id="a_Node000094"><a xlink:href="reinitialization__olsson__DG__operator_8cpp.html" target="_top" xlink:title=" ">
+<polygon fill="white" stroke="#666666" points="2989.5,-191.62 2820.5,-191.62 2820.5,-158.12 2989.5,-158.12 2989.5,-191.62"/>
+<text xml:space="preserve" text-anchor="start" x="2828.5" y="-178.12" font-family="Helvetica,sans-Serif" font-size="10.00">source/level_set/reinitialization</text>
+<text xml:space="preserve" text-anchor="middle" x="2905" y="-165.38" font-family="Helvetica,sans-Serif" font-size="10.00">_olsson_DG_operator.cpp</text>
+</a>
+</g>
+</g>
+<!-- Node46&#45;&gt;Node94 -->
+<g id="edge74_Node000046_Node000094" class="edge">
+<title>Node46&#45;&gt;Node94</title>
+<g id="a_edge74_Node000046_Node000094"><a xlink:title=" ">
+<path fill="none" stroke="#63b8ff" d="M2905,-229.02C2905,-216.34 2905,-202.48 2905,-192.09"/>
+<polygon fill="#63b8ff" stroke="#63b8ff" points="2901.5,-228.68 2905,-238.68 2908.5,-228.68 2901.5,-228.68"/>
+</a>
+</g>
+</g>
+<!-- Node95 -->
+<g id="Node000095" class="node">
+<title>Node95</title>
+<g id="a_Node000095"><a xlink:href="pseudo__rte__operation_8cpp.html" target="_top" xlink:title=" ">
 <polygon fill="white" stroke="#666666" points="3152.5,-191.62 3007.5,-191.62 3007.5,-158.12 3152.5,-158.12 3152.5,-191.62"/>
 <text xml:space="preserve" text-anchor="start" x="3015.5" y="-178.12" font-family="Helvetica,sans-Serif" font-size="10.00">source/radiative_transport</text>
 <text xml:space="preserve" text-anchor="middle" x="3080" y="-165.38" font-family="Helvetica,sans-Serif" font-size="10.00">/pseudo_rte_operation.cpp</text>
 </a>
 </g>
 </g>
-<!-- Node46&#45;&gt;Node94 -->
-<g id="edge75_Node000046_Node000094" class="edge">
-<title>Node46&#45;&gt;Node94</title>
-<g id="a_edge75_Node000046_Node000094"><a xlink:title=" ">
+<!-- Node46&#45;&gt;Node95 -->
+<g id="edge75_Node000046_Node000095" class="edge">
+<title>Node46&#45;&gt;Node95</title>
+<g id="a_edge75_Node000046_Node000095"><a xlink:title=" ">
 <path fill="none" stroke="#63b8ff" d="M2960.78,-234.89C2989.34,-220.75 3023.12,-204.03 3047.41,-192.01"/>
 <polygon fill="#63b8ff" stroke="#63b8ff" points="2959.29,-231.72 2951.88,-239.29 2962.39,-238 2959.29,-231.72"/>
 </a>
