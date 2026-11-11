@@ -69,17 +69,29 @@ namespace MeltPoolDG
         }
 
     // Looping over the subcells in lexicographic order and skipping the last subcell in the normal
-    // direction gives the faces in the order described in FESubcellEvaluation.
+    // direction gives the faces in the order described in FESubcellEvaluation. For the interior
+    // subcell the face is the face in positive direction d, for the exterior subcell the face in
+    // negative direction d.
     intra_cell_face_to_subcells.clear();
     intra_cell_face_directions.clear();
+    intra_cell_face_value_indices.clear();
     intra_cell_face_to_subcells.reserve(n_intra_cell_faces);
     intra_cell_face_directions.reserve(n_intra_cell_faces);
+    intra_cell_face_value_indices.reserve(n_intra_cell_faces);
+    subcell_index_to_intra_cell_face_value_index.reinit(n_subcells, 2 * dim);
+    subcell_index_to_intra_cell_face_value_index.fill(dealii::numbers::invalid_unsigned_int);
     for (unsigned int d = 0; d < dim; ++d)
       for (unsigned int subcell = 0; subcell < n_subcells; ++subcell)
         if ((subcell / strides[d]) % n_subcells_1d < n_subcells_1d - 1)
           {
+            const unsigned int intra_cell_face = intra_cell_face_to_subcells.size();
             intra_cell_face_to_subcells.push_back({{subcell, subcell + strides[d]}});
             intra_cell_face_directions.push_back(d);
+            intra_cell_face_value_indices.push_back(
+              {{2 * intra_cell_face, 2 * intra_cell_face + 1}});
+            subcell_index_to_intra_cell_face_value_index[subcell][2 * d + 1] = 2 * intra_cell_face;
+            subcell_index_to_intra_cell_face_value_index[subcell + strides[d]][2 * d] =
+              2 * intra_cell_face + 1;
           }
     AssertDimension(intra_cell_face_to_subcells.size(), n_intra_cell_faces);
 

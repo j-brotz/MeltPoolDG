@@ -212,3 +212,79 @@ TEST(EvaluateLimiterFunctionTest, SelectedLimiterFunction)
               MeltPoolDG::Utilities::LimiterFunctionType::harmonic, r),
             MeltPoolDG::Utilities::harmonic(r));
 }
+
+/**
+ * This test checks that compute_limited_slope() reconstructs linear data exactly for all limiter
+ * functions, since both one-sided slopes coincide, i.e. r = 1, and all limiter functions satisfy
+ * phi(1) = 1. The test sets up the values of the cell and its two neighbors on a linear function
+ * with a positive, a negative and a vanishing slope. Non-uniform distances to the neighbors are
+ * used to ensure that the one-sided slopes are computed as divided differences over the center
+ * distances. The computed limited slopes are then checked to equal the slope of the linear function
+ * on both faces.
+ */
+TEST(ComputeLimitedSlopeTest, LinearDataIsReconstructedExactly)
+{
+  const double          distance_left  = 0.25;
+  const double          distance_right = 0.75;
+  const TensorValueType value_left{{0.5, 2.125, 3.0}};
+  const TensorValueType value{{1.0, 2.0, 3.0}};
+  const TensorValueType value_right{{2.5, 1.625, 3.0}};
+
+  for (const MeltPoolDG::Utilities::LimiterFunctionType limiter_function_type :
+       {MeltPoolDG::Utilities::LimiterFunctionType::tvd_minmod,
+        MeltPoolDG::Utilities::LimiterFunctionType::superbee,
+        MeltPoolDG::Utilities::LimiterFunctionType::muscl,
+        MeltPoolDG::Utilities::LimiterFunctionType::harmonic})
+    {
+      SCOPED_TRACE(limiter_function_type._to_string());
+
+      const auto [limited_slope_left, limited_slope_right] =
+        MeltPoolDG::Utilities::compute_limited_slope(
+          value_left, value, value_right, distance_left, distance_right, limiter_function_type);
+
+      EXPECT_DOUBLE_EQ(limited_slope_left[0], 2.0);
+      EXPECT_DOUBLE_EQ(limited_slope_left[1], -0.5);
+      EXPECT_DOUBLE_EQ(limited_slope_left[2], 0.0);
+
+      EXPECT_DOUBLE_EQ(limited_slope_right[0], 2.0);
+      EXPECT_DOUBLE_EQ(limited_slope_right[1], -0.5);
+      EXPECT_DOUBLE_EQ(limited_slope_right[2], 0.0);
+    }
+}
+
+/**
+ * This test checks that compute_limited_slope() returns a vanishing slope on both faces at a local
+ * extremum for all limiter functions. The test sets up the values of the cell and its two
+ * neighbors such that the one-sided slopes have different signs, i.e. a local maximum and a local
+ * minimum, or such that one of the one-sided slopes vanishes. The computed limited slopes are then
+ * checked to be zero on both faces.
+ */
+TEST(ComputeLimitedSlopeTest, LocalExtremum)
+{
+  const double          distance_left  = 0.5;
+  const double          distance_right = 2.0;
+  const TensorValueType value_left{{0.0, 2.0, 1.0}};
+  const TensorValueType value{{1.0, 0.0, 1.0}};
+  const TensorValueType value_right{{0.5, 3.0, 4.0}};
+
+  for (const MeltPoolDG::Utilities::LimiterFunctionType limiter_function_type :
+       {MeltPoolDG::Utilities::LimiterFunctionType::tvd_minmod,
+        MeltPoolDG::Utilities::LimiterFunctionType::superbee,
+        MeltPoolDG::Utilities::LimiterFunctionType::muscl,
+        MeltPoolDG::Utilities::LimiterFunctionType::harmonic})
+    {
+      SCOPED_TRACE(limiter_function_type._to_string());
+
+      const auto [limited_slope_left, limited_slope_right] =
+        MeltPoolDG::Utilities::compute_limited_slope(
+          value_left, value, value_right, distance_left, distance_right, limiter_function_type);
+
+      EXPECT_DOUBLE_EQ(limited_slope_left[0], 0.0);
+      EXPECT_DOUBLE_EQ(limited_slope_left[1], 0.0);
+      EXPECT_DOUBLE_EQ(limited_slope_left[2], 0.0);
+
+      EXPECT_DOUBLE_EQ(limited_slope_right[0], 0.0);
+      EXPECT_DOUBLE_EQ(limited_slope_right[1], 0.0);
+      EXPECT_DOUBLE_EQ(limited_slope_right[2], 0.0);
+    }
+}

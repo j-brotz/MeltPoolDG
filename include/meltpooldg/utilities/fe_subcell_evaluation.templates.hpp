@@ -10,6 +10,7 @@
 #include <deal.II/matrix_free/operators.h>
 
 #include <meltpooldg/utilities/fe_subcell_evaluation.hpp>
+#include <meltpooldg/utilities/limiter_functions.templates.hpp>
 #include <meltpooldg/utilities/matrix_free_util.hpp>
 #include <meltpooldg/utilities/subcell_evaluation_utils.hpp>
 #include <meltpooldg/utilities/subcell_matrix_free.hpp>
@@ -25,7 +26,9 @@ namespace MeltPoolDG
     const std::function<value_type(const dealii::Point<dim, VectorizedArrayType> &,
                                    const dealii::Tensor<1, dim, VectorizedArrayType> &,
                                    const dealii::types::boundary_id,
-                                   const value_type &)> &boundary_value_function)
+                                   const value_type &)> &boundary_value_function,
+    const unsigned int                                   reconstruction_order,
+    const Utilities::LimiterFunctionType                 limiter_function)
     : subcell_matrix_free(subcell_matrix_free)
     , subcell_shape_info(subcell_matrix_free.get_subcell_shape_info())
     , cell_index_info(subcell_shape_info.cell_index_info)
@@ -36,7 +39,12 @@ namespace MeltPoolDG
     , fe_neighbor_evaluator(subcell_matrix_free.get_matrix_free(),
                             subcell_matrix_free.get_dof_no(),
                             subcell_matrix_free.get_quad_no())
+    , reconstruction_order(reconstruction_order)
+    , limiter_function_type(limiter_function)
   {
+    AssertThrow(reconstruction_order == 1 or reconstruction_order == 2,
+                dealii::ExcMessage(
+                  "Only reconstruction orders 1 and 2 are supported in FESubcellEvaluation."));
     setup_internal_data_structures();
   }
 
@@ -54,6 +62,7 @@ namespace MeltPoolDG
     subcell_fluxes_submitted      = false;
     halo_subcell_values_filled    = false;
     subcell_gradients_initialized = false;
+    face_values_reconstructed     = false;
 
     is_reinitialized = true;
   }
@@ -71,14 +80,20 @@ namespace MeltPoolDG
         "FESubcellEvaluation has not been reinitialized. Call reinit() before gather_evaluate()."));
     fe_cell_evaluator.read_dof_values(input_vector, 0, mask);
 
-    if (evaluation_flags & dealii::EvaluationFlags::values or
-        evaluation_flags & dealii::EvaluationFlags::gradients)
-      project_dof_values_to_subcell_values();
-
-    if (evaluation_flags & dealii::EvaluationFlags::gradients)
+    project_dof_values_to_subcell_values();
+    if (evaluation_flags & dealii::EvaluationFlags::gradients or reconstruction_order > 1)
       {
         fill_halo_subcell_values(input_vector, mask);
         compute_subcell_extents();
+      }
+
+    if (evaluation_flags & dealii::EvaluationFlags::values)
+      {
+        reconstruct_intra_cell_face_values();
+      }
+
+    if (evaluation_flags & dealii::EvaluationFlags::gradients)
+      {
         compute_subcell_gradients();
         compute_intra_cell_face_gradients();
       }
@@ -105,12 +120,11 @@ namespace MeltPoolDG
   {
     AssertIndexRange(subcell_face_index, cell_index_info.n_intra_cell_faces);
     Assert(
-      subcell_values_initialized,
+      face_values_reconstructed,
       dealii::ExcMessage(
-        "Subcell values have not been initialized. Call gather_evaluate() before get_face_value()."));
-    return subcell_values
-      [cell_index_info.subcell_index_to_haloed_vector_index
-         [cell_index_info.intra_cell_face_to_subcells[subcell_face_index][interior_face ? 0 : 1]]];
+        "Face values have not been reconstructed. Call gather_evaluate() before get_face_value()."));
+    return reconstructed_intra_cell_face_values
+      [cell_index_info.intra_cell_face_value_indices[subcell_face_index][interior_face ? 0 : 1]];
   }
 
   template <int dim, int n_components, typename number>
@@ -358,6 +372,7 @@ namespace MeltPoolDG
     subcell_values_to_project_buffer.resize(n_components * cell_index_info.n_subcells);
     integrated_values_buffer.resize(cell_index_info.n_subcells);
     intra_cell_face_gradients.resize(cell_index_info.n_intra_cell_faces);
+    reconstructed_intra_cell_face_values.resize(cell_index_info.n_intra_cell_faces * 2);
   }
 
   template <int dim, int n_components, typename number>
@@ -714,4 +729,98 @@ namespace MeltPoolDG
           }
       }
   }
+
+  template <int dim, int n_components, typename number>
+  void
+  FESubcellEvaluation<dim, n_components, number>::reconstruct_intra_cell_face_values()
+  {
+    AssertDimension(reconstructed_intra_cell_face_values.size(),
+                    cell_index_info.n_intra_cell_faces * 2);
+
+    if (reconstruction_order == 1)
+      {
+        for (const unsigned int subcell_face : subcell_face_indices())
+          {
+            const auto [interior_subcell, exterior_subcell] =
+              subcell_face_interior_exterior_indices(subcell_face);
+
+            reconstructed_intra_cell_face_values
+              [cell_index_info.intra_cell_face_value_indices[subcell_face][0]] =
+                subcell_values[cell_index_info
+                                 .subcell_index_to_haloed_vector_index[interior_subcell]];
+            reconstructed_intra_cell_face_values
+              [cell_index_info.intra_cell_face_value_indices[subcell_face][1]] =
+                subcell_values[cell_index_info
+                                 .subcell_index_to_haloed_vector_index[exterior_subcell]];
+          }
+      }
+    else if (reconstruction_order == 2)
+      {
+        Assert(halo_subcell_values_filled, dealii::ExcNotInitialized());
+
+        for (const unsigned int subcell_index : subcell_indices())
+          {
+            for (unsigned int direction = 0; direction < dim; ++direction)
+              {
+                const unsigned int face_no_left  = 2 * direction;
+                const unsigned int face_no_right = 2 * direction + 1;
+
+                const unsigned int intra_cell_face_value_index_left =
+                  cell_index_info
+                    .subcell_index_to_intra_cell_face_value_index[subcell_index][face_no_left];
+                const unsigned int intra_cell_face_value_index_right =
+                  cell_index_info
+                    .subcell_index_to_intra_cell_face_value_index[subcell_index][face_no_right];
+
+                const unsigned int halo_index_left =
+                  cell_index_info
+                    .subcell_index_to_haloed_neighbor_vector_index[subcell_index][face_no_left];
+                const unsigned int halo_index_right =
+                  cell_index_info
+                    .subcell_index_to_haloed_neighbor_vector_index[subcell_index][face_no_right];
+                const unsigned int subcell_halo_index =
+                  cell_index_info.subcell_index_to_haloed_vector_index[subcell_index];
+
+                const value_type &value_left  = subcell_values[halo_index_left];
+                const value_type &value_right = subcell_values[halo_index_right];
+                const value_type &value       = subcell_values[subcell_halo_index];
+
+                const VectorizedArrayType distance_left =
+                  0.5 * subcell_extents[subcell_halo_index][direction] +
+                  0.5 * subcell_extents[halo_index_left][direction];
+                const VectorizedArrayType distance_right =
+                  0.5 * subcell_extents[subcell_halo_index][direction] +
+                  0.5 * subcell_extents[halo_index_right][direction];
+
+                const auto [limited_slope_left, limited_slope_right] =
+                  Utilities::compute_limited_slope(value_left,
+                                                   value,
+                                                   value_right,
+                                                   distance_left,
+                                                   distance_right,
+                                                   limiter_function_type);
+                if (intra_cell_face_value_index_right != dealii::numbers::invalid_unsigned_int)
+                  {
+                    reconstructed_intra_cell_face_values[intra_cell_face_value_index_right] =
+                      value +
+                      0.5 * subcell_extents[subcell_halo_index][direction] * limited_slope_right;
+                  }
+
+                if (intra_cell_face_value_index_left != dealii::numbers::invalid_unsigned_int)
+                  {
+                    reconstructed_intra_cell_face_values[intra_cell_face_value_index_left] =
+                      value -
+                      0.5 * subcell_extents[subcell_halo_index][direction] * limited_slope_left;
+                  }
+              }
+          }
+      }
+    else
+      {
+        Assert(false, dealii::ExcNotImplemented());
+      }
+
+    face_values_reconstructed = true;
+  }
+
 } // namespace MeltPoolDG

@@ -14,6 +14,7 @@
 
 #include <meltpooldg/utilities/better_enum.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
+#include <meltpooldg/utilities/limiter_data.hpp>
 #include <meltpooldg/utilities/matrix_free_util.hpp>
 #include <meltpooldg/utilities/subcell_matrix_free.hpp>
 
@@ -285,7 +286,10 @@ namespace MeltPoolDG
       const std::function<value_type(const dealii::Point<dim, VectorizedArrayType> &,
                                      const dealii::Tensor<1, dim, VectorizedArrayType> &,
                                      const dealii::types::boundary_id,
-                                     const value_type &)> &boundary_value_function = {});
+                                     const value_type &)> &boundary_value_function = {},
+      const unsigned int                                   reconstruction_order    = 1,
+      const Utilities::LimiterFunctionType                 limiter_function =
+        Utilities::LimiterFunctionType::tvd_minmod);
 
     /**
      * Reinitialize the FESubcellEvaluation object for a specific cell batch. This function must be
@@ -562,6 +566,10 @@ namespace MeltPoolDG
                                    const value_type &)>
       boundary_value_function;
 
+    const unsigned int reconstruction_order;
+
+    const Utilities::LimiterFunctionType limiter_function_type;
+
     /// The cell batch index of the cell on which this FESubcellEvaluation object is currently
     /// reinitialized.
     unsigned int cell_batch_index;
@@ -630,6 +638,10 @@ namespace MeltPoolDG
     /// buffer is a class member to avoid repeated allocations memory.
     std::vector<VectorizedArrayType> subcell_values_to_project_buffer;
 
+    /// The reconstructed face values of the interior and the exterior subcell on each intra cell
+    /// face. For the ordering see SubcellIndexInfo::intra_cell_face_value_indices.
+    std::vector<value_type> reconstructed_intra_cell_face_values;
+
     /// A flag indicating whether the FESubcellEvaluation object has been reinitialized for a cell.
     /// Used for debug information.
     bool is_reinitialized = false;
@@ -651,6 +663,8 @@ namespace MeltPoolDG
     /// A flag indicating whether the halo subcell values have been filled. Used for debug
     /// information.
     bool halo_subcell_values_filled = false;
+
+    bool face_values_reconstructed = false;
 
     /**
      * This function sets up all internal data structures, i.e. allocating memory for internal data
@@ -742,6 +756,9 @@ namespace MeltPoolDG
      */
     void
     project_subcell_values_to_dof_values(const std::vector<value_type> &values_to_project);
+
+    void
+    reconstruct_intra_cell_face_values();
   };
 
 

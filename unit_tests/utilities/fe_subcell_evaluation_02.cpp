@@ -33,9 +33,11 @@
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/fe_subcell_evaluation.hpp>
 #include <meltpooldg/utilities/fe_subcell_evaluation.templates.hpp>
+#include <meltpooldg/utilities/limiter_data.hpp>
 #include <meltpooldg/utilities/matrix_free_util.hpp>
 #include <meltpooldg/utilities/subcell_matrix_free.templates.hpp>
 
+#include <algorithm>
 #include <cmath>
 #include <functional>
 #include <set>
@@ -379,6 +381,192 @@ TYPED_TEST(FESubcellEvaluationFaceTest, IntraCellFaceGradients)
                                  linear_function.gradient(subcells.subcell_location(interior)),
                                  this->n_active_lanes(cell),
                                  tolerance);
+        }
+    }
+}
+
+/**
+ * This test checks that the second order reconstruction of the values on the intra cell subcell
+ * faces is exact for a linear function for all limiter functions. For a linear function, both
+ * one-sided slopes of a subcell coincide, i.e. r = 1, and all limiter functions satisfy phi(1) = 1,
+ * such that the reconstructed values equal the linear function at the face centers. The test sets
+ * up the subcell values to the linear function at the subcell centers on all cells. At the domain
+ * boundary, the boundary value function returns the linear function at the given point on the
+ * boundary face. The reconstructed values seen from the interior and the exterior subcell of each
+ * intra cell subcell face are then checked to equal the linear function at the face center.
+ */
+TYPED_TEST(FESubcellEvaluationFaceTest, SecondOrderIntraCellFaceValuesLinearFunction)
+{
+  const TestUtils::LinearFunction<TypeParam::dim, TypeParam::n_components> linear_function;
+
+  const std::function<value_type<TypeParam::n_components, VectorizedArrayType>(
+    const dealii::Point<TypeParam::dim, VectorizedArrayType> &,
+    const dealii::Tensor<1, TypeParam::dim, VectorizedArrayType> &,
+    const dealii::types::boundary_id,
+    const value_type<TypeParam::n_components, VectorizedArrayType> &)>
+    boundary_value_function =
+      [&linear_function](const dealii::Point<TypeParam::dim, VectorizedArrayType> &location,
+                         const dealii::Tensor<1, TypeParam::dim, VectorizedArrayType> &,
+                         const dealii::types::boundary_id,
+                         const value_type<TypeParam::n_components, VectorizedArrayType> &)
+    -> value_type<TypeParam::n_components, VectorizedArrayType> {
+    return linear_function.value(location);
+  };
+
+  // We first need to submit the values of the linear function at the subcell center locations to
+  // guarantee that the subcell values are correct, see the test IntraCellFaceGradients.
+  FESubcellEvaluation<TypeParam::dim, TypeParam::n_components, double> subcells_setup(
+    this->subcell_matrix_free);
+  VectorType subcell_solution;
+  this->matrix_free.initialize_dof_vector(subcell_solution);
+  for (unsigned int cell = 0; cell < this->matrix_free.n_cell_batches(); ++cell)
+    {
+      subcells_setup.reinit(cell);
+      for (const unsigned int subcell : subcells_setup.subcell_indices())
+        subcells_setup.submit_value(
+          subcell, linear_function.value(subcells_setup.subcell_location(subcell)));
+      subcells_setup.integrate();
+      subcells_setup.set_dof_values(subcell_solution);
+    }
+  subcell_solution.update_ghost_values();
+
+  for (const Utilities::LimiterFunctionType limiter_function_type :
+       {Utilities::LimiterFunctionType::tvd_minmod,
+        Utilities::LimiterFunctionType::superbee,
+        Utilities::LimiterFunctionType::muscl,
+        Utilities::LimiterFunctionType::harmonic})
+    {
+      SCOPED_TRACE(limiter_function_type._to_string());
+
+      FESubcellEvaluation<TypeParam::dim, TypeParam::n_components, double> subcells(
+        this->subcell_matrix_free, boundary_value_function, 2, limiter_function_type);
+
+      for (unsigned int cell = 0; cell < this->matrix_free.n_cell_batches(); ++cell)
+        {
+          subcells.reinit(cell);
+          subcells.gather_evaluate(subcell_solution, dealii::EvaluationFlags::values);
+
+          for (const unsigned int face_index : subcells.subcell_face_indices())
+            {
+              const unsigned int interior =
+                subcells.subcell_face_interior_exterior_indices(face_index).first;
+
+              // The face center lies half the extent of the interior subcell in face normal
+              // direction away from the subcell center. On a Cartesian cell, this extent is the
+              // size of the subcell divided by the size of the face.
+              const dealii::Point<TypeParam::dim, VectorizedArrayType> face_center =
+                subcells.subcell_location(interior) +
+                0.5 * subcells.subcell_size(interior) / subcells.subcell_face_size(face_index) *
+                  subcells.subcell_face_normal_vector(face_index);
+
+              TestUtils::expect_near(subcells.get_face_value(face_index, true),
+                                     linear_function.value(face_center),
+                                     this->n_active_lanes(cell),
+                                     tolerance);
+              TestUtils::expect_near(subcells.get_face_value(face_index, false),
+                                     linear_function.value(face_center),
+                                     this->n_active_lanes(cell),
+                                     tolerance);
+            }
+        }
+    }
+}
+
+/**
+ * This test checks that the second order reconstruction with the minmod limiter function does not
+ * create new extrema on the intra cell subcell faces, i.e. both reconstructed values on a face lie
+ * between the values of its interior and exterior subcell. On the non-uniform subcells, this bound
+ * only holds for the minmod limiter function, since the other limiter functions allow limited
+ * slopes up to twice the one-sided slopes. The test sets up arbitrary subcell values on all cells,
+ * such that the one-sided slopes of the subcells frequently differ in sign and magnitude. At the
+ * domain boundary, the boundary value function returns the value of the adjacent subcell. The
+ * reconstructed values on each intra cell subcell face are then checked to lie between the values
+ * of the interior and exterior subcell of the face.
+ */
+TYPED_TEST(FESubcellEvaluationFaceTest, SecondOrderIntraCellFaceValuesMinmodBounds)
+{
+  const std::function<value_type<TypeParam::n_components, VectorizedArrayType>(
+    const dealii::Point<TypeParam::dim, VectorizedArrayType> &,
+    const dealii::Tensor<1, TypeParam::dim, VectorizedArrayType> &,
+    const dealii::types::boundary_id,
+    const value_type<TypeParam::n_components, VectorizedArrayType> &)>
+    boundary_value_function =
+      [](const dealii::Point<TypeParam::dim, VectorizedArrayType> &,
+         const dealii::Tensor<1, TypeParam::dim, VectorizedArrayType> &,
+         const dealii::types::boundary_id,
+         const value_type<TypeParam::n_components, VectorizedArrayType> &value)
+    -> value_type<TypeParam::n_components, VectorizedArrayType> { return value; };
+
+  // Submit arbitrary subcell values, which are recovered exactly by gather_evaluate() since the
+  // projection FV -> FE -> FV is exact.
+  FESubcellEvaluation<TypeParam::dim, TypeParam::n_components, double> subcells_setup(
+    this->subcell_matrix_free);
+  VectorType subcell_solution;
+  this->matrix_free.initialize_dof_vector(subcell_solution);
+  for (unsigned int cell = 0; cell < this->matrix_free.n_cell_batches(); ++cell)
+    {
+      subcells_setup.reinit(cell);
+      for (const unsigned int subcell : subcells_setup.subcell_indices())
+        {
+          value_type<TypeParam::n_components, VectorizedArrayType> value;
+          TestUtils::arbitrary_value(value);
+          subcells_setup.submit_value(subcell, value);
+        }
+      subcells_setup.integrate();
+      subcells_setup.set_dof_values(subcell_solution);
+    }
+  subcell_solution.update_ghost_values();
+
+  FESubcellEvaluation<TypeParam::dim, TypeParam::n_components, double> subcells(
+    this->subcell_matrix_free,
+    boundary_value_function,
+    2,
+    Utilities::LimiterFunctionType::tvd_minmod);
+
+  for (unsigned int cell = 0; cell < this->matrix_free.n_cell_batches(); ++cell)
+    {
+      subcells.reinit(cell);
+      subcells.gather_evaluate(subcell_solution, dealii::EvaluationFlags::values);
+
+      for (const unsigned int face_index : subcells.subcell_face_indices())
+        {
+          const auto [interior, exterior] =
+            subcells.subcell_face_interior_exterior_indices(face_index);
+
+          // Store the values as tensors to access components and lanes in the same way for a
+          // single and multiple components.
+          dealii::Tensor<1, TypeParam::n_components, VectorizedArrayType> value_interior;
+          dealii::Tensor<1, TypeParam::n_components, VectorizedArrayType> value_exterior;
+          dealii::Tensor<1, TypeParam::n_components, VectorizedArrayType> face_value_interior;
+          dealii::Tensor<1, TypeParam::n_components, VectorizedArrayType> face_value_exterior;
+          if constexpr (TypeParam::n_components == 1)
+            {
+              value_interior[0]      = subcells.get_value(interior);
+              value_exterior[0]      = subcells.get_value(exterior);
+              face_value_interior[0] = subcells.get_face_value(face_index, true);
+              face_value_exterior[0] = subcells.get_face_value(face_index, false);
+            }
+          else
+            {
+              value_interior      = subcells.get_value(interior);
+              value_exterior      = subcells.get_value(exterior);
+              face_value_interior = subcells.get_face_value(face_index, true);
+              face_value_exterior = subcells.get_face_value(face_index, false);
+            }
+
+          for (unsigned int lane = 0; lane < this->n_active_lanes(cell); ++lane)
+            for (unsigned int c = 0; c < TypeParam::n_components; ++c)
+              {
+                const double lower_bound =
+                  std::min(value_interior[c][lane], value_exterior[c][lane]) - tolerance;
+                const double upper_bound =
+                  std::max(value_interior[c][lane], value_exterior[c][lane]) + tolerance;
+
+                EXPECT_GE(face_value_interior[c][lane], lower_bound);
+                EXPECT_LE(face_value_interior[c][lane], upper_bound);
+                EXPECT_GE(face_value_exterior[c][lane], lower_bound);
+                EXPECT_LE(face_value_exterior[c][lane], upper_bound);
+              }
         }
     }
 }

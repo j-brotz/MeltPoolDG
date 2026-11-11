@@ -112,6 +112,18 @@ namespace MeltPoolDG
     /// [intra cell face]: direction of the normal vector of the face.
     std::vector<unsigned int> intra_cell_face_directions;
 
+    /// [intra cell face][interior/exterior]: A vector storing the indices of the face values in a
+    /// vector of intra cell face values, e.g. the reconstructed face values in FESubcellEvaluation.
+    /// The first index is the index of the intra cell face and the second index is 0 for the face
+    /// value of the interior subcell and 1 for the face value of the exterior subcell.
+    std::vector<std::array<unsigned int, 2>> intra_cell_face_value_indices;
+
+    /// [subcell index][face_no]: A table storing the indices of the face values of the subcells in
+    /// a vector of intra cell face values, see #intra_cell_face_value_indices. The first index is
+    /// the index of the subcell and the second index is the face number of the subcell face. For
+    /// faces on the boundary of the cell, the index is dealii::numbers::invalid_unsigned_int.
+    dealii::Table<2, unsigned int> subcell_index_to_intra_cell_face_value_index;
+
     /// [subcell index][d]: index of the subcell in direction d, i.e. its Cartesian index.
     std::vector<std::array<unsigned int, dim>> subcell_cartesian_indices;
 
