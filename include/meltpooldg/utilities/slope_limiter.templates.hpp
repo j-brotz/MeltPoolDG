@@ -13,8 +13,8 @@
 #include <meltpooldg/utilities/dealii_tensor.hpp>
 #include <meltpooldg/utilities/fe_integrator.hpp>
 #include <meltpooldg/utilities/limiter_functions.templates.hpp>
-#include <meltpooldg/utilities/limiters.hpp>
 #include <meltpooldg/utilities/matrix_free_util.hpp>
+#include <meltpooldg/utilities/slope_limiter.hpp>
 
 #include <array>
 #include <functional>
@@ -22,7 +22,7 @@
 
 template <int dim, int n_components, typename number>
 std::array<dealii::Tensor<1, n_components, number>, dim>
-MeltPoolDG::Utilities::compute_minmod_type_limited_slopes(
+MeltPoolDG::Utilities::compute_limited_slopes(
   const std::vector<std::pair<dealii::Tensor<1, n_components, number>,
                               dealii::Tensor<1, n_components, dealii::Tensor<1, dim, number>>>>
                                                                   &cell_average_values,
@@ -67,7 +67,7 @@ MeltPoolDG::Utilities::compute_minmod_type_limited_slopes(
                     cell->reference_cell().is_hyper_cube() and
                       neighbor->reference_cell().is_hyper_cube(),
                     dealii::ExcMessage(
-                      "The minmod limiter currently only supports 3D hexahedral meshes with isotropic refinement."));
+                      "The slope limiter currently only supports hypercube meshes with isotropic refinement."));
 
                   // Only use active cells that share a face with the current cell. If the face lies
                   // on a partition boundary, we only have access to ghost cell averages for direct
@@ -95,7 +95,7 @@ MeltPoolDG::Utilities::compute_minmod_type_limited_slopes(
                     cell->reference_cell().is_hyper_cube() and
                       neighbor->reference_cell().is_hyper_cube(),
                     dealii::ExcMessage(
-                      "The minmod limiter currently only supports 3D hexahedral meshes with isotropic refinement."));
+                      "The slope limiter currently only supports hypercube meshes with isotropic refinement."));
 
 
                   auto vec_neighbor_to_cell = cell->center() - neighbor->center();
@@ -165,7 +165,7 @@ template <int dim,
           typename VectorizedArrayType,
           typename VectorType>
 void
-MeltPoolDG::Utilities::apply_minmod_type_limiter(
+MeltPoolDG::Utilities::apply_slope_limiter(
   const MatrixFreeContext<dim, number>             &mf_context,
   VectorType                                       &dst,
   const VectorType                                 &src,
@@ -176,7 +176,7 @@ MeltPoolDG::Utilities::apply_minmod_type_limiter(
 
   AssertThrow(mf_context.mf.get_dof_handler(mf_context.dof_idx).get_fe().degree == 1,
               dealii::ExcMessage(
-                "The minmod type limiter currently only supports linear elements (degree 1)."));
+                "The slope limiter currently only supports linear elements (degree 1)."));
 
   const auto cell_average_values =
     compute_cell_average_quantities<dim, number, n_components>(mf_context, src);
@@ -243,8 +243,9 @@ MeltPoolDG::Utilities::apply_minmod_type_limiter(
                        ++lane)
                     {
                       std::array<dealii::Tensor<1, n_components, number>, dim> limited_slope_lane =
-                        compute_minmod_type_limited_slopes<dim, n_components, number>(
-                          cell_average_values, cells[lane], limiter_data);
+                        compute_limited_slopes<dim, n_components, number>(cell_average_values,
+                                                                          cells[lane],
+                                                                          limiter_data);
 
                       for (unsigned int c = 0; c < n_components; ++c)
                         for (unsigned int d = 0; d < dim; ++d)
