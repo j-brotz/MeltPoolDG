@@ -1,5 +1,7 @@
 <map id="MeltPoolDG::CompressibleFlow::OperationData&lt; number &gt;" name="MeltPoolDG::CompressibleFlow::OperationData&lt; number &gt;">
-<area shape="rect" id="Node000001" title="Collection of parameters required by the compressible Navier&#45;Stokes operator." alt="" coords="5,106,240,151"/>
-<area shape="rect" id="Node000002" href="$structMeltPoolDG_1_1FiniteElementData.html" title=" " alt="" coords="9,5,236,33"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="124,47,125,106,120,105,121,51"/>
+<area shape="rect" id="Node000001" title="Collection of parameters required by the compressible Navier&#45;Stokes operator." alt="" coords="110,123,344,168"/>
+<area shape="rect" id="Node000002" href="$structMeltPoolDG_1_1FiniteElementData.html" title=" " alt="" coords="5,14,233,42"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="142,50,210,122,204,123,140,55"/>
+<area shape="rect" id="Node000003" href="$structMeltPoolDG_1_1Utilities_1_1LimiterData.html" title=" " alt="" coords="256,5,414,50"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="307,61,249,125,246,120,302,62"/>
 </map>
