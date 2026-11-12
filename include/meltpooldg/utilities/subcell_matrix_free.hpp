@@ -105,6 +105,15 @@ namespace MeltPoolDG
      */
     std::array<std::vector<unsigned int>, 2 * dim> face_to_cell_subcell_indices;
 
+    /// [face_no][subcell_no]: An array of vectors storing the indices of the subcells in the second
+    /// layer of subcells adjacent to a face of the cell, e.g. for the second order reconstruction
+    /// in FESubcellFaceEvaluation. The first index is the face number of the cell and the second
+    /// index is the index of the subcell face, ordered as in #face_to_cell_subcell_indices. The
+    /// subcell in the second layer is the neighbor of the subcell in the first layer in the
+    /// direction away from the face. For a single subcell per direction, there is no second layer
+    /// within the cell and all indices are dealii::numbers::invalid_unsigned_int.
+    std::array<std::vector<unsigned int>, 2 * dim> face_to_cell_second_layer_subcell_indices;
+
     /// [intra cell face][interior/exterior]: index of the interior and the exterior subcell of the
     /// face.
     std::vector<std::array<unsigned int, 2>> intra_cell_face_to_subcells;

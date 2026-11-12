@@ -58,8 +58,14 @@ namespace MeltPoolDG::Utilities
     /// The type of limiter to apply.
     LimiterType type = LimiterType::none;
 
-    /// The type of limiter function to use.
+    /// The type of limiter function to use. It limits the slopes of the slope limiter and of the
+    /// second order subcell reconstruction of the finite volume subcell limiter.
     LimiterFunctionType limiter_function_type = LimiterFunctionType::tvd_minmod;
+
+    /// The order of the reconstruction of the subcell face values of the finite volume subcell
+    /// limiter: 1 for piecewise constant subcell values, 2 for a piecewise linear reconstruction
+    /// with slopes limited by #limiter_function_type.
+    unsigned int subcell_reconstruction_order = 1;
 
     /// The troubled cell marking strategy to use.
     std::vector<TroubledCellMarkingStrategy> troubled_cell_marking_strategy = {};

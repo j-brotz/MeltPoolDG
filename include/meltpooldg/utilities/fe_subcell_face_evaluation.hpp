@@ -4,6 +4,7 @@
 
 #include <deal.II/matrix_free/fe_evaluation.h>
 
+#include <meltpooldg/utilities/limiter_data.hpp>
 #include <meltpooldg/utilities/subcell_matrix_free.hpp>
 
 #include <array>
@@ -69,6 +70,37 @@ namespace MeltPoolDG
    *   FESubcellEvaluation::subcell_location(). Note that this is not a point on the face.
    * - subcell_face_location(s): the location of the subcell face, i.e. its geometric center. It
    *   lies on the face and is the same on the interior and the exterior object.
+   *
+   * ## Reconstructed face values
+   * A first order finite volume scheme evaluates the numerical fluxes with the subcell values
+   * returned by get_value(). For a second order scheme, the constructor argument
+   * `reconstruction_order = 2` selects a piecewise linear reconstruction within the subcells, and
+   * the numerical fluxes are evaluated with the values on the subcell faces instead. As for the
+   * face gradients, each object only holds the subcell values on its side of the face, so the
+   * reconstructed value on an inner face is computed by get_face_value(s, opposite), which takes
+   * the object of the other side as second argument. It returns the reconstructed value on this
+   * object's side of subcell face `s`, i.e.
+   * @f[
+   *   u_\mathrm{face} = u \pm \frac{\Delta x}{2} \, s,
+   * @f]
+   * where \f$u\f$ is the value and \f$\Delta x\f$ the width normal to the face of the subcell
+   * adjacent to subcell face `s`, and the sign is positive if the face lies in positive cell
+   * direction of the subcell. The slope \f$s\f$ normal to the face is computed by
+   * Utilities::compute_limited_slope() with the limiter function passed to the constructor from
+   * - the value of the subcell across the face, taken from the opposite object, and
+   * - the value of the next subcell of the same cell in the direction away from the face, i.e. the
+   *   second layer of subcells adjacent to the face.
+   *
+   * This is the stencil FESubcellEvaluation uses for the slope normal to the face of the same
+   * subcell, such that both classes reconstruct the same linear function in each subcell if they
+   * use the same limiter function. Since the stencil only reaches over the face and not beyond its
+   * edges, no lateral neighbors are needed. The second order reconstruction requires at least two
+   * subcells per direction.
+   *
+   * On a boundary face, get_face_value(s) without a second argument takes the value across the
+   * face from the `boundary_value_function` passed to the constructor, located on the boundary
+   * face as for the face gradients. For `reconstruction_order = 1`, both functions return the
+   * subcell value get_value(s).
    *
    * ## Subcell gradients
    * If gather_evaluate() is called with dealii::EvaluationFlags::gradients set, the class also
@@ -156,6 +188,16 @@ namespace MeltPoolDG
    * In the boundary face loop, only the interior object is used. The exterior state is taken from
    * the boundary condition, selected via boundary_id().
    *
+   * For a second order scheme, both objects are constructed with `reconstruction_order = 2`, and
+   * the numerical flux is evaluated with the reconstructed face values instead of the subcell
+   * values:
+   *
+   * @code
+   * const auto flux = numerical_flux(phi_m.get_face_value(q, phi_p),
+   *                                  phi_p.get_face_value(q, phi_m),
+   *                                  phi_m.normal_vector(q));
+   * @endcode
+   *
    * If the numerical flux also depends on the gradient, both objects evaluate the gradients, and
    * the face gradient is computed from both of them. As mentioned above, it does not matter which
    * object is used to call get_face_gradient(), since the result is the same. On boundary faces,
@@ -217,12 +259,23 @@ namespace MeltPoolDG
      * index data.
      * @param is_interior_face Whether this object represents the interior side of a face.
      * @param boundary_value_function The function returning the values on the domain boundary for
-     * the subcell gradients, see the section on subcell gradients in the class documentation. The
-     * parameter may be omitted for inner domain cells or if no gradients are evaluated.
+     * the subcell gradients and the reconstructed face values, see the sections on subcell
+     * gradients and reconstructed face values in the class documentation. The parameter may be
+     * omitted for inner domain cells or if neither gradients nor reconstructed values on boundary
+     * faces are evaluated.
+     * @param reconstruction_order The order of the reconstruction of the face values returned by
+     * get_face_value(): 1 for the subcell values themselves, 2 for a piecewise linear
+     * reconstruction with limited slopes. The second order reconstruction requires at least two
+     * subcells per direction.
+     * @param limiter_function The limiter function applied to the slopes of the second order
+     * reconstruction. It is not used for `reconstruction_order = 1`.
      */
     FESubcellFaceEvaluation(const SubcellMatrixFree<dim, number> &subcell_matrix_free,
                             const bool                            is_interior_face,
-                            const BoundaryValueFunctionType      &boundary_value_function = {});
+                            const BoundaryValueFunctionType      &boundary_value_function = {},
+                            const unsigned int                    reconstruction_order    = 1,
+                            const Utilities::LimiterFunctionType  limiter_function =
+                              Utilities::LimiterFunctionType::tvd_minmod);
 
     /**
      * Reinitialize the object for the face batch with index @p face_batch_index. This function
@@ -242,7 +295,9 @@ namespace MeltPoolDG
     /**
      * Read the DoF values of the cell on this object's side of the face from the given vector and
      * evaluate the values of the subcells adjacent to the face and, if requested, their tangential
-     * gradients. Afterwards, the values can be accessed with get_value() and the face gradients
+     * gradients. For the second order reconstruction, the values of the second layer of subcells
+     * adjacent to the face are evaluated as well. Afterwards, the values can be accessed with
+     * get_value(), the reconstructed face values with get_face_value() and the face gradients
      * with get_face_gradient().
      *
      * @param input_vector The vector from which the DoF values are read. For gradients, the DoF
@@ -269,6 +324,36 @@ namespace MeltPoolDG
      */
     value_type
     get_value(const unsigned int subcell_index) const;
+
+    /**
+     * Return the reconstructed value on this object's side of the subcell face @p subcell_index of
+     * an inner face. For details, see the section on reconstructed face values in the class
+     * documentation. For `reconstruction_order = 1`, this is the subcell value get_value().
+     *
+     * A call to this function requires that gather_evaluate() has been called on both objects for
+     * the current face batch.
+     *
+     * @param subcell_index The index of the subcell face.
+     * @param opposite The object representing the other side of the same face batch, i.e. the
+     * exterior object if this is the interior one and vice versa.
+     */
+    value_type
+    get_face_value(const unsigned int subcell_index, const FESubcellFaceEvaluation &opposite) const;
+
+    /**
+     * Return the reconstructed value on the subcell face @p subcell_index of a boundary face, where
+     * no opposite object exists. Instead, the value across the face is taken from the boundary
+     * value function passed to the constructor. For details, see the section on reconstructed face
+     * values in the class documentation. For `reconstruction_order = 1`, this is the subcell value
+     * get_value().
+     *
+     * A call to this function requires that gather_evaluate() has been called for the current face
+     * batch.
+     *
+     * @param subcell_index The index of the subcell face.
+     */
+    value_type
+    get_face_value(const unsigned int subcell_index) const;
 
     /**
      * Return the gradient of the solution on the subcell face @p subcell_index of an inner face.
@@ -501,6 +586,13 @@ namespace MeltPoolDG
     /// subcell gradients in the class documentation.
     const BoundaryValueFunctionType boundary_value_function;
 
+    /// The order of the reconstruction of the face values returned by get_face_value(), either 1
+    /// or 2.
+    const unsigned int reconstruction_order;
+
+    /// The limiter function applied to the slopes of the second order reconstruction.
+    const Utilities::LimiterFunctionType limiter_function_type;
+
     /**
      * Values of the subcells adjacent to the face on this object's side, i.e. one layer of
      * subcells, in the haloed layout of SubcellShapeInfo::face_index_info, see SubcellIndexInfo.
@@ -564,6 +656,11 @@ namespace MeltPoolDG
      */
     std::vector<value_type> layer_values;
 
+    /// Values of the subcells in the second layer of subcells adjacent to the face on this object's
+    /// side, see SubcellIndexInfo::face_to_cell_second_layer_subcell_indices, indexed by the
+    /// subcell face index. Only filled for the second order reconstruction.
+    std::vector<value_type> second_layer_values;
+
     /// The extents of the subcells of layer_values in the face directions, stored in the same
     /// haloed layout. The component k is the extent in the direction k of the face coordinates, see
     /// SubcellShapeInfo::face_index_info. In the face direction normal to the edge it lies on, a
@@ -586,6 +683,10 @@ namespace MeltPoolDG
     /// Sizes of the subcells adjacent to the face on this object's side, indexed by the subcell
     /// face index.
     std::vector<VectorizedArrayType> subcell_sizes;
+
+    /// Sizes of the subcells in the second layer of subcells adjacent to the face on this object's
+    /// side, indexed by the subcell face index. Only filled for the second order reconstruction.
+    std::vector<VectorizedArrayType> second_layer_subcell_sizes;
 
     /// Unit normal vectors of the subcell faces, pointing out of the interior cell, indexed by the
     /// subcell face index.
@@ -712,6 +813,22 @@ namespace MeltPoolDG
      */
     void
     compute_subcell_tangential_gradients();
+
+    /**
+     * Return the second order reconstruction of the value on this object's side of the subcell face
+     * @p subcell_index, see the section on reconstructed face values in the class documentation.
+     * Requires the second layer values to be filled by project_dof_values_to_subcell_values().
+     *
+     * @param subcell_index The index of the subcell face.
+     * @param value_across_face The value across the face, i.e. the value of the adjacent subcell of
+     * the opposite object on inner faces and the boundary value on boundary faces.
+     * @param distance_across_face The distance between the center of the subcell adjacent to the
+     * face and the location of @p value_across_face.
+     */
+    value_type
+    reconstruct_face_value(const unsigned int        subcell_index,
+                           const value_type         &value_across_face,
+                           const VectorizedArrayType distance_across_face) const;
   };
 
   template <int dim, int n_components, typename number>

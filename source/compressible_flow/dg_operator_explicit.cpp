@@ -500,8 +500,14 @@ namespace MeltPoolDG::CompressibleFlow
     const std::pair<unsigned int, unsigned int>                  &cell_range,
     const dealii::AlignedVector<dealii::VectorizedArray<number>> &troubled_cells) const
   {
+    // The second order reconstruction needs the values on the wall at the domain boundary, i.e.
+    // the boundary values without the mirror principle.
+    const Utilities::LimiterData<number> &limiter_data = flow_scratch_data.flow_data.limiter_data;
     FESubcellEvaluation<dim, n_conserved_variables<dim, n_species>, number> subcell_evaluation(
-      *flow_scratch_data.subcell_matrix_free);
+      *flow_scratch_data.subcell_matrix_free,
+      std::bind_front(&DGOperatorExplicit::fv_subcell_boundary_value, this, false),
+      limiter_data.subcell_reconstruction_order,
+      limiter_data.limiter_function_type);
 
     for (unsigned int cell = cell_range.first; cell < cell_range.second; ++cell)
       {
@@ -557,10 +563,19 @@ namespace MeltPoolDG::CompressibleFlow
     const std::pair<unsigned int, unsigned int>                  &face_range,
     const dealii::AlignedVector<dealii::VectorizedArray<number>> &troubled_cells) const
   {
+    const Utilities::LimiterData<number> &limiter_data = flow_scratch_data.flow_data.limiter_data;
     FESubcellFaceEvaluation<dim, n_conserved_variables<dim, n_species>, number> phi_m(
-      *flow_scratch_data.subcell_matrix_free, true);
+      *flow_scratch_data.subcell_matrix_free,
+      true,
+      std::bind_front(&DGOperatorExplicit::fv_subcell_boundary_value, this, false),
+      limiter_data.subcell_reconstruction_order,
+      limiter_data.limiter_function_type);
     FESubcellFaceEvaluation<dim, n_conserved_variables<dim, n_species>, number> phi_p(
-      *flow_scratch_data.subcell_matrix_free, false);
+      *flow_scratch_data.subcell_matrix_free,
+      false,
+      std::bind_front(&DGOperatorExplicit::fv_subcell_boundary_value, this, false),
+      limiter_data.subcell_reconstruction_order,
+      limiter_data.limiter_function_type);
 
     for (unsigned int face = face_range.first; face < face_range.second; ++face)
       {
@@ -579,8 +594,8 @@ namespace MeltPoolDG::CompressibleFlow
 
         for (const unsigned int subcell : phi_m.subcell_face_indices())
           {
-            const ConservedVariables w_m = phi_m.get_value(subcell);
-            const ConservedVariables w_p = phi_p.get_value(subcell);
+            const ConservedVariables w_m = phi_m.get_face_value(subcell, phi_p);
+            const ConservedVariables w_p = phi_p.get_face_value(subcell, phi_m);
 
             const ConservedVariables numerical_flux =
               fv_subcell_convective_numerical_flux(w_m, w_p, phi_m.normal_vector(subcell));
@@ -603,23 +618,15 @@ namespace MeltPoolDG::CompressibleFlow
     const std::pair<unsigned int, unsigned int>                  &face_range,
     const dealii::AlignedVector<dealii::VectorizedArray<number>> &troubled_cells) const
   {
+    // The second order reconstruction of the face value needs the value on the wall, i.e. the
+    // boundary value without the mirror principle.
+    const Utilities::LimiterData<number> &limiter_data = flow_scratch_data.flow_data.limiter_data;
     FESubcellFaceEvaluation<dim, n_conserved_variables<dim, n_species>, number> phi_m(
-      *flow_scratch_data.subcell_matrix_free, true);
-
-    using DofReaderType = NSpeciesDofValueAndGradientStateView<
-      dim,
-      n_species,
-      number,
-      const ConservedVariablesType<dim, number, n_species>,
-      const ConservedVariablesGradientType<dim, number, n_species>>;
-
-    using DofWriteType =
-      NSpeciesDofValueAndGradientStateView<dim,
-                                           n_species,
-                                           number,
-                                           ConservedVariablesType<dim, number, n_species>,
-                                           ConservedVariablesGradientType<dim, number, n_species>>;
-
+      *flow_scratch_data.subcell_matrix_free,
+      true,
+      std::bind_front(&DGOperatorExplicit::fv_subcell_boundary_value, this, false),
+      limiter_data.subcell_reconstruction_order,
+      limiter_data.limiter_function_type);
 
     for (unsigned int face = face_range.first; face < face_range.second; ++face)
       {
@@ -634,34 +641,16 @@ namespace MeltPoolDG::CompressibleFlow
 
         for (const unsigned int subcell : phi_m.subcell_face_indices())
           {
-            const auto w_m = phi_m.get_value(subcell);
+            const ConservedVariables w_m = phi_m.get_face_value(subcell);
 
-            ConservedVariablesType<dim, number, n_species>         w_p;
-            ConservedVariablesGradientType<dim, number, n_species> grad_w_p;
-
-            // Note: currently the gradient is not used. Hence, we grad_w_p for the inner side
-            // knowing that this is not correct, but as we only use the value for the flux
-            // evaluation this is not a problem.
-            flow_scratch_data.boundary_conditions
-              .set_conserved_variables_boundary_value_and_gradient(
-                phi_m.subcell_face_location(subcell),
-                phi_m.normal_vector(subcell),
-                phi_m.boundary_id(),
-                DofReaderType(w_m, grad_w_p, flow_scratch_data.material),
-                DofWriteType(w_p, grad_w_p, flow_scratch_data.material));
-
-            if constexpr (n_species > 1)
-              {
-                // Using grad_w_p for inner side, see comment above.
-                flow_scratch_data.boundary_conditions
-                  .template set_partial_density_boundary_value_and_gradient<n_species,
-                                                                            DofReaderType,
-                                                                            DofWriteType>(
-                    phi_m.subcell_face_location(subcell),
-                    phi_m.boundary_id(),
-                    DofReaderType(w_m, grad_w_p, flow_scratch_data.material),
-                    DofWriteType(w_p, grad_w_p, flow_scratch_data.material));
-              }
+            // The convective numerical flux requires the mirrored state on slip walls, such that
+            // there is no mass flux through the wall.
+            const ConservedVariables w_p =
+              fv_subcell_boundary_value(true /* use mirror principle */,
+                                        phi_m.subcell_face_location(subcell),
+                                        phi_m.normal_vector(subcell),
+                                        phi_m.boundary_id(),
+                                        w_m);
 
             const ConservedVariables numerical_flux =
               fv_subcell_convective_numerical_flux(w_m, w_p, phi_m.normal_vector(subcell));
@@ -682,10 +671,21 @@ namespace MeltPoolDG::CompressibleFlow
     const std::pair<unsigned int, unsigned int>                  &face_range,
     const dealii::AlignedVector<dealii::VectorizedArray<number>> &troubled_cells) const
   {
+    // The finite volume flux must be the same as in fv_subcell_limiter_local_apply_face(), so the
+    // subcell evaluators are set up in the same way.
+    const Utilities::LimiterData<number> &limiter_data = flow_scratch_data.flow_data.limiter_data;
     FESubcellFaceEvaluation<dim, n_conserved_variables<dim, n_species>, number> subcell_m(
-      *flow_scratch_data.subcell_matrix_free, true);
+      *flow_scratch_data.subcell_matrix_free,
+      true,
+      std::bind_front(&DGOperatorExplicit::fv_subcell_boundary_value, this, false),
+      limiter_data.subcell_reconstruction_order,
+      limiter_data.limiter_function_type);
     FESubcellFaceEvaluation<dim, n_conserved_variables<dim, n_species>, number> subcell_p(
-      *flow_scratch_data.subcell_matrix_free, false);
+      *flow_scratch_data.subcell_matrix_free,
+      false,
+      std::bind_front(&DGOperatorExplicit::fv_subcell_boundary_value, this, false),
+      limiter_data.subcell_reconstruction_order,
+      limiter_data.limiter_function_type);
     FEFaceIntegrator<dim, n_conserved_variables<dim, n_species>, number> phi_m(
       matrix_free, true, flow_scratch_data.dof_idx, flow_scratch_data.quad_idx);
     FEFaceIntegrator<dim, n_conserved_variables<dim, n_species>, number> phi_p(
@@ -730,12 +730,13 @@ namespace MeltPoolDG::CompressibleFlow
         // correction exactly balances the finite volume flux of the troubled cell.
         for (const unsigned int q : phi_m.quadrature_point_indices())
           {
-            const ConservedVariables fv_flux = ConvectionOperator::face(subcell_m.get_value(q),
-                                                                        subcell_p.get_value(q),
-                                                                        subcell_m.normal_vector(q),
-                                                                        convective_kernel,
-                                                                        numerical_flux_type)
-                                                 .outer_face_value;
+            const ConservedVariables fv_flux =
+              ConvectionOperator::face(subcell_m.get_face_value(q, subcell_p),
+                                       subcell_p.get_face_value(q, subcell_m),
+                                       subcell_m.normal_vector(q),
+                                       convective_kernel,
+                                       numerical_flux_type)
+                .outer_face_value;
             const ConservedVariables dg_flux = ConvectionOperator::face(phi_m.get_value(q),
                                                                         phi_p.get_value(q),
                                                                         phi_m.normal_vector(q),
@@ -793,6 +794,58 @@ namespace MeltPoolDG::CompressibleFlow
       }
 
     return numerical_flux;
+  }
+
+  template <int dim, typename number, int n_species>
+  ConservedVariablesType<dim, number, n_species>
+  DGOperatorExplicit<dim, number, n_species>::fv_subcell_boundary_value(
+    const bool                                                     use_mirror_principle,
+    const dealii::Point<dim, dealii::VectorizedArray<number>>     &location,
+    const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal,
+    const dealii::types::boundary_id                               boundary_id,
+    const ConservedVariablesType<dim, number, n_species>          &w_m) const
+  {
+    using DofReaderType = NSpeciesDofValueAndGradientStateView<
+      dim,
+      n_species,
+      number,
+      const ConservedVariablesType<dim, number, n_species>,
+      const ConservedVariablesGradientType<dim, number, n_species>>;
+
+    using DofWriteType =
+      NSpeciesDofValueAndGradientStateView<dim,
+                                           n_species,
+                                           number,
+                                           ConservedVariablesType<dim, number, n_species>,
+                                           ConservedVariablesGradientType<dim, number, n_species>>;
+
+    ConservedVariablesType<dim, number, n_species>         w_p;
+    ConservedVariablesGradientType<dim, number, n_species> grad_w_p;
+
+    // Note: currently the gradient is not used. Hence, we use grad_w_p for the inner side
+    // knowing that this is not correct, but as we only use the value for the flux
+    // evaluation this is not a problem.
+    flow_scratch_data.boundary_conditions.set_conserved_variables_boundary_value_and_gradient(
+      location,
+      normal,
+      boundary_id,
+      DofReaderType(w_m, grad_w_p, flow_scratch_data.material),
+      DofWriteType(w_p, grad_w_p, flow_scratch_data.material),
+      use_mirror_principle);
+
+    if constexpr (n_species > 1)
+      {
+        // Using grad_w_p for inner side, see comment above.
+        flow_scratch_data.boundary_conditions
+          .template set_partial_density_boundary_value_and_gradient<n_species,
+                                                                    DofReaderType,
+                                                                    DofWriteType>(
+            location,
+            boundary_id,
+            DofReaderType(w_m, grad_w_p, flow_scratch_data.material),
+            DofWriteType(w_p, grad_w_p, flow_scratch_data.material));
+      }
+    return w_p;
   }
 
 

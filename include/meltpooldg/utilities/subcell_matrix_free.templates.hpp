@@ -55,6 +55,7 @@ namespace MeltPoolDG
           const unsigned int layer     = (face_no % 2) * (n_subcells_1d - 1);
 
           face_to_cell_subcell_indices[face_no].resize(n_subcells_face);
+          face_to_cell_second_layer_subcell_indices[face_no].resize(n_subcells_face);
           for (unsigned int q_face = 0; q_face < n_subcells_face; ++q_face)
             {
               unsigned int subcell         = layer * strides[direction];
@@ -65,6 +66,15 @@ namespace MeltPoolDG
                   remaining_index /= n_subcells_1d;
                 }
               face_to_cell_subcell_indices[face_no][q_face] = subcell;
+
+              // The second layer lies one stride further into the cell, i.e. above the first layer
+              // for the lower face and below it for the upper face.
+              if (n_subcells_1d > 1)
+                face_to_cell_second_layer_subcell_indices[face_no][q_face] =
+                  (face_no % 2 == 0) ? subcell + strides[direction] : subcell - strides[direction];
+              else
+                face_to_cell_second_layer_subcell_indices[face_no][q_face] =
+                  dealii::numbers::invalid_unsigned_int;
             }
         }
 

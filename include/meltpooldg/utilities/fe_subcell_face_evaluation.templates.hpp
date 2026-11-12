@@ -15,10 +15,12 @@
 #include <deal.II/matrix_free/shape_info.h>
 
 #include <meltpooldg/utilities/fe_subcell_face_evaluation.hpp>
+#include <meltpooldg/utilities/limiter_functions.templates.hpp>
 #include <meltpooldg/utilities/subcell_evaluation_utils.hpp>
 #include <meltpooldg/utilities/subcell_matrix_free.hpp>
 
 #include <bitset>
+#include <utility>
 
 namespace MeltPoolDG
 {
@@ -26,7 +28,9 @@ namespace MeltPoolDG
   FESubcellFaceEvaluation<dim, n_components, number>::FESubcellFaceEvaluation(
     const SubcellMatrixFree<dim, number> &subcell_matrix_free,
     const bool                            is_interior_face,
-    const BoundaryValueFunctionType      &boundary_value_function)
+    const BoundaryValueFunctionType      &boundary_value_function,
+    const unsigned int                    reconstruction_order,
+    const Utilities::LimiterFunctionType  limiter_function)
     : subcell_matrix_free(subcell_matrix_free)
     , subcell_shape_info(subcell_matrix_free.get_subcell_shape_info())
     , cell_index_info(subcell_matrix_free.get_subcell_shape_info().cell_index_info)
@@ -34,6 +38,8 @@ namespace MeltPoolDG
     , matrix_free(subcell_matrix_free.get_matrix_free())
     , is_interior_face(is_interior_face)
     , boundary_value_function(boundary_value_function)
+    , reconstruction_order(reconstruction_order)
+    , limiter_function_type(limiter_function)
     , fe_cell_evaluator(subcell_matrix_free.get_matrix_free(),
                         subcell_matrix_free.get_dof_no(),
                         subcell_matrix_free.get_quad_no())
@@ -42,6 +48,14 @@ namespace MeltPoolDG
                         subcell_matrix_free.get_dof_no(),
                         subcell_matrix_free.get_quad_no())
   {
+    AssertThrow(reconstruction_order == 1 or reconstruction_order == 2,
+                dealii::ExcMessage(
+                  "Only reconstruction orders 1 and 2 are supported in FESubcellFaceEvaluation."));
+    AssertThrow(
+      reconstruction_order == 1 or cell_index_info.n_subcells_1d > 1,
+      dealii::ExcMessage(
+        "The second order reconstruction in FESubcellFaceEvaluation requires at least two "
+        "subcells per direction."));
     setup_internal_data_structures();
   }
 
@@ -126,6 +140,72 @@ namespace MeltPoolDG
       dealii::ExcMessage(
         "FESubcellFaceEvaluation has not been reinitialized. Call reinit() before get_interior_value()."));
     return layer_values[face_index_info.subcell_index_to_haloed_vector_index[subcell_index]];
+  }
+
+  template <int dim, int n_components, typename number>
+  auto
+  FESubcellFaceEvaluation<dim, n_components, number>::get_face_value(
+    const unsigned int             subcell_index,
+    const FESubcellFaceEvaluation &opposite) const -> value_type
+  {
+    AssertIndexRange(subcell_index, cell_index_info.n_subcells_face);
+    Assert(
+      not is_boundary_face,
+      dealii::ExcMessage(
+        "This function can only be used on inner faces. Use get_face_value(subcell_index) on boundary faces."));
+    Assert(subcell_values_initialized and opposite.subcell_values_initialized,
+           dealii::ExcNotInitialized());
+    Assert(
+      (opposite.face_batch_index == face_batch_index) and
+        (opposite.is_interior_face != is_interior_face),
+      dealii::ExcMessage(
+        "The opposite FESubcellFaceEvaluation object must represent the opposite side of the face."));
+
+    if (reconstruction_order == 1)
+      return get_value(subcell_index);
+
+    // As for the face gradient, the distance of the two subcell centers is computed from the widths
+    // of the subcells normal to the face and not from their locations, which lie at opposite ends
+    // of the domain on periodic faces.
+    const VectorizedArrayType distance_across_face =
+      0.5 * (subcell_sizes[subcell_index] / subcell_face_sizes[subcell_index] +
+             opposite.subcell_sizes[subcell_index] / opposite.subcell_face_sizes[subcell_index]);
+
+    return reconstruct_face_value(subcell_index,
+                                  opposite.get_value(subcell_index),
+                                  distance_across_face);
+  }
+
+  template <int dim, int n_components, typename number>
+  auto
+  FESubcellFaceEvaluation<dim, n_components, number>::get_face_value(
+    const unsigned int subcell_index) const -> value_type
+  {
+    AssertIndexRange(subcell_index, cell_index_info.n_subcells_face);
+    Assert(
+      is_boundary_face,
+      dealii::ExcMessage(
+        "This function can only be used on boundary faces. Use the other get_face_value() function for inner faces."));
+    Assert(subcell_values_initialized, dealii::ExcNotInitialized());
+
+    if (reconstruction_order == 1)
+      return get_value(subcell_index);
+
+    Assert(boundary_value_function,
+           dealii::ExcMessage("The second order reconstruction on boundary faces requires the "
+                              "boundary value function passed to the constructor."));
+
+    // As for the face gradient, the boundary value is located on the boundary face, i.e. at half
+    // the width of the subcell normal to the face from the subcell center.
+    const value_type boundary_value = boundary_value_function(subcell_face_locations[subcell_index],
+                                                              subcell_face_normals[subcell_index],
+                                                              boundary_id(),
+                                                              get_value(subcell_index));
+
+    return reconstruct_face_value(subcell_index,
+                                  boundary_value,
+                                  0.5 * subcell_sizes[subcell_index] /
+                                    subcell_face_sizes[subcell_index]);
   }
 
   template <int dim, int n_components, typename number>
@@ -375,6 +455,13 @@ namespace MeltPoolDG
         subcell_sizes[q] =
           fe_cell_evaluator.JxW(cell_index_info.face_to_cell_subcell_indices[face_no][q]);
       }
+
+    if (reconstruction_order > 1)
+      for (const unsigned int q : subcell_face_indices())
+        {
+          second_layer_subcell_sizes[q] = fe_cell_evaluator.JxW(
+            cell_index_info.face_to_cell_second_layer_subcell_indices[face_no][q]);
+        }
   }
   template <int dim, int n_components, typename number>
   void
@@ -440,6 +527,12 @@ namespace MeltPoolDG
     subcell_face_sizes.resize(cell_index_info.n_subcells_face);
     subcell_sizes.resize(cell_index_info.n_subcells_face);
 
+    if (reconstruction_order > 1)
+      {
+        second_layer_values.resize(cell_index_info.n_subcells_face);
+        second_layer_subcell_sizes.resize(cell_index_info.n_subcells_face);
+      }
+
     subcell_locations.resize(cell_index_info.n_subcells_face);
     subcell_face_locations.resize(cell_index_info.n_subcells_face);
     integrated_subcell_values_buffer.resize(n_components * fe_cell_evaluator.n_q_points);
@@ -458,6 +551,13 @@ namespace MeltPoolDG
                        .face_index_info.subcell_index_to_haloed_vector_index[subcell]] =
           fe_cell_evaluator.get_value(cell_q_index);
       }
+
+    if (reconstruction_order > 1)
+      for (const unsigned int subcell : subcell_face_indices())
+        {
+          second_layer_values[subcell] = fe_cell_evaluator.get_value(
+            cell_index_info.face_to_cell_second_layer_subcell_indices[face_no][subcell]);
+        }
 
     subcell_values_initialized = true;
   }
@@ -744,6 +844,54 @@ namespace MeltPoolDG
         subcell_face_locations[subcell_face] = subcell_locations[subcell_face];
         subcell_face_locations[subcell_face][face_normal_coordinate_direction] =
           fe_face_evaluator.quadrature_point(subcell_face)[face_normal_coordinate_direction];
+      }
+  }
+
+  template <int dim, int n_components, typename number>
+  auto
+  FESubcellFaceEvaluation<dim, n_components, number>::reconstruct_face_value(
+    const unsigned int        subcell_index,
+    const value_type         &value_across_face,
+    const VectorizedArrayType distance_across_face) const -> value_type
+  {
+    Assert(reconstruction_order == 2, dealii::ExcInternalError());
+    AssertDimension(second_layer_values.size(), cell_index_info.n_subcells_face);
+    AssertDimension(second_layer_subcell_sizes.size(), cell_index_info.n_subcells_face);
+
+    // On a Cartesian cell, the width of a subcell normal to the face is its size divided by the
+    // size of the subcell face, as for the face gradients.
+    const VectorizedArrayType subcell_width =
+      subcell_sizes[subcell_index] / subcell_face_sizes[subcell_index];
+    const VectorizedArrayType distance_to_second_layer =
+      0.5 * (subcell_width +
+             second_layer_subcell_sizes[subcell_index] / subcell_face_sizes[subcell_index]);
+
+    const value_type value = get_value(subcell_index);
+
+    // For even face numbers, the face lies in negative cell direction of the subcell, i.e. the
+    // value across the face is the left and the second layer value the right neighbor. For odd face
+    // numbers, it is the other way round.
+    if (face_no % 2 == 0)
+      {
+        const std::pair<value_type, value_type> limited_slopes =
+          Utilities::compute_limited_slope(value_across_face,
+                                           value,
+                                           second_layer_values[subcell_index],
+                                           distance_across_face,
+                                           distance_to_second_layer,
+                                           limiter_function_type);
+        return value - 0.5 * subcell_width * limited_slopes.first;
+      }
+    else
+      {
+        const std::pair<value_type, value_type> limited_slopes =
+          Utilities::compute_limited_slope(second_layer_values[subcell_index],
+                                           value,
+                                           value_across_face,
+                                           distance_to_second_layer,
+                                           distance_across_face,
+                                           limiter_function_type);
+        return value + 0.5 * subcell_width * limited_slopes.second;
       }
   }
 } // namespace MeltPoolDG

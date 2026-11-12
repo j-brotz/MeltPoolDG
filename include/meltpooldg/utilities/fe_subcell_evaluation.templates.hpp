@@ -33,14 +33,14 @@ namespace MeltPoolDG
     , subcell_shape_info(subcell_matrix_free.get_subcell_shape_info())
     , cell_index_info(subcell_shape_info.cell_index_info)
     , boundary_value_function(boundary_value_function)
+    , reconstruction_order(reconstruction_order)
+    , limiter_function_type(limiter_function)
     , fe_cell_evaluator(subcell_matrix_free.get_matrix_free(),
                         subcell_matrix_free.get_dof_no(),
                         subcell_matrix_free.get_quad_no())
     , fe_neighbor_evaluator(subcell_matrix_free.get_matrix_free(),
                             subcell_matrix_free.get_dof_no(),
                             subcell_matrix_free.get_quad_no())
-    , reconstruction_order(reconstruction_order)
-    , limiter_function_type(limiter_function)
   {
     AssertThrow(reconstruction_order == 1 or reconstruction_order == 2,
                 dealii::ExcMessage(

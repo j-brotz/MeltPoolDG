@@ -100,7 +100,10 @@ namespace MeltPoolDG::CompressibleFlow
      * In the troubled cells, the candidate solution is replaced by a forward Euler step of the
      * finite volume subcell scheme starting from @p previous_solution. The finite volume
      * right-hand side contains the convective fluxes and the external forces. Viscous terms are
-     * not considered yet.
+     * not considered yet. Depending on Utilities::LimiterData::subcell_reconstruction_order, the
+     * convective fluxes are evaluated with the subcell values (first order) or with the values on
+     * the subcell faces of a piecewise linear reconstruction, whose slopes are limited with
+     * Utilities::LimiterData::limiter_function_type (second order).
      *
      * In the untroubled neighbors of troubled cells, the update is corrected such that it uses the
      * finite volume flux instead of the DG flux at the faces shared with troubled cells. Thus, both
@@ -279,7 +282,8 @@ namespace MeltPoolDG::CompressibleFlow
      * finite volume flux, while the DG update of the untroubled cell contains the DG flux. For
      * the untroubled cell, this function computes the face integral of the difference between the
      * two fluxes, which replaces the DG flux by the finite volume flux once the inverse mass matrix
-     * is applied.
+     * is applied. The finite volume flux is evaluated with the same reconstructed face values as
+     * in fv_subcell_limiter_local_apply_face(), such that it equals the flux of the troubled cell.
      *
      * @param matrix_free Matrix free object on which the applier works on.
      * @param dst Destination vector to which the face integrals are added.
@@ -313,5 +317,31 @@ namespace MeltPoolDG::CompressibleFlow
       const ConservedVariablesType<dim, number, n_species>          &w_m,
       const ConservedVariablesType<dim, number, n_species>          &w_p,
       const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal) const;
+
+    /**
+     * @brief Exterior state on a finite volume subcell face at the domain boundary.
+     *
+     * Evaluates the boundary conditions of the conserved variables and, for multiple species, of
+     * the partial densities. @p use_mirror_principle is the first parameter, such that the
+     * function can be bound with std::bind_front() to obtain the boundary value function of the
+     * subcell evaluators.
+     *
+     * @param use_mirror_principle If true, the mirrored state is returned on slip walls, as needed
+     * by the convective numerical flux. If false, the state on the wall is returned, as needed by
+     * the second order reconstruction of the subcell values. See
+     * BoundaryConditions::set_conserved_variables_boundary_value_and_gradient().
+     * @param location Location on the boundary.
+     * @param normal Unit outer normal vector of the boundary.
+     * @param boundary_id ID of the boundary.
+     * @param w_m State on the interior side of the boundary face.
+     *
+     * @return Exterior state on the boundary face.
+     */
+    ConservedVariablesType<dim, number, n_species>
+    fv_subcell_boundary_value(const bool use_mirror_principle,
+                              const dealii::Point<dim, dealii::VectorizedArray<number>> &location,
+                              const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal,
+                              const dealii::types::boundary_id                      boundary_id,
+                              const ConservedVariablesType<dim, number, n_species> &w_m) const;
   };
 } // namespace MeltPoolDG::CompressibleFlow
