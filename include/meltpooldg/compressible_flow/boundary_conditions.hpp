@@ -17,6 +17,7 @@
 #include <map>
 #include <memory>
 #include <set>
+#include <vector>
 
 namespace MeltPoolDG::CompressibleFlow
 {
@@ -30,7 +31,9 @@ namespace MeltPoolDG::CompressibleFlow
               slip_wall,
               no_slip_wall,
               subsonic_outflow_fixed_energy,
-              subsonic_outflow_fixed_pressure);
+              subsonic_outflow_fixed_pressure,
+              non_reflecting_inflow,
+              non_reflecting_outflow);
 
   /**
    * Struct defining the index interpretation for the values of the free jet inflow boundary
@@ -73,6 +76,19 @@ namespace MeltPoolDG::CompressibleFlow
 
 
   /**
+   * Struct defining the index interpretation for the values of the non-reflecting outflow boundary
+   * condition. Boundary functions passed for this type of boundary condition must return values
+   * according to this interpretation.
+   */
+  struct NonReflectingOutflowValueInterpretation
+  {
+    enum
+    {
+      pressure = 0
+    };
+  };
+
+  /**
    * @brief Helper class taking care of all boundary condition related computations for the
    * compressible flow solver.
    *
@@ -87,6 +103,13 @@ namespace MeltPoolDG::CompressibleFlow
    * - Subsonic outflow with fixed energy
    * - Combined inflow and no-slip wall boundary condition, which can be used to apply a free jet
    * inflow.
+   * - Non-reflecting inflow and outflow based on the polynomial-correction Navier-Stokes
+   * characteristic boundary conditions (PC-NSCBC). The boundary functions follow the
+   * InflowValueInterpretation and the NonReflectingOutflowValueInterpretation, respectively. The
+   * polynomial-correction reconstruction requires all quadrature points of a face and is
+   * therefore not computed by this class, but by the NonReflectingBoundaryEvaluator, which is only
+   * available for the explicit DG operator. This class only provides the target states and a
+   * zeroth-order pointwise variant for the finite volume subcell limiter.
    */
   template <int dim, typename number>
   class BoundaryConditions
@@ -107,6 +130,8 @@ namespace MeltPoolDG::CompressibleFlow
       {BoundaryType::slip_wall, "slip_wall"},
       {BoundaryType::no_slip_wall, "no_slip_wall"},
       {BoundaryType::combined_inflow_no_slip_wall, "combined_inflow_no_slip_wall"},
+      {BoundaryType::non_reflecting_inflow, "non_reflecting_inflow"},
+      {BoundaryType::non_reflecting_outflow, "non_reflecting_outflow"},
     };
 
     /**
@@ -154,6 +179,14 @@ namespace MeltPoolDG::CompressibleFlow
       set_boundary_condition(BoundaryType::combined_inflow_no_slip_wall,
                              simulation_case->get_boundary_condition("combined_inflow_no_slip_wall",
                                                                      operation_name));
+
+      set_boundary_condition(BoundaryType::non_reflecting_inflow,
+                             simulation_case->get_boundary_condition("non_reflecting_inflow",
+                                                                     operation_name));
+
+      set_boundary_condition(BoundaryType::non_reflecting_outflow,
+                             simulation_case->get_boundary_condition("non_reflecting_outflow",
+                                                                     operation_name));
     }
 
     /**
@@ -195,10 +228,41 @@ namespace MeltPoolDG::CompressibleFlow
         return BoundaryType::subsonic_outflow_fixed_pressure;
       if (combined_inflow_no_slip_wall_boundaries.contains(boundary_id))
         return BoundaryType::combined_inflow_no_slip_wall;
+      if (non_reflecting_inflow_boundaries.contains(boundary_id))
+        return BoundaryType::non_reflecting_inflow;
+      if (non_reflecting_outflow_boundaries.contains(boundary_id))
+        return BoundaryType::non_reflecting_outflow;
       AssertThrow(false,
                   dealii::ExcMessage(
                     "There is no compressible flow boundary set at the boundary with boundary id " +
                     std::to_string(boundary_id) + "!"));
+    }
+
+    /**
+     * @brief Check whether a non-reflecting boundary condition is applied at a boundary.
+     *
+     * @param boundary_id Boundary id of the boundary of interest.
+     */
+    bool
+    is_non_reflecting_boundary(const dealii::types::boundary_id boundary_id) const
+    {
+      return non_reflecting_inflow_boundaries.contains(boundary_id) or
+             non_reflecting_outflow_boundaries.contains(boundary_id);
+    }
+
+    /**
+     * @brief Get the ids of all boundaries with a non-reflecting boundary condition in ascending
+     * order.
+     */
+    std::vector<dealii::types::boundary_id>
+    get_non_reflecting_boundary_ids() const
+    {
+      std::set<dealii::types::boundary_id> ids;
+      for (const auto &[id, function] : non_reflecting_inflow_boundaries)
+        ids.insert(id);
+      for (const auto &[id, function] : non_reflecting_outflow_boundaries)
+        ids.insert(id);
+      return {ids.begin(), ids.end()};
     }
 
     /**
@@ -257,6 +321,13 @@ namespace MeltPoolDG::CompressibleFlow
      * wall instead, i.e. the mean of the inner and the mirrored values, e.g. for finite difference
      * gradients. Only slip walls are affected, since all other boundary types set the values on the
      * boundary anyway. The gradients are not affected.
+     *
+     * @note For non-reflecting boundaries, this function applies a zeroth-order variant, which is
+     * intended for the finite volume subcell limiter, where no polynomial representation of the
+     * solution is available: At outflow boundaries, the interior state is extrapolated, which does
+     * not reflect outgoing waves, and at inflow boundaries, the prescribed state is imposed. The
+     * polynomial-correction reconstruction of the DG scheme is computed by the
+     * NonReflectingBoundaryEvaluator instead.
      */
     template <typename DofReadView, typename DofWriteView>
     void
@@ -329,6 +400,10 @@ namespace MeltPoolDG::CompressibleFlow
       subsonic_outflow_fixed_energy;
     std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
       combined_inflow_no_slip_wall_boundaries;
+    std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
+      non_reflecting_inflow_boundaries;
+    std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
+      non_reflecting_outflow_boundaries;
 
     /// Sets of boundary IDs.
     std::set<dealii::types::boundary_id> slip_wall_boundaries;

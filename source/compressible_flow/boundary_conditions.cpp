@@ -21,6 +21,10 @@ namespace MeltPoolDG::CompressibleFlow
       i.second->set_time(time);
     for (auto &i : this->combined_inflow_no_slip_wall_boundaries)
       i.second->set_time(time);
+    for (auto &i : this->non_reflecting_inflow_boundaries)
+      i.second->set_time(time);
+    for (auto &i : this->non_reflecting_outflow_boundaries)
+      i.second->set_time(time);
   }
 
   template <int dim, typename number>
@@ -46,6 +50,10 @@ namespace MeltPoolDG::CompressibleFlow
             no_slip_adiabatic_wall_boundaries.insert(boundary.first);
         else if (boundary_condition == BoundaryType::combined_inflow_no_slip_wall)
           combined_inflow_no_slip_wall_boundaries = boundary_condition_function;
+        else if (boundary_condition == BoundaryType::non_reflecting_inflow)
+          non_reflecting_inflow_boundaries = boundary_condition_function;
+        else if (boundary_condition == BoundaryType::non_reflecting_outflow)
+          non_reflecting_outflow_boundaries = boundary_condition_function;
         else
           AssertThrow(false,
                       dealii::ExcMessage("The provided boundary condition is not supported."));
@@ -72,6 +80,12 @@ namespace MeltPoolDG::CompressibleFlow
     if (boundary_condition == BoundaryType::combined_inflow_no_slip_wall)
       return VectorTools::evaluate_function_at_vectorized_points<dim, number>(
         *combined_inflow_no_slip_wall_boundaries.find(boundary_id)->second, location, component);
+    if (boundary_condition == BoundaryType::non_reflecting_inflow)
+      return VectorTools::evaluate_function_at_vectorized_points<dim, number>(
+        *non_reflecting_inflow_boundaries.find(boundary_id)->second, location, component);
+    if (boundary_condition == BoundaryType::non_reflecting_outflow)
+      return VectorTools::evaluate_function_at_vectorized_points<dim, number>(
+        *non_reflecting_outflow_boundaries.find(boundary_id)->second, location, component);
 
     AssertThrow(false,
                 dealii::ExcMessage("The boundary condition " + std::to_string(boundary_condition) +
@@ -175,6 +189,14 @@ namespace MeltPoolDG::CompressibleFlow
                                           q_point,
                                           component_offset);
         grad_w_p[dim + 1]                   = grad_w_m[dim + 1];
+      }
+    else if (boundary_type == BoundaryType::non_reflecting_inflow or
+             boundary_type == BoundaryType::non_reflecting_outflow)
+      {
+        AssertThrow(false,
+                    dealii::ExcMessage(
+                      "Non-reflecting boundary conditions are only supported by the explicit DG "
+                      "operator of the fitted single-phase compressible flow solver."));
       }
     else
       {
@@ -422,6 +444,14 @@ namespace MeltPoolDG::CompressibleFlow
                                                        grad_delta_w_p[d + 1][d2]);
               }
           }
+      }
+    else if (boundary_type == BoundaryType::non_reflecting_inflow or
+             boundary_type == BoundaryType::non_reflecting_outflow)
+      {
+        AssertThrow(false,
+                    dealii::ExcMessage(
+                      "Non-reflecting boundary conditions are only supported by the explicit DG "
+                      "operator of the fitted single-phase compressible flow solver."));
       }
     else
       AssertThrow(false,

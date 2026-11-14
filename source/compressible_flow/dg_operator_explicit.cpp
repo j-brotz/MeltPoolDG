@@ -19,6 +19,7 @@
 #include <meltpooldg/utilities/vector_tools.templates.hpp>
 
 #include <functional>
+#include <optional>
 #include <utility>
 
 
@@ -30,12 +31,15 @@ namespace MeltPoolDG::CompressibleFlow
   DGOperatorExplicit<dim, number, n_species>::DGOperatorExplicit(
     OperationScratchData<dim, number> &flow_scratch_data)
     : flow_scratch_data(flow_scratch_data)
+    , non_reflecting_boundary(flow_scratch_data)
   {}
 
   template <int dim, typename number, int n_species>
   void
   DGOperatorExplicit<dim, number, n_species>::reinit()
   {
+    non_reflecting_boundary.reinit();
+
     if (flow_scratch_data.flow_data.limiter_data.type == Utilities::LimiterType::fv_subcell)
       {
         flow_scratch_data.scratch_data.get_matrix_free().initialize_dof_vector(fv_rhs);
@@ -60,6 +64,9 @@ namespace MeltPoolDG::CompressibleFlow
                                                   VectorType       &dst,
                                                   const VectorType &src,
                                                   const std::pair<unsigned int, unsigned int> &)>;
+
+    if (non_reflecting_boundary.is_active())
+      non_reflecting_boundary.update_mean_mach_numbers(src);
 
     local_applier_type cell          = MPDG_LAMBDA_WRAPPER(this->local_apply_cell);
     local_applier_type face          = MPDG_LAMBDA_WRAPPER(this->local_apply_face);
@@ -418,6 +425,13 @@ namespace MeltPoolDG::CompressibleFlow
                                            ConservedVariablesGradientType<dim, number, n_species>>;
 
 
+    // The polynomial-correction non-reflecting boundary conditions are computed for all
+    // quadrature points of a face at once.
+    std::optional<typename NonReflectingBoundaryEvaluator<dim, number, n_species>::FaceScratch>
+                                                                          non_reflecting_scratch;
+    AlignedVector<ConservedVariablesType<dim, number, n_species>>         non_reflecting_w_p;
+    AlignedVector<ConservedVariablesGradientType<dim, number, n_species>> non_reflecting_grad_w_p;
+
     for (unsigned int face = face_range.first; face < face_range.second; ++face)
       {
         phi_m.reinit(face);
@@ -430,6 +444,16 @@ namespace MeltPoolDG::CompressibleFlow
               phi_m.read_cell_data(flow_scratch_data.interior_penalty_parameter) :
             0.;
 
+        const bool is_non_reflecting =
+          flow_scratch_data.boundary_conditions.is_non_reflecting_boundary(phi_m.boundary_id());
+        if (is_non_reflecting)
+          {
+            if (not non_reflecting_scratch)
+              non_reflecting_scratch.emplace(flow_scratch_data);
+            non_reflecting_boundary.evaluate(
+              phi_m, src, *non_reflecting_scratch, non_reflecting_w_p, non_reflecting_grad_w_p);
+          }
+
         for (const unsigned int q : phi_m.quadrature_point_indices())
           {
             const auto w_m      = phi_m.get_value(q);
@@ -438,25 +462,32 @@ namespace MeltPoolDG::CompressibleFlow
             ConservedVariablesType<dim, number, n_species>         w_p;
             ConservedVariablesGradientType<dim, number, n_species> grad_w_p;
 
-            flow_scratch_data.boundary_conditions
-              .set_conserved_variables_boundary_value_and_gradient(
-                phi_m.quadrature_point(q),
-                phi_m.normal_vector(q),
-                phi_m.boundary_id(),
-                DofReaderType(w_m, grad_w_m, flow_scratch_data.material),
-                DofWriteType(w_p, grad_w_p, flow_scratch_data.material));
+            if (is_non_reflecting)
+              {
+                w_p      = non_reflecting_w_p[q];
+                grad_w_p = non_reflecting_grad_w_p[q];
+              }
+            else
+              flow_scratch_data.boundary_conditions
+                .set_conserved_variables_boundary_value_and_gradient(
+                  phi_m.quadrature_point(q),
+                  phi_m.normal_vector(q),
+                  phi_m.boundary_id(),
+                  DofReaderType(w_m, grad_w_m, flow_scratch_data.material),
+                  DofWriteType(w_p, grad_w_p, flow_scratch_data.material));
 
             if constexpr (n_species > 1)
-              {
-                flow_scratch_data.boundary_conditions
-                  .template set_partial_density_boundary_value_and_gradient<n_species,
-                                                                            DofReaderType,
-                                                                            DofWriteType>(
-                    phi_m.quadrature_point(q),
-                    phi_m.boundary_id(),
-                    DofReaderType(w_m, grad_w_m, flow_scratch_data.material),
-                    DofWriteType(w_p, grad_w_p, flow_scratch_data.material));
-              }
+              if (not is_non_reflecting)
+                {
+                  flow_scratch_data.boundary_conditions
+                    .template set_partial_density_boundary_value_and_gradient<n_species,
+                                                                              DofReaderType,
+                                                                              DofWriteType>(
+                      phi_m.quadrature_point(q),
+                      phi_m.boundary_id(),
+                      DofReaderType(w_m, grad_w_m, flow_scratch_data.material),
+                      DofWriteType(w_p, grad_w_p, flow_scratch_data.material));
+                }
 
             FaceFluxType<dim, number, n_species> flux_m;
             if (is_viscous_flow<number, n_species>(flow_scratch_data.material))

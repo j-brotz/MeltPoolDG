@@ -106,7 +106,8 @@ namespace MeltPoolDG::CompressibleFlow
   {
     switch (type)
       {
-          case (BoundaryConditionType::inflow): {
+        case (BoundaryConditionType::inflow):
+          case (BoundaryConditionType::non_reflecting_inflow): {
             auto inflow_bc = std::make_shared<
               MeltPoolDG::CompressibleFlow::ConservativeVariablesFunction<dim, number>>(
               start_time, density, velocity, energy, species_mass_fractions, n_species - 1);
@@ -130,7 +131,8 @@ namespace MeltPoolDG::CompressibleFlow
               typename dealii::FunctionParser<dim>::ConstMap());
             return energy_boundary_function;
           }
-          case (BoundaryConditionType::subsonic_outflow_fixed_pressure): {
+        case (BoundaryConditionType::subsonic_outflow_fixed_pressure):
+          case (BoundaryConditionType::non_reflecting_outflow): {
             auto pressure_boundary_function =
               std::make_shared<dealii::FunctionParser<dim>>(1, start_time);
             pressure_boundary_function->initialize(

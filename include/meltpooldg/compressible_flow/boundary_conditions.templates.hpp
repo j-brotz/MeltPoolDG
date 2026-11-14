@@ -241,6 +241,25 @@ namespace MeltPoolDG::CompressibleFlow
       {
         apply_combined_inflow_no_slip_wall_boundary(boundary_id, q_point, w_m, w_p);
       }
+    else if (boundary_type == BoundaryType::non_reflecting_inflow)
+      {
+        // zeroth-order variant: impose the prescribed state
+        apply_inflow_boundary(boundary_id, q_point, w_m, w_p, BoundaryType::non_reflecting_inflow);
+      }
+    else if (boundary_type == BoundaryType::non_reflecting_outflow)
+      {
+        // zeroth-order variant: extrapolate the interior state, which does not reflect outgoing
+        // waves
+        w_p.density()      = w_m.density();
+        w_p.grad_density() = w_m.grad_density();
+        for (unsigned int d = 0; d < dim; ++d)
+          {
+            w_p.momentum(d)      = w_m.momentum(d);
+            w_p.grad_momentum(d) = w_m.grad_momentum(d);
+          }
+        w_p.total_energy()      = w_m.total_energy();
+        w_p.grad_total_energy() = w_m.grad_total_energy();
+      }
     else
       {
         std::cout << "ID: " << boundary_id << std::endl;
@@ -263,10 +282,12 @@ namespace MeltPoolDG::CompressibleFlow
       const DofWriteView                                        &w_p) const
   {
     if (const BoundaryType boundary_type = get_boundary_type(boundary_id);
-        boundary_type == BoundaryType::inflow)
+        boundary_type == BoundaryType::inflow or
+        boundary_type == BoundaryType::non_reflecting_inflow)
       {
         // For inflow boundary conditions we assume that the partial densities are given and we set
-        // them as Dirichlet values.
+        // them as Dirichlet values. For non-reflecting inflow boundaries, this is the zeroth-order
+        // variant, see set_conserved_variables_boundary_value_and_gradient().
 
         // Remember for compressible flow we only need to prescribe n_species - 1 partial densities.
         std::array<dealii::VectorizedArray<number>, n_species - 1> dirichlet_boundary_values;
@@ -275,7 +296,7 @@ namespace MeltPoolDG::CompressibleFlow
           {
             dirichlet_boundary_values[species] =
               get_boundary_value(boundary_id,
-                                 BoundaryType::inflow,
+                                 boundary_type,
                                  q_point,
                                  CompressibleFlow::n_conserved_variables<dim, 1> + species);
           }
@@ -337,6 +358,15 @@ namespace MeltPoolDG::CompressibleFlow
                   dealii::VectorizedArray<number>(1.0),
                   w_p_partial_density_gradients[species][d],
                   w_p.grad_partial_density(species)[d]);
+          }
+      }
+    else if (boundary_type == BoundaryType::non_reflecting_outflow)
+      {
+        // zeroth-order variant: extrapolate the interior partial densities
+        for (unsigned int species = 0; species < n_species - 1; ++species)
+          {
+            w_p.partial_density(species)      = w_m.partial_density(species);
+            w_p.grad_partial_density(species) = w_m.grad_partial_density(species);
           }
       }
     else

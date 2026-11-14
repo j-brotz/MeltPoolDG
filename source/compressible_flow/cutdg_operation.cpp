@@ -125,6 +125,10 @@ namespace MeltPoolDG::CompressibleFlow
     const std::string                                      &operation_name)
   {
     flow_scratch_data.boundary_conditions.set_boundary_conditions(simulation_case, operation_name);
+    AssertThrow(
+      flow_scratch_data.boundary_conditions.get_non_reflecting_boundary_ids().empty(),
+      ExcMessage(
+        "Non-reflecting boundary conditions are not supported by the cut compressible flow solver."));
   }
 
   template <int dim, typename number>

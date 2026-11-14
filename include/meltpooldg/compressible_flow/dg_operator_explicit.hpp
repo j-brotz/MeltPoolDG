@@ -9,6 +9,7 @@
 
 #include <meltpooldg/compressible_flow/convective_kernels.hpp>
 #include <meltpooldg/compressible_flow/kernels_n_species.hpp>
+#include <meltpooldg/compressible_flow/non_reflecting_boundary_conditions.hpp>
 #include <meltpooldg/compressible_flow/operation_scratch_data.hpp>
 #include <meltpooldg/compressible_flow/utils.hpp>
 #include <meltpooldg/compressible_flow/viscous_kernels.hpp>
@@ -146,6 +147,9 @@ namespace MeltPoolDG::CompressibleFlow
     /// This pointer may hold an instance of an external fluid force contribution
     /// (e.g., gravity, body forces, or user - defined source terms)
     std::vector<std::shared_ptr<ExternalFlowForce<dim, number, n_species>>> external_forces;
+
+    /// Evaluation of the polynomial-correction non-reflecting boundary conditions
+    NonReflectingBoundaryEvaluator<dim, number, n_species> non_reflecting_boundary;
 
     /// Current time step size
     mutable number current_time_step;
