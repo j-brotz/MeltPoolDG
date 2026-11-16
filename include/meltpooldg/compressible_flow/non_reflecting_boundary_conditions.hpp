@@ -852,13 +852,19 @@ namespace MeltPoolDG::CompressibleFlow
     /**
      * @brief Compute the boundary state and its gradient on a non-reflecting boundary face.
      *
-     * As in Eqs. (27) and (A.13) of the reference, the interior trace and the derivatives of the
-     * primitive variables are the ones of the Lagrange interpolant of the primitive variables in
-     * the nodes. In contrast to evaluating the primitive variables of the interpolated conserved
-     * variables, this gives a constant pressure at species interfaces in pressure equilibrium,
-     * where the heat capacity ratio varies. Otherwise, the nonlinear equation of state would result
-     * in a spurious pressure and pressure gradient, which the characteristic decomposition
-     * partially turns into a correction of the boundary state.
+     * The boundary state is the interior trace of the solution, which is changed by the
+     * polynomial correction of the incoming waves. Thus, the boundary state equals the interior
+     * trace, i.e., the boundary is transparent, if no correction is applied. Similarly, the
+     * gradient of the boundary state is the gradient of the interior solution, whose normal
+     * derivative is replaced by the boundary-conforming one, see Appendix A.2 of the reference.
+     *
+     * As in Eqs. (27) and (A.13) of the reference, the normal derivatives entering the
+     * characteristic analysis are the ones of the Lagrange interpolant of the primitive variables
+     * in the nodes. In contrast to the derivatives of the primitive variables of the interpolated
+     * conserved variables, this gives a vanishing pressure gradient at species interfaces in
+     * pressure equilibrium, where the heat capacity ratio varies. Otherwise, the nonlinear equation
+     * of state would result in a spurious pressure gradient, which the characteristic decomposition
+     * would partially turn into a correction of the boundary state.
      *
      * @param phi_m Face evaluator of the interior side, which is initialized to a boundary face of
      * a non-reflecting boundary and has evaluated the values and the gradients.
@@ -875,25 +881,13 @@ namespace MeltPoolDG::CompressibleFlow
              dealii::AlignedVector<ConservedVariables>         &w_p,
              dealii::AlignedVector<ConservedVariablesGradient> &grad_w_p) const
     {
-      using Idx            = NonReflectingBoundary::PrimitiveIndex<dim>;
       using StateView      = NSpeciesDofStateView<dim, n_species, number, const ConservedVariables>;
       const auto &material = flow_scratch_data.material;
-      const auto &bcs      = flow_scratch_data.boundary_conditions;
-      const auto &data     = flow_scratch_data.flow_data.non_reflecting_boundary;
       const auto  boundary_id = phi_m.boundary_id();
       const auto  n_q_points  = phi_m.n_q_points;
 
-      NonReflectingBoundary::BoundaryParameters<dim, number, n_species> parameters;
-      parameters.type = bcs.get_boundary_type(boundary_id);
-      Assert(parameters.type == BoundaryConditionType::non_reflecting_inflow or
-               parameters.type == BoundaryConditionType::non_reflecting_outflow,
-             dealii::ExcMessage("The boundary is not a non-reflecting boundary."));
-      const bool is_inflow = parameters.type == BoundaryConditionType::non_reflecting_inflow;
-      parameters.sigma =
-        is_inflow ? data.inflow_relaxation_coefficient : data.outflow_relaxation_coefficient;
-      parameters.beta             = is_inflow ? 0. : data.outflow_transverse_relaxation_coefficient;
-      parameters.reference_length = data.reference_length;
-      parameters.mean_mach_number = get_mean_mach_number(boundary_id);
+      NonReflectingBoundary::BoundaryParameters<dim, number, n_species> parameters =
+        get_boundary_parameters(boundary_id);
 
       compute_boundary_basis_normal_derivative(phi_m.get_current_cell_index(), scratch);
       evaluate_primitive_gradient(phi_m.get_current_cell_index(), src, scratch);
@@ -918,29 +912,11 @@ namespace MeltPoolDG::CompressibleFlow
           const ConservedVariables w_m = phi_m.get_value(q);
           const StateView          state(w_m, material);
 
-          primitive_m[q] = scratch.phi_primitive.get_value(q);
-          gradient_m[q]  = scratch.phi_primitive.get_gradient(q);
+          primitive_m[q] =
+            NonReflectingBoundary::primitive_variables<dim, n_species, number>(state);
+          gradient_m[q] = scratch.phi_primitive.get_gradient(q);
 
-          // target state
-          if (is_inflow)
-            {
-              ConservedVariables target;
-              for (unsigned int c = 0; c < n_conserved_variables<dim, n_species>; ++c)
-                target[c] = bcs.get_boundary_value(boundary_id,
-                                                   BoundaryConditionType::non_reflecting_inflow,
-                                                   phi_m.quadrature_point(q),
-                                                   c);
-              target_m[q] = target;
-              parameters.target =
-                NonReflectingBoundary::primitive_variables<dim, n_species, number>(
-                  StateView(target_m[q], material));
-            }
-          else
-            parameters.target[Idx::pressure] =
-              bcs.get_boundary_value(boundary_id,
-                                     BoundaryConditionType::non_reflecting_outflow,
-                                     phi_m.quadrature_point(q),
-                                     NonReflectingOutflowValueInterpretation::pressure);
+          set_target(parameters, target_m[q], boundary_id, phi_m.quadrature_point(q));
 
           normal_derivative_correction[q] =
             NonReflectingBoundary::normal_derivative_correction<dim, number, n_species>(
@@ -964,50 +940,105 @@ namespace MeltPoolDG::CompressibleFlow
 
       for (unsigned int q = 0; q < n_q_points; ++q)
         {
-          const PrimitiveVariables primitive_p = primitive_m[q] + boundary_correction[q];
-          w_p[q] = NonReflectingBoundary::conserved_variables<dim, n_species, number>(primitive_p,
-                                                                                      material);
+          const auto normal = phi_m.normal_vector(q);
 
-          // gradient of the boundary state with the boundary-conforming normal derivative
-          const auto        normal     = phi_m.normal_vector(q);
-          PrimitiveGradient gradient_p = gradient_m[q];
+          w_p[q] = NonReflectingBoundary::conserved_variables<dim, n_species, number>(
+            primitive_m[q] + boundary_correction[q], material);
+
+          // The conversion of the gradient of the primitive variables into the one of the
+          // conserved variables is linear in the gradient, such that it converts the correction of
+          // the normal derivative into the one of the conserved variables.
+          PrimitiveGradient gradient_correction;
           for (unsigned int c = 0; c < n_conserved_variables<dim, n_species>; ++c)
-            gradient_p[c] += normal_derivative_correction[q][c] * normal;
-
-          const ConservedVariables pressure_derivatives_p =
-            NonReflectingBoundary::pressure_derivatives<dim, n_species, number>(
-              StateView(w_p[q], material));
+            gradient_correction[c] = normal_derivative_correction[q][c] * normal;
           grad_w_p[q] = NonReflectingBoundary::conserved_gradient<dim, n_species, number>(
-            w_p[q], gradient_p, pressure_derivatives_p);
+            w_p[q],
+            gradient_correction,
+            NonReflectingBoundary::pressure_derivatives<dim, n_species, number>(
+              StateView(w_p[q], material)));
+          const ConservedVariablesGradient grad_w_m = phi_m.get_gradient(q);
+          for (unsigned int c = 0; c < n_conserved_variables<dim, n_species>; ++c)
+            grad_w_p[q][c] += grad_w_m[c];
 
-          if (is_inflow)
-            {
-              // At supersonic inflow, all waves enter the domain and the prescribed state is
-              // imposed.
-              VectorizedArrayType normal_velocity = 0.;
-              for (unsigned int d = 0; d < dim; ++d)
-                normal_velocity += primitive_m[q][Idx::velocity + d] * normal[d];
-              const VectorizedArrayType speed_of_sound =
-                StateView(phi_m.get_value(q), material).speed_of_sound();
-              const ConservedVariablesGradient grad_w_m = phi_m.get_gradient(q);
-              for (unsigned int c = 0; c < n_conserved_variables<dim, n_species>; ++c)
-                {
-                  w_p[q][c] =
-                    dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than_or_equal>(
-                      normal_velocity + speed_of_sound,
-                      VectorizedArrayType(0.),
-                      target_m[q][c],
-                      w_p[q][c]);
-                  for (unsigned int d = 0; d < dim; ++d)
-                    grad_w_p[q][c][d] =
-                      dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than_or_equal>(
-                        normal_velocity + speed_of_sound,
-                        VectorizedArrayType(0.),
-                        grad_w_m[c][d],
-                        grad_w_p[q][c][d]);
-                }
-            }
+          if (parameters.type == BoundaryConditionType::non_reflecting_inflow)
+            apply_supersonic_inflow(primitive_m[q],
+                                    normal,
+                                    StateView(phi_m.get_value(q), material).speed_of_sound(),
+                                    target_m[q],
+                                    phi_m.get_gradient(q),
+                                    w_p[q],
+                                    grad_w_p[q]);
         }
+    }
+
+    /**
+     * @brief Compute the boundary state on a non-reflecting boundary in a single point from the
+     * interior state in this point.
+     *
+     * This is the variant for the finite volume subcell limiter, where the solution in troubled
+     * cells is represented by constant values on subcells. The normal derivative of the interior
+     * solution is assumed to vanish, such that the outgoing waves are extrapolated, and the
+     * incoming waves are relaxed towards the target state as in evaluate(). Without relaxation,
+     * i.e., for a vanishing relaxation coefficient, the boundary state is the interior state.
+     *
+     * The boundary state is chosen such that the finite difference of the boundary state and the
+     * interior state over @p distance, which is the normal derivative used by the finite volume
+     * scheme, is the boundary-conforming normal derivative of the incoming waves. This corresponds
+     * to the polynomial correction of evaluate() with the factor \f$c = 1 /\f$ @p distance.
+     *
+     * The mean Mach number of the boundary is the one of the last call of
+     * update_mean_mach_numbers().
+     *
+     * @param location Location of the point on the boundary.
+     * @param normal Outward-pointing unit normal vector.
+     * @param boundary_id Boundary id of the non-reflecting boundary.
+     * @param w_m Interior state.
+     * @param distance Normal distance between the interior state, e.g., the center of a subcell,
+     * and the boundary.
+     *
+     * @return The boundary state.
+     */
+    ConservedVariables
+    evaluate_pointwise(const dealii::Point<dim, VectorizedArrayType>     &location,
+                       const dealii::Tensor<1, dim, VectorizedArrayType> &normal,
+                       const dealii::types::boundary_id                   boundary_id,
+                       const ConservedVariables                          &w_m,
+                       const VectorizedArrayType                         &distance) const
+    {
+      using StateView      = NSpeciesDofStateView<dim, n_species, number, const ConservedVariables>;
+      const auto &material = flow_scratch_data.material;
+
+      NonReflectingBoundary::BoundaryParameters<dim, number, n_species> parameters =
+        get_boundary_parameters(boundary_id);
+      ConservedVariables target;
+      set_target(parameters, target, boundary_id, location);
+
+      const StateView          state(w_m, material);
+      const PrimitiveVariables primitive_m =
+        NonReflectingBoundary::primitive_variables<dim, n_species, number>(state);
+      const VectorizedArrayType speed_of_sound = state.speed_of_sound();
+
+      const VectorizedArrayType inverse_distance = 1. / distance;
+      const PrimitiveVariables  normal_derivative_correction =
+        NonReflectingBoundary::normal_derivative_correction<dim, number, n_species>(
+          primitive_m, PrimitiveGradient(), normal, speed_of_sound, inverse_distance, parameters);
+
+      ConservedVariables w_p = NonReflectingBoundary::conserved_variables<dim, n_species, number>(
+        primitive_m + normal_derivative_correction * distance, material);
+
+      if (parameters.type == BoundaryConditionType::non_reflecting_inflow)
+        {
+          ConservedVariablesGradient grad_w_p;
+          apply_supersonic_inflow(primitive_m,
+                                  normal,
+                                  speed_of_sound,
+                                  target,
+                                  ConservedVariablesGradient(),
+                                  w_p,
+                                  grad_w_p);
+        }
+
+      return w_p;
     }
 
   private:
@@ -1032,6 +1063,111 @@ namespace MeltPoolDG::CompressibleFlow
 
     /// Mean Mach number of each non-reflecting boundary.
     mutable std::map<dealii::types::boundary_id, number> mean_mach_numbers;
+
+    /**
+     * @brief Get the type and the tuning parameters of a non-reflecting boundary. The target state
+     * is set by set_target().
+     *
+     * @param boundary_id Boundary id of the non-reflecting boundary.
+     */
+    NonReflectingBoundary::BoundaryParameters<dim, number, n_species>
+    get_boundary_parameters(const dealii::types::boundary_id boundary_id) const
+    {
+      const auto &data = flow_scratch_data.flow_data.non_reflecting_boundary;
+
+      NonReflectingBoundary::BoundaryParameters<dim, number, n_species> parameters;
+      parameters.type = flow_scratch_data.boundary_conditions.get_boundary_type(boundary_id);
+      Assert(parameters.type == BoundaryConditionType::non_reflecting_inflow or
+               parameters.type == BoundaryConditionType::non_reflecting_outflow,
+             dealii::ExcMessage("The boundary is not a non-reflecting boundary."));
+
+      // As in the reference, the transverse terms are only considered at outflow boundaries.
+      const bool is_inflow = parameters.type == BoundaryConditionType::non_reflecting_inflow;
+      parameters.sigma =
+        is_inflow ? data.inflow_relaxation_coefficient : data.outflow_relaxation_coefficient;
+      parameters.beta             = is_inflow ? 0. : data.outflow_transverse_relaxation_coefficient;
+      parameters.reference_length = data.reference_length;
+      parameters.mean_mach_number = get_mean_mach_number(boundary_id);
+
+      return parameters;
+    }
+
+    /**
+     * @brief Set the target state of a non-reflecting boundary in a point.
+     *
+     * @param parameters Parameters of the boundary, whose target state is set. At outflow
+     * boundaries, only the pressure is set.
+     * @param target On output, the prescribed conserved state at inflow boundaries. Unchanged at
+     * outflow boundaries.
+     * @param boundary_id Boundary id of the non-reflecting boundary.
+     * @param location Location of the point on the boundary.
+     */
+    void
+    set_target(NonReflectingBoundary::BoundaryParameters<dim, number, n_species> &parameters,
+               ConservedVariables                                                &target,
+               const dealii::types::boundary_id                                   boundary_id,
+               const dealii::Point<dim, VectorizedArrayType>                     &location) const
+    {
+      using Idx       = NonReflectingBoundary::PrimitiveIndex<dim>;
+      const auto &bcs = flow_scratch_data.boundary_conditions;
+
+      if (parameters.type == BoundaryConditionType::non_reflecting_inflow)
+        {
+          for (unsigned int c = 0; c < n_conserved_variables<dim, n_species>; ++c)
+            target[c] = bcs.get_boundary_value(boundary_id,
+                                               BoundaryConditionType::non_reflecting_inflow,
+                                               location,
+                                               c);
+          parameters.target = NonReflectingBoundary::primitive_variables<dim, n_species, number>(
+            NSpeciesDofStateView<dim, n_species, number, const ConservedVariables>(
+              target, flow_scratch_data.material));
+        }
+      else
+        parameters.target[Idx::pressure] =
+          bcs.get_boundary_value(boundary_id,
+                                 BoundaryConditionType::non_reflecting_outflow,
+                                 location,
+                                 NonReflectingOutflowValueInterpretation::pressure);
+    }
+
+    /**
+     * @brief Impose the prescribed state at supersonic inflow, where all waves enter the domain.
+     *
+     * @param primitive_m Primitive variables of the interior solution.
+     * @param normal Outward-pointing unit normal vector.
+     * @param speed_of_sound Speed of sound of the interior solution.
+     * @param target Prescribed conserved state.
+     * @param grad_w_m Gradient of the interior solution.
+     * @param w_p Boundary state, which is replaced by @p target at supersonic inflow.
+     * @param grad_w_p Gradient of the boundary state, which is replaced by @p grad_w_m at
+     * supersonic inflow.
+     */
+    void
+    apply_supersonic_inflow(const PrimitiveVariables                          &primitive_m,
+                            const dealii::Tensor<1, dim, VectorizedArrayType> &normal,
+                            const VectorizedArrayType                         &speed_of_sound,
+                            const ConservedVariables                          &target,
+                            const ConservedVariablesGradient                  &grad_w_m,
+                            ConservedVariables                                &w_p,
+                            ConservedVariablesGradient                        &grad_w_p) const
+    {
+      using Idx = NonReflectingBoundary::PrimitiveIndex<dim>;
+
+      VectorizedArrayType normal_velocity = 0.;
+      for (unsigned int d = 0; d < dim; ++d)
+        normal_velocity += primitive_m[Idx::velocity + d] * normal[d];
+      const VectorizedArrayType outgoing_eigenvalue = normal_velocity + speed_of_sound;
+
+      for (unsigned int c = 0; c < n_conserved_variables<dim, n_species>; ++c)
+        {
+          w_p[c] = dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than_or_equal>(
+            outgoing_eigenvalue, VectorizedArrayType(0.), target[c], w_p[c]);
+          for (unsigned int d = 0; d < dim; ++d)
+            grad_w_p[c][d] =
+              dealii::compare_and_apply_mask<dealii::SIMDComparison::less_than_or_equal>(
+                outgoing_eigenvalue, VectorizedArrayType(0.), grad_w_m[c][d], grad_w_p[c][d]);
+        }
+    }
 
     /**
      * @brief Evaluate the gradient of the Lagrange interpolant of the primitive variables in the

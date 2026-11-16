@@ -108,8 +108,10 @@ namespace MeltPoolDG::CompressibleFlow
    * InflowValueInterpretation and the NonReflectingOutflowValueInterpretation, respectively. The
    * polynomial-correction reconstruction requires all quadrature points of a face and is
    * therefore not computed by this class, but by the NonReflectingBoundaryEvaluator, which is only
-   * available for the explicit DG operator. This class only provides the target states and a
-   * zeroth-order pointwise variant for the finite volume subcell limiter.
+   * available for the explicit DG operator, including a pointwise variant for the boundary fluxes
+   * of the finite volume subcell limiter. This class only provides the target states and a
+   * zeroth-order variant for the boundary values of the finite difference gradients of the
+   * finite volume subcell limiter.
    */
   template <int dim, typename number>
   class BoundaryConditions
@@ -323,11 +325,11 @@ namespace MeltPoolDG::CompressibleFlow
      * boundary anyway. The gradients are not affected.
      *
      * @note For non-reflecting boundaries, this function applies a zeroth-order variant, which is
-     * intended for the finite volume subcell limiter, where no polynomial representation of the
-     * solution is available: At outflow boundaries, the interior state is extrapolated, which does
-     * not reflect outgoing waves, and at inflow boundaries, the prescribed state is imposed. The
-     * polynomial-correction reconstruction of the DG scheme is computed by the
-     * NonReflectingBoundaryEvaluator instead.
+     * intended for the boundary values of the finite difference gradients of the finite volume
+     * subcell limiter: At outflow boundaries, the interior state is extrapolated, i.e., the normal
+     * derivative vanishes, and at inflow boundaries, the prescribed state is imposed. The boundary
+     * states of the numerical fluxes, both of the DG scheme and of the finite volume subcell
+     * limiter, are computed by the NonReflectingBoundaryEvaluator instead.
      */
     template <typename DofReadView, typename DofWriteView>
     void

@@ -692,18 +692,31 @@ namespace MeltPoolDG::CompressibleFlow
                                    EvaluationFlags::nothing),
                               mask);
 
+        const bool is_non_reflecting =
+          flow_scratch_data.boundary_conditions.is_non_reflecting_boundary(phi_m.boundary_id());
+
         for (const unsigned int subcell : phi_m.subcell_face_indices())
           {
             const ConservedVariables w_m = phi_m.get_value(subcell);
 
             // The convective numerical flux requires the mirrored state on slip walls, such that
-            // there is no mass flux through the wall.
+            // there is no mass flux through the wall. On non-reflecting boundaries, the boundary
+            // state follows from the characteristic relaxation of the incoming waves with the
+            // finite difference of the subcell value and the boundary value as normal derivative.
             const ConservedVariables w_p =
-              fv_subcell_boundary_value(true /* use mirror principle */,
-                                        phi_m.subcell_face_location(subcell),
-                                        phi_m.normal_vector(subcell),
-                                        phi_m.boundary_id(),
-                                        w_m);
+              is_non_reflecting ?
+                non_reflecting_boundary.evaluate_pointwise(phi_m.subcell_face_location(subcell),
+                                                           phi_m.normal_vector(subcell),
+                                                           phi_m.boundary_id(),
+                                                           w_m,
+                                                           (phi_m.subcell_face_location(subcell) -
+                                                            phi_m.subcell_location(subcell)) *
+                                                             phi_m.normal_vector(subcell)) :
+                fv_subcell_boundary_value(true /* use mirror principle */,
+                                          phi_m.subcell_face_location(subcell),
+                                          phi_m.normal_vector(subcell),
+                                          phi_m.boundary_id(),
+                                          w_m);
 
             ConservedVariables numerical_flux =
               fv_subcell_convective_numerical_flux(w_m, w_p, phi_m.normal_vector(subcell));
@@ -713,11 +726,13 @@ namespace MeltPoolDG::CompressibleFlow
             if (is_viscous_flow<number, n_species>(flow_scratch_data.material))
               {
                 const ConservedVariables w_face =
-                  fv_subcell_boundary_value(false /* use mirror principle */,
-                                            phi_m.subcell_face_location(subcell),
-                                            phi_m.normal_vector(subcell),
-                                            phi_m.boundary_id(),
-                                            w_m);
+                  is_non_reflecting ?
+                    w_p :
+                    fv_subcell_boundary_value(false /* use mirror principle */,
+                                              phi_m.subcell_face_location(subcell),
+                                              phi_m.normal_vector(subcell),
+                                              phi_m.boundary_id(),
+                                              w_m);
 
                 numerical_flux +=
                   fv_subcell_viscous_numerical_flux(w_face,
