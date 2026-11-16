@@ -59,7 +59,10 @@ namespace MeltPoolDG
      * Mark the troubled cells of @p candidate. The marked cells are stored internally and can be
      * accessed with troubled_cells(). The candidate is considered admissible in a cell if it
      * satisfies the physical admissibility check in all subcells and the numerical admissibility
-     * check with respect to the old solution (see CellwiseNumericalAdmissibility).
+     * check with respect to the old solution (see CellwiseNumericalAdmissibility). The global scale
+     * of the noise floor of the numerical admissibility tolerance (see admissibility_mask()) is the
+     * component-wise maximum magnitude of the old solution and the candidate over all subcells,
+     * which requires one collective MPI reduction per call.
      *
      * @param subcell_matrix_free Subcell data used to evaluate the solutions on the subcells. Must
      * be the same as passed to reinit().

@@ -364,5 +364,6 @@ TYPED_TEST(CellwiseNumericalAdmissibilityTest, InvalidUsageAsserts)
   nad.reinit(MatrixFreeContext<dim, double>{this->scratch_data.get_matrix_free(), 0, 0});
 
   std::vector<MaskType> masks(this->scratch_data.get_matrix_free().n_cell_batches());
-  EXPECT_THROW(nad.evaluate(masks), dealii::ExceptionBase);
+  EXPECT_THROW(nad.evaluate(masks, dealii::Tensor<1, n_components, double>()),
+               dealii::ExceptionBase);
 }

@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <array>
 #include <bitset>
+#include <cmath>
 #include <limits>
 #include <vector>
 
@@ -24,17 +25,25 @@ namespace MeltPoolDG
   admissibility_mask(const dealii::Tensor<1, n_components, dealii::VectorizedArray<number>> &lower,
                      const dealii::Tensor<1, n_components, dealii::VectorizedArray<number>> &upper,
                      const dealii::Tensor<1, n_components, dealii::VectorizedArray<number>> &m,
-                     const dealii::Tensor<1, n_components, dealii::VectorizedArray<number>> &M)
+                     const dealii::Tensor<1, n_components, dealii::VectorizedArray<number>> &M,
+                     const dealii::Tensor<1, n_components, number> &global_scale)
   {
-    constexpr number delta_0 = 1e-4;
-    constexpr number epsilon = 1e-5;
+    constexpr number delta_0     = 1e-4;
+    constexpr number epsilon     = 1e-5;
+    constexpr number delta_floor = 1e-10;
 
     std::bitset<dealii::VectorizedArray<number>::size()> mask;
     mask.set();
     for (unsigned int c = 0; c < n_components; ++c)
       for (unsigned int lane = 0; lane < dealii::VectorizedArray<number>::size(); ++lane)
         {
-          const number delta = std::max(delta_0, epsilon * (M[c][lane] - m[c][lane]));
+          // The tolerance depends only on the magnitudes of the bounds and on their difference.
+          // Hence, it is invariant under a change of sign of the component, e.g., of a momentum
+          // component under a mirroring of the domain.
+          const number magnitude = std::max(std::abs(M[c][lane]), std::abs(m[c][lane]));
+          const number delta     = std::max({delta_0 * magnitude,
+                                             epsilon * (M[c][lane] - m[c][lane]),
+                                             delta_floor * global_scale[c]});
           if (lower[c][lane] < m[c][lane] - delta or upper[c][lane] > M[c][lane] + delta)
             mask.reset(lane);
         }
@@ -84,7 +93,8 @@ namespace MeltPoolDG
   template <int dim, int n_components, typename number>
   void
   CellwiseNumericalAdmissibility<dim, n_components, number>::evaluate(
-    std::vector<MaskType> &troubled_cells_mask)
+    std::vector<MaskType>                         &troubled_cells_mask,
+    const dealii::Tensor<1, n_components, number> &global_scale)
   {
     Assert(
       n_cell_batches_submitted == n_cell_batches,
@@ -119,7 +129,7 @@ namespace MeltPoolDG
             }
 
         numerically_admissible[cell] =
-          admissibility_mask(candidate_minimum[cell], candidate_maximum[cell], m, M);
+          admissibility_mask(candidate_minimum[cell], candidate_maximum[cell], m, M, global_scale);
         troubled_cells_mask[cell] |= ~numerically_admissible[cell];
       }
     n_cell_batches_submitted       = 0;
@@ -173,7 +183,8 @@ namespace MeltPoolDG
 
     // To prevent multiple memory allocations during the marking of troubled cells, we reserve
     // memory for the deferred subcells vector. As the exact number of deferred subcells is not
-    // known a priori, we make a conservative estimate.
+    // known a priori, we estimate it by the number of subcells at the cell boundaries. The vector
+    // grows if more subcells are deferred.
     deferred_subcells.reserve(n_cell_batches * n_lanes * faces_per_cell *
                               matrix_free_context.mf.get_dof_handler().get_fe().degree);
   }
@@ -188,8 +199,8 @@ namespace MeltPoolDG
     AssertIndexRange(cell_batch, n_cell_batches);
     compute_face_layer_extrema(cell_batch, phi_old);
 
-    std::bitset<n_lanes> admissible;
-    admissible.set();
+    // all lanes are admissible unless a deferred subcell fails in evaluate()
+    subcell_admissibility[cell_batch].set();
     for (const unsigned int subcell : phi_candidate.subcell_indices())
       {
         // bounds from the old solution on the subcell and its neighbors within the cell; a missing
@@ -212,18 +223,13 @@ namespace MeltPoolDG
                 }
             }
 
-        const ValueType            value_candidate = phi_candidate.get_value(subcell);
-        const std::bitset<n_lanes> admissible_subcell =
-          admissibility_mask(value_candidate, value_candidate, m, M);
-
-        // The neighboring cells can only widen the bounds. Hence, a subcell which passes is
-        // admissible, and a subcell in the interior of the cell which fails is not. A failing
-        // subcell at the boundary of the cell is decided in evaluate().
-        if (cell_faces.none())
-          {
-            admissible &= admissible_subcell;
-            continue;
-          }
+        // The global scale entering the tolerance is only known in evaluate(). Checking with a zero
+        // scale gives the narrowest bounds, and the neighboring cells as well as the global scale
+        // can only widen them. Hence, a subcell which passes here is admissible, and a failing
+        // subcell is decided in evaluate().
+        const ValueType            value_candidate    = phi_candidate.get_value(subcell);
+        const std::bitset<n_lanes> admissible_subcell = admissibility_mask(
+          value_candidate, value_candidate, m, M, dealii::Tensor<1, n_components, number>());
         for (unsigned int lane = 0; lane < n_lanes; ++lane)
           if (not admissible_subcell[lane])
             {
@@ -237,7 +243,6 @@ namespace MeltPoolDG
               deferred_subcells.push_back(deferred);
             }
       }
-    subcell_admissibility[cell_batch] = admissible;
     ++n_cell_batches_submitted;
   }
 
@@ -288,7 +293,8 @@ namespace MeltPoolDG
   template <int dim, int n_components, typename number>
   void
   SubcellNumericalAdmissibility<dim, n_components, number>::evaluate(
-    std::vector<std::bitset<VectorizedArrayType::size()>> &troubled_cells_mask)
+    std::vector<std::bitset<VectorizedArrayType::size()>> &troubled_cells_mask,
+    const dealii::Tensor<1, n_components, number>         &global_scale)
   {
     Assert(
       n_cell_batches_submitted == n_cell_batches,
@@ -311,7 +317,7 @@ namespace MeltPoolDG
           continue;
 
         // widen the bounds by the face layer extrema of the neighboring cells across the faces
-        // the subcell is adjacent to
+        // the subcell is adjacent to (none for subcells in the interior of the cell)
         dealii::Tensor<1, n_components, number> m = deferred.minimum;
         dealii::Tensor<1, n_components, number> M = deferred.maximum;
         for (unsigned int f = 0; f < faces_per_cell; ++f)
@@ -342,8 +348,11 @@ namespace MeltPoolDG
             m_vectorized[c]         = m[c];
             M_vectorized[c]         = M[c];
           }
-        if (not admissibility_mask(
-              candidate_vectorized, candidate_vectorized, m_vectorized, M_vectorized)[0])
+        if (not admissibility_mask(candidate_vectorized,
+                                   candidate_vectorized,
+                                   m_vectorized,
+                                   M_vectorized,
+                                   global_scale)[0])
           subcell_admissibility[deferred.cell_batch].reset(deferred.lane);
       }
 

@@ -1,7 +1,9 @@
 #pragma once
 
 #include <deal.II/base/aligned_vector.h>
+#include <deal.II/base/array_view.h>
 #include <deal.II/base/exceptions.h>
+#include <deal.II/base/mpi.h>
 #include <deal.II/base/tensor.h>
 #include <deal.II/base/vectorization.h>
 
@@ -18,7 +20,10 @@
 
 #include <meltpooldg/utilities/cpp23_functions.h>
 
+#include <algorithm>
+#include <array>
 #include <bitset>
+#include <cmath>
 #include <functional>
 #include <vector>
 
@@ -84,12 +89,35 @@ namespace MeltPoolDG
     FESubcellEvaluation<dim, n_components, number> phi_candidate(subcell_matrix_free);
     FESubcellEvaluation<dim, n_components, number> phi_old(subcell_matrix_free);
 
+    // component-wise maximum magnitude of the old solution and the candidate over all subcells of
+    // the locally owned cells, which sets the scale of the noise floor of the numerical
+    // admissibility tolerance
+    std::array<number, n_components> local_scale;
+    local_scale.fill(0.);
+
     for (unsigned int cell = 0; cell < matrix_free.n_cell_batches(); ++cell)
       {
         phi_candidate.reinit(cell);
         phi_candidate.gather_evaluate(candidate, dealii::EvaluationFlags::values);
         phi_old.reinit(cell);
         phi_old.gather_evaluate(old_solution, dealii::EvaluationFlags::values);
+
+        if (apply_cellwise_nad or apply_subcellwise_nad)
+          {
+            // only the active lanes are used, since the unused lanes of the last cell batch may
+            // hold arbitrary values
+            const unsigned int n_active_lanes = matrix_free.n_active_entries_per_cell_batch(cell);
+            for (const unsigned int subcell : phi_old.subcell_indices())
+              {
+                const ValueType value_old       = phi_old.get_value(subcell);
+                const ValueType value_candidate = phi_candidate.get_value(subcell);
+                for (unsigned int c = 0; c < n_components; ++c)
+                  for (unsigned int lane = 0; lane < n_active_lanes; ++lane)
+                    local_scale[c] = std::max({local_scale[c],
+                                               std::abs(value_old[c][lane]),
+                                               std::abs(value_candidate[c][lane])});
+              }
+          }
 
         if (apply_physical_admissibility_check)
           physical_admissibility.submit_cell(cell, phi_candidate);
@@ -117,14 +145,27 @@ namespace MeltPoolDG
     if (not old_solution_has_ghost_values)
       old_solution.zero_out_ghost_values();
 
+    dealii::Tensor<1, n_components, number> global_scale;
+    if (apply_cellwise_nad or apply_subcellwise_nad)
+      {
+        // deal.II only instantiates the array reduction for ArrayView and std::vector
+        dealii::Utilities::MPI::max(dealii::ArrayView<const number>(local_scale.data(),
+                                                                    local_scale.size()),
+                                    old_solution.get_mpi_communicator(),
+                                    dealii::ArrayView<number>(local_scale.data(),
+                                                              local_scale.size()));
+        for (unsigned int c = 0; c < n_components; ++c)
+          global_scale[c] = local_scale[c];
+      }
+
     // a lane is troubled if it is marked by at least one of the applied strategies
     std::fill(troubled_cells_mask.begin(), troubled_cells_mask.end(), MaskType());
     if (apply_physical_admissibility_check)
       physical_admissibility.evaluate(troubled_cells_mask);
     if (apply_cellwise_nad)
-      cellwise_numerical_admissibility.evaluate(troubled_cells_mask);
+      cellwise_numerical_admissibility.evaluate(troubled_cells_mask, global_scale);
     if (apply_subcellwise_nad)
-      subcellwise_numerical_admissibility.evaluate(troubled_cells_mask);
+      subcellwise_numerical_admissibility.evaluate(troubled_cells_mask, global_scale);
 
     // only the active lanes are marked, since the unused lanes of the last cell batch may hold
     // states which are not admissible

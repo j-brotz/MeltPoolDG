@@ -20,9 +20,22 @@ namespace MeltPoolDG
    * bitset where each bit corresponds to a lane.
    *
    * The function checks if the lower value is greater than or equal to the minimum value minus a
-   * small tolerance, using the tolerance defined in [1], and if the upper value is less than or
-   * equal to the maximum value plus a small tolerance. The tolerance is computed as the maximum of
-   * a small constant and a fraction of the range between the maximum and minimum values.
+   * small tolerance, and if the upper value is less than or equal to the maximum value plus a small
+   * tolerance. In the spirit of [1], the tolerance of component \f$c\f$ is
+   * \f[
+   *   \delta_c = \max\left(\delta_0 \max\left(|m_c|, |M_c|\right),
+   *                        \varepsilon \left(M_c - m_c\right),
+   *                        \delta_\text{floor} s_c\right)
+   * \f]
+   * with \f$\delta_0 = 10^{-4}\f$, \f$\varepsilon = 10^{-5}\f$ and \f$\delta_\text{floor} =
+   * 10^{-10}\f$. The first term relaxes the bounds relative to the magnitude of the local values,
+   * the second one relative to the local range. Since all terms only depend on magnitudes and on
+   * the range, the check is invariant under a change of sign of a component, e.g., of a momentum
+   * component when mirroring the domain. The third term is a noise floor relative to a global scale
+   * \f$s_c\f$ of the component, e.g., its maximum magnitude over the domain. Without it, the
+   * tolerance of a component which locally vanishes, e.g., the momentum of a fluid at rest or the
+   * partial density of an absent species, collapses to zero and round-off errors mark cells as
+   * troubled.
    *
    * [1] Dumbser et al., A posteriori subcell limiting of the discontinuous Galerkin finite element
    * method for hyperbolic conservation laws, J. Comput. Phys. 278, 2014.
@@ -31,13 +44,16 @@ namespace MeltPoolDG
    * @param upper The upper value to be checked.
    * @param m The minimum value for the admissibility check.
    * @param M The maximum value for the admissibility check.
+   * @param global_scale The global scale \f$s_c\f$ of each component for the noise floor of the
+   * tolerance. A zero scale disables the noise floor.
    */
   template <int n_components, typename number>
   std::bitset<dealii::VectorizedArray<number>::size()>
   admissibility_mask(const dealii::Tensor<1, n_components, dealii::VectorizedArray<number>> &lower,
                      const dealii::Tensor<1, n_components, dealii::VectorizedArray<number>> &upper,
                      const dealii::Tensor<1, n_components, dealii::VectorizedArray<number>> &m,
-                     const dealii::Tensor<1, n_components, dealii::VectorizedArray<number>> &M);
+                     const dealii::Tensor<1, n_components, dealii::VectorizedArray<number>> &M,
+                     const dealii::Tensor<1, n_components, number> &global_scale);
 
   /**
    * Numerical admissibility detection with cellwise bounds, based on the relaxed discrete maximum
@@ -55,12 +71,14 @@ namespace MeltPoolDG
    * \f[
    *   m_i = \min_{j \in \{i\} \cup \mathcal{N}(i)} \min_{s} u_{j,s}^n, \qquad
    *   M_i = \max_{j \in \{i\} \cup \mathcal{N}(i)} \max_{s} u_{j,s}^n, \qquad
-   *   \delta_i = \max\left(\delta_0, \varepsilon \left(M_i - m_i\right)\right),
+   *   \delta_i = \max\left(\delta_0 \max\left(|m_i|, |M_i|\right),
+   *                        \varepsilon \left(M_i - m_i\right), \delta_\text{floor} s\right),
    * \f]
-   * where \f$\mathcal{N}(i)\f$ is the set of face neighbors of cell \f$i\f$ and \f$u_{j,s}\f$ is
-   * the value on subcell \f$s\f$ of cell \f$j\f$ as given by FESubcellEvaluation. Cells sharing
-   * only an edge or a vertex with cell \f$i\f$ do not contribute. The check is applied to each
-   * component separately, and a cell is admissible only if all components pass.
+   * where \f$\mathcal{N}(i)\f$ is the set of face neighbors of cell \f$i\f$, \f$u_{j,s}\f$ is
+   * the value on subcell \f$s\f$ of cell \f$j\f$ as given by FESubcellEvaluation and \f$s\f$ is the
+   * global scale passed to evaluate(), see admissibility_mask() for details on the tolerance. Cells
+   * sharing only an edge or a vertex with cell \f$i\f$ do not contribute. The check is applied to
+   * each component separately, and a cell is admissible only if all components pass.
    *
    * ## Usage
    * Call reinit() every time the MatrixFree object is reinitialized. Each evaluation then consists
@@ -142,9 +160,12 @@ namespace MeltPoolDG
      * owned cell batch and each bit to a vectorization lane. The bits of the inadmissible lanes are
      * set, while all other bits are kept, i.e., the result is combined with the existing bits by a
      * logical OR. It is assumed that the given vector already has the correct size.
+     * @param global_scale The global scale of each component for the noise floor of the tolerance,
+     * see admissibility_mask(). It has to be the same on all MPI processes.
      */
     void
-    evaluate(std::vector<MaskType> &troubled_cells_mask);
+    evaluate(std::vector<MaskType>                         &troubled_cells_mask,
+             const dealii::Tensor<1, n_components, number> &global_scale);
 
     /**
      * Returns a vector of bitsets, where each bitset corresponds to a locally owned cell batch and
@@ -233,12 +254,13 @@ namespace MeltPoolDG
    *
    * The usage of the class is the same as for the CellwiseNumericalAdmissibility class: call
    * submit_cell() for every locally owned cell batch and submit_ghost_cell() for every ghost cell
-   * batch, and then evaluate(). Since neighbors can only widen the bounds, submit_cell() already
-   * decides most subcells using only the subcells of their own cell: a subcell that passes is
-   * admissible, and a subcell in the interior of the cell that fails is not. Only failing subcells
-   * at the boundary of the cell are stored and decided in evaluate(), once the face layer extrema
-   * of all neighboring cells, including the ghost cells, are available. The evaluate() function
-   * combines the result with the given vector of bitsets by a logical AND operation.
+   * batch, and then evaluate(). Since neighbors and the noise floor of the tolerance (see
+   * admissibility_mask()) can only widen the bounds, submit_cell() already decides most subcells
+   * using only the subcells of their own cell and no noise floor: a subcell that passes is
+   * admissible. Only failing subcells are stored and decided in evaluate(), once the face layer
+   * extrema of all neighboring cells, including the ghost cells, and the global scale of the noise
+   * floor are available. The evaluate() function combines the result with the given vector of
+   * bitsets by a logical OR operation.
    *
    * [1] F. Vilar, A posteriori correction of high-order discontinuous Galerkin scheme through
    *     subcell finite volume formulation and flux reconstruction, J. Comput. Phys. 387, 2019.
@@ -263,9 +285,9 @@ namespace MeltPoolDG
     /**
      * Check the candidate on all subcells of the given cell batch against the bounds from the
      * subcells of the same cell, and compute the face layer extrema of the old solution needed by
-     * the neighboring cells. Subcells at the boundary of the cell that fail this check are stored
-     * and decided in evaluate(), since the face layer extrema of the neighboring cells may widen
-     * their bounds.
+     * the neighboring cells. Subcells that fail this check are stored and decided in evaluate(),
+     * since the face layer extrema of the neighboring cells and the noise floor of the tolerance
+     * may widen their bounds.
      *
      * @param cell_batch The index of the locally owned cell batch.
      * @param phi_old The FESubcellEvaluation object containing the old solution evaluated on the
@@ -293,16 +315,19 @@ namespace MeltPoolDG
 
     /**
      * Decide the subcells deferred by submit_cell() using the face layer extrema of the
-     * neighboring cells, and compute the admissibility of the candidate solution for each locally
-     * owned cell batch.
+     * neighboring cells and the noise floor of the tolerance, and compute the admissibility of the
+     * candidate solution for each locally owned cell batch.
      *
      * @param troubled_cells_mask A vector of bitsets, where each bitset corresponds to a locally
      * owned cell batch and each bit to a vectorization lane. The bits of the inadmissible lanes are
      * set, while all other bits are kept, i.e., the result is combined with the existing bits by a
      * logical OR. It is assumed that the given vector already has the correct size.
+     * @param global_scale The global scale of each component for the noise floor of the tolerance,
+     * see admissibility_mask(). It has to be the same on all MPI processes.
      */
     void
-    evaluate(std::vector<MaskType> &troubled_cells_mask);
+    evaluate(std::vector<MaskType>                         &troubled_cells_mask,
+             const dealii::Tensor<1, n_components, number> &global_scale);
 
     /**
      * Returns a vector of bitsets, where each bitset corresponds to a locally owned cell batch and
@@ -317,9 +342,10 @@ namespace MeltPoolDG
     static constexpr unsigned int faces_per_cell = dealii::GeometryInfo<dim>::faces_per_cell;
 
     /**
-     * A subcell at the boundary of a locally owned cell whose candidate value violates the bounds
-     * from the subcells of its own cell. Whether it is admissible is decided in evaluate(), once
-     * the face layer extrema of the neighboring cells are available.
+     * A subcell of a locally owned cell whose candidate value violates the bounds from the
+     * subcells of its own cell without noise floor. Whether it is admissible is decided in
+     * evaluate(), once the face layer extrema of the neighboring cells and the global scale of the
+     * noise floor are available.
      */
     struct DeferredSubcell
     {
@@ -327,7 +353,7 @@ namespace MeltPoolDG
       unsigned int cell_batch;
       unsigned int lane;
 
-      /// The faces of the cell the subcell is adjacent to.
+      /// The faces of the cell the subcell is adjacent to (none for interior subcells).
       std::bitset<faces_per_cell> faces;
 
       /// The candidate value of the subcell and the bounds from the subcells of its own cell.
@@ -377,7 +403,7 @@ namespace MeltPoolDG
     dealii::Table<2, ValueType> face_layer_minimum;
     dealii::Table<2, ValueType> face_layer_maximum;
 
-    /// Subcells at the boundary of locally owned cells which are decided in evaluate().
+    /// Subcells of locally owned cells which are decided in evaluate().
     std::vector<DeferredSubcell> deferred_subcells;
   };
 } // namespace MeltPoolDG
