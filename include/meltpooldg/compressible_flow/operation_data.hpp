@@ -2,6 +2,7 @@
 
 #include <deal.II/base/parameter_handler.h>
 
+#include <meltpooldg/compressible_flow/boundary_condition_data.hpp>
 #include <meltpooldg/core/finite_element_data.hpp>
 #include <meltpooldg/cut/cut_data.hpp>
 #include <meltpooldg/time_integration/time_integrator_data.hpp>
@@ -60,6 +61,9 @@ namespace MeltPoolDG::CompressibleFlow
     int verbosity_level = -1;
 
     Utilities::LimiterData limiter_data;
+
+    /// Coefficients of the boundary conditions that are shared by all boundaries of one type
+    BoundaryConditionData<number> boundary_condition_data;
 
     /// Type of the variables added to the output
     std::vector<OutputType> output_variables = {OutputType::conserved_variables};
@@ -133,6 +137,7 @@ namespace MeltPoolDG::CompressibleFlow
                           dealii::Patterns::Selection("fitted|cut"));
         prm.add_parameter("verbosity level", verbosity_level, "Verbosity level for output.");
         limiter_data.add_parameters(prm);
+        boundary_condition_data.add_parameters(prm);
       }
       prm.leave_subsection();
 
