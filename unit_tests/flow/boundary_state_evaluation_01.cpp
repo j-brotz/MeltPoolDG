@@ -314,7 +314,7 @@ TYPED_TEST(BoundaryStateEvaluationTest, SlipWall)
   for (unsigned int boundary_id = 0; boundary_id < 2 * dim; ++boundary_id)
     boundary_functions[boundary_id] = std::make_shared<dealii::Functions::ZeroFunction<dim>>();
 
-  BoundaryConditions<dim, double> boundary_conditions;
+  BoundaryConditions<dim, double> boundary_conditions{BoundaryConditionData<double>()};
   boundary_conditions.set_boundary_condition(BoundaryConditionType::slip_wall, boundary_functions);
 
   const std::function<void(const dealii::Point<dim> &,
@@ -380,7 +380,7 @@ TYPED_TEST(BoundaryStateEvaluationTest, NoSlipWall)
   for (unsigned int boundary_id = 0; boundary_id < 2 * dim; ++boundary_id)
     boundary_functions[boundary_id] = std::make_shared<dealii::Functions::ZeroFunction<dim>>();
 
-  BoundaryConditions<dim, double> boundary_conditions;
+  BoundaryConditions<dim, double> boundary_conditions{BoundaryConditionData<double>()};
   boundary_conditions.set_boundary_condition(BoundaryConditionType::no_slip_wall,
                                              boundary_functions);
 
@@ -446,7 +446,7 @@ TYPED_TEST(BoundaryStateEvaluationTest, Inflow)
   for (unsigned int boundary_id = 0; boundary_id < 2 * dim; ++boundary_id)
     boundary_functions[boundary_id] = inflow_function;
 
-  BoundaryConditions<dim, double> boundary_conditions;
+  BoundaryConditions<dim, double> boundary_conditions{BoundaryConditionData<double>()};
   boundary_conditions.set_boundary_condition(BoundaryConditionType::inflow, boundary_functions);
 
   const std::function<void(const dealii::Point<dim> &,
@@ -509,7 +509,7 @@ TYPED_TEST(BoundaryStateEvaluationTest, CombinedInflowNoSlipWall)
   for (unsigned int boundary_id = 0; boundary_id < 2 * dim; ++boundary_id)
     boundary_functions[boundary_id] = combined_function;
 
-  BoundaryConditions<dim, double> boundary_conditions;
+  BoundaryConditions<dim, double> boundary_conditions{BoundaryConditionData<double>()};
   boundary_conditions.set_boundary_condition(BoundaryConditionType::combined_inflow_no_slip_wall,
                                              boundary_functions);
 
@@ -586,7 +586,7 @@ TYPED_TEST(BoundaryStateEvaluationTest, SubsonicOutflowFixedPressure)
   for (unsigned int boundary_id = 0; boundary_id < 2 * dim; ++boundary_id)
     boundary_functions[boundary_id] = pressure_function;
 
-  BoundaryConditions<dim, double> boundary_conditions;
+  BoundaryConditions<dim, double> boundary_conditions{BoundaryConditionData<double>()};
   boundary_conditions.set_boundary_condition(BoundaryConditionType::subsonic_outflow_fixed_pressure,
                                              boundary_functions);
 
@@ -657,7 +657,7 @@ TYPED_TEST(BoundaryStateEvaluationTest, SubsonicOutflowFixedEnergy)
   for (unsigned int boundary_id = 0; boundary_id < 2 * dim; ++boundary_id)
     boundary_functions[boundary_id] = energy_function;
 
-  BoundaryConditions<dim, double> boundary_conditions;
+  BoundaryConditions<dim, double> boundary_conditions{BoundaryConditionData<double>()};
   boundary_conditions.set_boundary_condition(BoundaryConditionType::subsonic_outflow_fixed_energy,
                                              boundary_functions);
 

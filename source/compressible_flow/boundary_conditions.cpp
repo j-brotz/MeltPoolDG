@@ -5,22 +5,38 @@
 #include <meltpooldg/utilities/dealii_tensor.hpp>
 #include <meltpooldg/utilities/vector_tools.templates.hpp>
 
+#include <format>
+#include <ranges>
+
 namespace MeltPoolDG::CompressibleFlow
 {
   using namespace dealii;
 
   template <int dim, typename number>
+  BoundaryConditions<dim, number>::BoundaryConditions(
+    const BoundaryConditionData<number> &boundary_condition_data)
+    : boundary_condition_data(boundary_condition_data)
+  {}
+
+  template <int dim, typename number>
   void
   BoundaryConditions<dim, number>::update_boundary_conditions(const number time)
   {
-    for (auto &i : this->inflow_boundaries)
-      i.second->set_time(time);
-    for (auto &i : this->subsonic_outflow_fixed_pressure)
-      i.second->set_time(time);
-    for (auto &i : this->subsonic_outflow_fixed_energy)
-      i.second->set_time(time);
-    for (auto &i : this->combined_inflow_no_slip_wall_boundaries)
-      i.second->set_time(time);
+    for (const std::shared_ptr<dealii::Function<dim>> &function :
+         std::views::values(inflow_boundaries))
+      function->set_time(time);
+    for (const std::shared_ptr<dealii::Function<dim>> &function :
+         std::views::values(subsonic_outflow_fixed_pressure))
+      function->set_time(time);
+    for (const std::shared_ptr<dealii::Function<dim>> &function :
+         std::views::values(subsonic_outflow_fixed_energy))
+      function->set_time(time);
+    for (const std::shared_ptr<dealii::Function<dim>> &function :
+         std::views::values(combined_inflow_no_slip_wall_boundaries))
+      function->set_time(time);
+    for (const std::shared_ptr<dealii::Function<dim>> &function :
+         std::views::values(subsonic_non_reflecting_pressure_outflow))
+      function->set_time(time);
   }
 
   template <int dim, typename number>
@@ -46,6 +62,17 @@ namespace MeltPoolDG::CompressibleFlow
             no_slip_adiabatic_wall_boundaries.insert(boundary.first);
         else if (boundary_condition == BoundaryType::combined_inflow_no_slip_wall)
           combined_inflow_no_slip_wall_boundaries = boundary_condition_function;
+        else if (boundary_condition == BoundaryType::subsonic_non_reflecting_pressure_outflow)
+          {
+            AssertThrow(
+              boundary_condition_data.non_reflecting_outflow.reference_length > 0.,
+              dealii::ExcMessage(std::format(
+                "The non-reflecting pressure outflow needs a positive reference length, but the "
+                "parameter \"reference length\" in the subsection \"boundary conditions/non "
+                "reflecting outflow\" is {}. Set it to a length of the order of the domain size.",
+                boundary_condition_data.non_reflecting_outflow.reference_length)));
+            subsonic_non_reflecting_pressure_outflow = boundary_condition_function;
+          }
         else
           AssertThrow(false,
                       dealii::ExcMessage("The provided boundary condition is not supported."));
@@ -72,10 +99,28 @@ namespace MeltPoolDG::CompressibleFlow
     if (boundary_condition == BoundaryType::combined_inflow_no_slip_wall)
       return VectorTools::evaluate_function_at_vectorized_points<dim, number>(
         *combined_inflow_no_slip_wall_boundaries.find(boundary_id)->second, location, component);
+    if (boundary_condition == BoundaryType::subsonic_non_reflecting_pressure_outflow)
+      return VectorTools::evaluate_function_at_vectorized_points<dim, number>(
+        *subsonic_non_reflecting_pressure_outflow.find(boundary_id)->second, location, component);
 
     AssertThrow(false,
                 dealii::ExcMessage("The boundary condition " + std::to_string(boundary_condition) +
                                    " does not have a prescribed boundary value."));
+  }
+
+  template <int dim, typename number>
+  const BoundaryConditionData<number> &
+  BoundaryConditions<dim, number>::get_boundary_condition_data() const
+  {
+    return boundary_condition_data;
+  }
+
+  template <int dim, typename number>
+  bool
+  BoundaryConditions<dim, number>::needs_face_data(
+    const dealii::types::boundary_id boundary_id) const
+  {
+    return get_boundary_type(boundary_id) == BoundaryType::subsonic_non_reflecting_pressure_outflow;
   }
 
   template <int dim, typename number>

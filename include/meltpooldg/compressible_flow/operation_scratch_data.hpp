@@ -58,6 +58,7 @@ namespace MeltPoolDG::CompressibleFlow
       , cut(cut_data_in)
       , dof_idx(dof_idx_in)
       , quad_idx(quad_idx_in)
+      , boundary_conditions(flow_data.boundary_condition_data)
     {
       if (material.number_of_species == 1)
         {
@@ -201,6 +202,7 @@ namespace MeltPoolDG::CompressibleFlow
       , darcy_damping(darcy_damping_data_in)
       , dof_idx(dof_idx_in)
       , quad_idx(quad_idx_in)
+      , boundary_conditions(flow_data.boundary_condition_data)
     {
       is_viscous = material_gas.dynamic_viscosity > 0. or material_liquid.dynamic_viscosity > 0.;
     }

@@ -270,7 +270,7 @@ TYPED_TEST(BoundaryStateEvaluationFVTest, SlipWall)
   std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>> boundary_functions;
   boundary_functions[0] = std::make_shared<dealii::Functions::ZeroFunction<dim>>();
 
-  BoundaryConditions<dim, double> boundary_conditions;
+  BoundaryConditions<dim, double> boundary_conditions{BoundaryConditionData<double>()};
   boundary_conditions.set_boundary_condition(BoundaryConditionType::slip_wall, boundary_functions);
 
   std::array<dealii::types::boundary_id, n_lanes> boundary_ids;
@@ -318,7 +318,7 @@ TYPED_TEST(BoundaryStateEvaluationFVTest, NoSlipWall)
   std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>> boundary_functions;
   boundary_functions[0] = std::make_shared<dealii::Functions::ZeroFunction<dim>>();
 
-  BoundaryConditions<dim, double> boundary_conditions;
+  BoundaryConditions<dim, double> boundary_conditions{BoundaryConditionData<double>()};
   boundary_conditions.set_boundary_condition(BoundaryConditionType::no_slip_wall,
                                              boundary_functions);
 
@@ -365,7 +365,7 @@ TYPED_TEST(BoundaryStateEvaluationFVTest, Inflow)
   std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>> boundary_functions;
   boundary_functions[0] = inflow_function;
 
-  BoundaryConditions<dim, double> boundary_conditions;
+  BoundaryConditions<dim, double> boundary_conditions{BoundaryConditionData<double>()};
   boundary_conditions.set_boundary_condition(BoundaryConditionType::inflow, boundary_functions);
 
   std::array<dealii::types::boundary_id, n_lanes> boundary_ids;
@@ -412,7 +412,7 @@ TYPED_TEST(BoundaryStateEvaluationFVTest, CombinedInflowNoSlipWall)
   std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>> boundary_functions;
   boundary_functions[0] = combined_function;
 
-  BoundaryConditions<dim, double> boundary_conditions;
+  BoundaryConditions<dim, double> boundary_conditions{BoundaryConditionData<double>()};
   boundary_conditions.set_boundary_condition(BoundaryConditionType::combined_inflow_no_slip_wall,
                                              boundary_functions);
 
@@ -468,7 +468,7 @@ TYPED_TEST(BoundaryStateEvaluationFVTest, SubsonicOutflowFixedPressure)
   std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>> boundary_functions;
   boundary_functions[0] = pressure_function;
 
-  BoundaryConditions<dim, double> boundary_conditions;
+  BoundaryConditions<dim, double> boundary_conditions{BoundaryConditionData<double>()};
   boundary_conditions.set_boundary_condition(BoundaryConditionType::subsonic_outflow_fixed_pressure,
                                              boundary_functions);
 
@@ -523,7 +523,7 @@ TYPED_TEST(BoundaryStateEvaluationFVTest, SubsonicOutflowFixedEnergy)
   std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>> boundary_functions;
   boundary_functions[0] = energy_function;
 
-  BoundaryConditions<dim, double> boundary_conditions;
+  BoundaryConditions<dim, double> boundary_conditions{BoundaryConditionData<double>()};
   boundary_conditions.set_boundary_condition(BoundaryConditionType::subsonic_outflow_fixed_energy,
                                              boundary_functions);
 
@@ -570,7 +570,7 @@ TYPED_TEST(BoundaryStateEvaluationFVTest, MixedLanes)
   const std::shared_ptr<BoundaryFunction<dim>> pressure_function =
     std::make_shared<BoundaryFunction<dim>>(1, false);
 
-  BoundaryConditions<dim, double> boundary_conditions;
+  BoundaryConditions<dim, double> boundary_conditions{BoundaryConditionData<double>()};
   {
     std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>> outflow_functions;
     outflow_functions[0] = pressure_function;

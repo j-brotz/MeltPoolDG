@@ -130,7 +130,8 @@ namespace MeltPoolDG::CompressibleFlow
               typename dealii::FunctionParser<dim>::ConstMap());
             return energy_boundary_function;
           }
-          case (BoundaryConditionType::subsonic_outflow_fixed_pressure): {
+        case (BoundaryConditionType::subsonic_outflow_fixed_pressure):
+          case (BoundaryConditionType::subsonic_non_reflecting_pressure_outflow): {
             auto pressure_boundary_function =
               std::make_shared<dealii::FunctionParser<dim>>(1, start_time);
             pressure_boundary_function->initialize(

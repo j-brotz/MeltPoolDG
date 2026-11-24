@@ -6,6 +6,7 @@
 #include <deal.II/base/tensor.h>
 #include <deal.II/base/vectorization.h>
 
+#include <meltpooldg/compressible_flow/boundary_condition_data.hpp>
 #include <meltpooldg/compressible_flow/data_types.hpp>
 #include <meltpooldg/compressible_flow/material.hpp>
 #include <meltpooldg/compressible_flow/operation_data.hpp>
@@ -22,6 +23,9 @@ namespace MeltPoolDG::CompressibleFlow
 {
   /**
    * An enum for the various boundary conditions supported by the compressible flow solver.
+   *
+   * @note The subsonic non-reflecting pressure outflow is not supported by the cut, implicit, IMEX
+   * and multiphase operators, nor by the FV subcell limiter.
    */
   BETTER_ENUM(BoundaryConditionType,
               char,
@@ -30,7 +34,8 @@ namespace MeltPoolDG::CompressibleFlow
               slip_wall,
               no_slip_wall,
               subsonic_outflow_fixed_energy,
-              subsonic_outflow_fixed_pressure);
+              subsonic_outflow_fixed_pressure,
+              subsonic_non_reflecting_pressure_outflow);
 
   /**
    * Struct defining the index interpretation for the values of the free jet inflow boundary
@@ -85,6 +90,7 @@ namespace MeltPoolDG::CompressibleFlow
    * - No-slip adiabatic wall
    * - Subsonic outflow with fixed pressure
    * - Subsonic outflow with fixed energy
+   * - Subsonic non-reflecting outflow with prescribed static pressure
    * - Combined inflow and no-slip wall boundary condition, which can be used to apply a free jet
    * inflow.
    */
@@ -107,7 +113,16 @@ namespace MeltPoolDG::CompressibleFlow
       {BoundaryType::slip_wall, "slip_wall"},
       {BoundaryType::no_slip_wall, "no_slip_wall"},
       {BoundaryType::combined_inflow_no_slip_wall, "combined_inflow_no_slip_wall"},
+      {BoundaryType::subsonic_non_reflecting_pressure_outflow, "non_reflecting_pressure_outflow"},
     };
+
+    /**
+     * @brief Constructor.
+     *
+     * @param boundary_condition_data The boundary condition data shared by all boundaries. The
+     * object keeps a local copy.
+     */
+    explicit BoundaryConditions(const BoundaryConditionData<number> &boundary_condition_data);
 
     /**
      * @brief Update the boundary conditions.
@@ -154,6 +169,10 @@ namespace MeltPoolDG::CompressibleFlow
       set_boundary_condition(BoundaryType::combined_inflow_no_slip_wall,
                              simulation_case->get_boundary_condition("combined_inflow_no_slip_wall",
                                                                      operation_name));
+
+      set_boundary_condition(
+        BoundaryType::subsonic_non_reflecting_pressure_outflow,
+        simulation_case->get_boundary_condition("non_reflecting_pressure_outflow", operation_name));
     }
 
     /**
@@ -195,6 +214,8 @@ namespace MeltPoolDG::CompressibleFlow
         return BoundaryType::subsonic_outflow_fixed_pressure;
       if (combined_inflow_no_slip_wall_boundaries.contains(boundary_id))
         return BoundaryType::combined_inflow_no_slip_wall;
+      if (subsonic_non_reflecting_pressure_outflow.contains(boundary_id))
+        return BoundaryType::subsonic_non_reflecting_pressure_outflow;
       AssertThrow(false,
                   dealii::ExcMessage(
                     "There is no compressible flow boundary set at the boundary with boundary id " +
@@ -217,6 +238,21 @@ namespace MeltPoolDG::CompressibleFlow
                        BoundaryType               boundary_condition,
                        const dealii::Point<dim, dealii::VectorizedArray<number>> &location,
                        unsigned                                                   component) const;
+
+    /**
+     * @brief Return the boundary condition data that is shared by all boundaries.
+     */
+    const BoundaryConditionData<number> &
+    get_boundary_condition_data() const;
+
+    /**
+     * @brief Return whether the boundary condition at the boundary @p boundary_id needs data of the
+     * whole boundary face.
+     *
+     * @param boundary_id The boundary id of interest.
+     */
+    bool
+    needs_face_data(const dealii::types::boundary_id boundary_id) const;
 
     /**
      * @brief This function sets the corresponding values on the fictional outer face if the face is
@@ -325,17 +361,34 @@ namespace MeltPoolDG::CompressibleFlow
       number                                                         gamma) const;
 
   private:
-    /// Maps boundary IDs to the specific boundary functions.
+    /// A map storing the boundary function of each inflow boundary by its boundary id.
     std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>> inflow_boundaries;
+
+    /// A map storing the boundary function of each fixed-pressure outflow boundary by its boundary
+    /// id.
     std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
       subsonic_outflow_fixed_pressure;
+
+    /// A map storing the boundary function of each fixed-energy outflow boundary by its boundary
+    /// id.
     std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
       subsonic_outflow_fixed_energy;
+
+    /// A map storing the boundary function of each combined inflow and no-slip wall boundary by
+    /// its boundary id.
     std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
       combined_inflow_no_slip_wall_boundaries;
+
+    /// A map storing the boundary function of each non-reflecting outflow boundary by its boundary
+    /// id.
+    std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>>
+      subsonic_non_reflecting_pressure_outflow;
 
     /// Sets of boundary IDs.
     std::set<dealii::types::boundary_id> slip_wall_boundaries;
     std::set<dealii::types::boundary_id> no_slip_adiabatic_wall_boundaries;
+
+    /// Boundary condition data that is shared by all boundaries.
+    BoundaryConditionData<number> boundary_condition_data;
   };
 } // namespace MeltPoolDG::CompressibleFlow
