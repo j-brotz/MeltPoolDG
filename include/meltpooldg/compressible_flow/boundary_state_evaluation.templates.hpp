@@ -6,7 +6,11 @@
 #include <meltpooldg/species_transport/boundary_conditions.hpp>
 #include <meltpooldg/utilities/matrix_free_util.hpp>
 
+#include <algorithm>
+#include <cmath>
 #include <format>
+#include <functional>
+#include <limits>
 
 namespace MeltPoolDG::CompressibleFlow
 {
@@ -43,9 +47,18 @@ namespace MeltPoolDG::CompressibleFlow
     n_evaluated_points = phi_m.n_q_points;
     evaluated_flags    = evaluation_flags;
 
+    // The non-reflecting outflow needs the data of the whole face, so it is not evaluated point by
+    // point.
+    if (boundary_conditions.get_boundary_type(phi_m.boundary_id()) ==
+        BoundaryConditionType::subsonic_non_reflecting_pressure_outflow)
+      {
+        evaluate_non_reflecting_outflow<ReadView>(phi_m, material, evaluation_flags);
+        return;
+      }
+
     // All lanes of a boundary face batch lie on the same boundary. This is guaranteed by
     // dealii::MatrixFree, which only puts boundary faces with the same boundary id into one batch.
-    std::bitset<dealii::VectorizedArray<number>::size()> all_lanes;
+    std::bitset<VectorizedArrayType::size()> all_lanes;
     all_lanes.set();
 
     for (const unsigned int q : phi_m.quadrature_point_indices())
@@ -67,10 +80,9 @@ namespace MeltPoolDG::CompressibleFlow
   template <IsBoundaryStateView<dim, number, n_species> ReadView>
   void
   BoundaryStateEvaluation<dim, number, n_species>::evaluate(
-    const std::array<dealii::types::boundary_id, dealii::VectorizedArray<number>::size()>
-      &boundary_ids,
-    const dealii::ArrayView<const dealii::Point<dim, dealii::VectorizedArray<number>>> &locations,
-    const dealii::ArrayView<const dealii::Tensor<1, dim, dealii::VectorizedArray<number>>> &normals,
+    const std::array<dealii::types::boundary_id, VectorizedArrayType::size()>     &boundary_ids,
+    const dealii::ArrayView<const dealii::Point<dim, VectorizedArrayType>>        &locations,
+    const dealii::ArrayView<const dealii::Tensor<1, dim, VectorizedArrayType>>    &normals,
     const dealii::ArrayView<const ConservedVariablesType<dim, number, n_species>> &interior_values,
     const dealii::ArrayView<const ConservedVariablesGradientType<dim, number, n_species>>
                                                   &interior_gradients,
@@ -78,7 +90,7 @@ namespace MeltPoolDG::CompressibleFlow
     const dealii::EvaluationFlags::EvaluationFlags evaluation_flags,
     const bool                                     use_mirror_principle)
   {
-    constexpr unsigned int n_lanes  = dealii::VectorizedArray<number>::size();
+    constexpr unsigned int n_lanes  = VectorizedArrayType::size();
     const unsigned int     n_points = interior_values.size();
 
     Assert(evaluation_flags == dealii::EvaluationFlags::values or
@@ -155,13 +167,13 @@ namespace MeltPoolDG::CompressibleFlow
   template <typename ReadView, typename WriteView>
   void
   BoundaryStateEvaluation<dim, number, n_species>::compute_exterior_state(
-    const BoundaryConditions<dim, number>                         &boundary_conditions,
-    const dealii::Point<dim, dealii::VectorizedArray<number>>     &location,
-    const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal,
-    const dealii::types::boundary_id                               boundary_id,
-    const ReadView                                                &w_m,
-    const WriteView                                               &w_p,
-    const bool                                                     use_mirror_principle)
+    const BoundaryConditions<dim, number>             &boundary_conditions,
+    const dealii::Point<dim, VectorizedArrayType>     &location,
+    const dealii::Tensor<1, dim, VectorizedArrayType> &normal,
+    const dealii::types::boundary_id                   boundary_id,
+    const ReadView                                    &w_m,
+    const WriteView                                   &w_p,
+    const bool                                         use_mirror_principle)
   {
     if (const BoundaryConditionType boundary_type =
           boundary_conditions.get_boundary_type(boundary_id);
@@ -208,11 +220,11 @@ namespace MeltPoolDG::CompressibleFlow
   template <typename ReadView, typename WriteView>
   void
   BoundaryStateEvaluation<dim, number, n_species>::compute_exterior_partial_densities(
-    const BoundaryConditions<dim, number>                     &boundary_conditions,
-    const dealii::Point<dim, dealii::VectorizedArray<number>> &location,
-    const dealii::types::boundary_id                           boundary_id,
-    const ReadView                                            &w_m,
-    const WriteView                                           &w_p)
+    const BoundaryConditions<dim, number>         &boundary_conditions,
+    const dealii::Point<dim, VectorizedArrayType> &location,
+    const dealii::types::boundary_id               boundary_id,
+    const ReadView                                &w_m,
+    const WriteView                               &w_p)
   {
     if (const BoundaryConditionType boundary_type =
           boundary_conditions.get_boundary_type(boundary_id);
@@ -222,7 +234,7 @@ namespace MeltPoolDG::CompressibleFlow
         // them as Dirichlet values.
 
         // Remember for compressible flow we only need to prescribe n_species - 1 partial densities.
-        std::array<dealii::VectorizedArray<number>, n_species - 1> dirichlet_boundary_values;
+        std::array<VectorizedArrayType, n_species - 1> dirichlet_boundary_values;
 
         for (unsigned int species = 0; species < n_species - 1; ++species)
           {
@@ -238,13 +250,13 @@ namespace MeltPoolDG::CompressibleFlow
       }
     else if (boundary_type == BoundaryConditionType::combined_inflow_no_slip_wall)
       {
-        dealii::VectorizedArray<number> mask = boundary_conditions.get_boundary_value(
+        VectorizedArrayType mask = boundary_conditions.get_boundary_value(
           boundary_id,
           BoundaryConditionType::combined_inflow_no_slip_wall,
           location,
           CombinedInflowNoSlipWallValueInterpretation<dim>::inside_flow);
 
-        std::array<dealii::VectorizedArray<number>, n_species - 1> dirichlet_boundary_values;
+        std::array<VectorizedArrayType, n_species - 1> dirichlet_boundary_values;
         for (unsigned int species = 0; species < n_species - 1; ++species)
           {
             dirichlet_boundary_values[species] = boundary_conditions.get_boundary_value(
@@ -257,27 +269,25 @@ namespace MeltPoolDG::CompressibleFlow
         SpeciesTransport::set_boundary_value_and_gradient(
           w_p, w_m, SpeciesTransport::BoundaryConditionType::dirichlet, dirichlet_boundary_values);
 
-        std::vector<dealii::VectorizedArray<number>> w_p_partial_densities(n_species - 1);
+        std::vector<VectorizedArrayType> w_p_partial_densities(n_species - 1);
         for (unsigned int species = 0; species < n_species - 1; ++species)
           w_p_partial_densities[species] = w_p.partial_density(species);
 
-        std::vector<dealii::Tensor<1, dim, dealii::VectorizedArray<number>>>
-          w_p_partial_density_gradients(n_species - 1);
+        std::vector<dealii::Tensor<1, dim, VectorizedArrayType>> w_p_partial_density_gradients(
+          n_species - 1);
         for (unsigned int species = 0; species < n_species - 1; ++species)
           w_p_partial_density_gradients[species] = w_p.grad_partial_density(species);
 
-        SpeciesTransport::set_boundary_value_and_gradient<n_species - 1,
-                                                          dealii::VectorizedArray<number>,
-                                                          ReadView,
-                                                          WriteView>(
-          w_p, w_m, SpeciesTransport::BoundaryConditionType::neumann);
+        SpeciesTransport::
+          set_boundary_value_and_gradient<n_species - 1, VectorizedArrayType, ReadView, WriteView>(
+            w_p, w_m, SpeciesTransport::BoundaryConditionType::neumann);
 
         for (unsigned int species = 0; species < n_species - 1; ++species)
           {
             w_p.partial_density(species) =
               dealii::compare_and_apply_mask<dealii::SIMDComparison::equal>(
                 mask,
-                dealii::VectorizedArray<number>(1.0),
+                VectorizedArrayType(1.0),
                 w_p_partial_densities[species],
                 w_p.partial_density(species));
 
@@ -285,7 +295,7 @@ namespace MeltPoolDG::CompressibleFlow
               w_p.grad_partial_density(species)[d] =
                 dealii::compare_and_apply_mask<dealii::SIMDComparison::equal>(
                   mask,
-                  dealii::VectorizedArray<number>(1.0),
+                  VectorizedArrayType(1.0),
                   w_p_partial_density_gradients[species][d],
                   w_p.grad_partial_density(species)[d]);
           }
@@ -294,11 +304,9 @@ namespace MeltPoolDG::CompressibleFlow
       {
         // For all other boundary conditions we assume homogeneous Neumann for the partial
         // densities.
-        SpeciesTransport::set_boundary_value_and_gradient<n_species - 1,
-                                                          dealii::VectorizedArray<number>,
-                                                          ReadView,
-                                                          WriteView>(
-          w_p, w_m, SpeciesTransport::BoundaryConditionType::neumann);
+        SpeciesTransport::
+          set_boundary_value_and_gradient<n_species - 1, VectorizedArrayType, ReadView, WriteView>(
+            w_p, w_m, SpeciesTransport::BoundaryConditionType::neumann);
       }
   }
 
@@ -306,17 +314,17 @@ namespace MeltPoolDG::CompressibleFlow
   template <typename DofReadView, typename DofWriteView>
   void
   BoundaryStateEvaluation<dim, number, n_species>::apply_slip_wall_boundary(
-    DofReadView                                                    w_m,
-    DofWriteView                                                   w_p,
-    const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal,
-    const bool                                                     use_mirror_principle)
+    DofReadView                                        w_m,
+    DofWriteView                                       w_p,
+    const dealii::Tensor<1, dim, VectorizedArrayType> &normal,
+    const bool                                         use_mirror_principle)
   {
     // homogeneous Neumann
     w_p.density()      = w_m.density();
     w_p.grad_density() = -(w_m.grad_density());
 
     // homogeneous Neumann
-    dealii::VectorizedArray<number> rho_u_dot_n = 0;
+    VectorizedArrayType rho_u_dot_n = 0;
     for (unsigned int d = 0; d < dim; ++d)
       rho_u_dot_n += w_m.momentum(d) * normal[d];
     // symmetry: the mirror principle reverses the normal momentum, while if no mirror value is used
@@ -358,12 +366,12 @@ namespace MeltPoolDG::CompressibleFlow
   template <typename DofReadView, typename DofWriteView, typename DirichletValueInterpretation>
   void
   BoundaryStateEvaluation<dim, number, n_species>::apply_inflow_boundary(
-    const BoundaryConditions<dim, number>                     &boundary_conditions,
-    const dealii::types::boundary_id                           boundary_id,
-    const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
-    DofReadView                                                w_m,
-    DofWriteView                                               w_p,
-    const BoundaryConditionType                                bc_value_type)
+    const BoundaryConditions<dim, number>         &boundary_conditions,
+    const dealii::types::boundary_id               boundary_id,
+    const dealii::Point<dim, VectorizedArrayType> &q_point,
+    DofReadView                                    w_m,
+    DofWriteView                                   w_p,
+    const BoundaryConditionType                    bc_value_type)
   {
     w_p.density()      = boundary_conditions.get_boundary_value(boundary_id,
                                                            bc_value_type,
@@ -388,11 +396,11 @@ namespace MeltPoolDG::CompressibleFlow
   void
   BoundaryStateEvaluation<dim, number, n_species>::
     apply_subsonic_outflow_with_fixed_pressure_boundary(
-      const BoundaryConditions<dim, number>                     &boundary_conditions,
-      const dealii::types::boundary_id                           boundary_id,
-      const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
-      DofReadView                                                w_m,
-      DofWriteView                                               w_p)
+      const BoundaryConditions<dim, number>         &boundary_conditions,
+      const dealii::types::boundary_id               boundary_id,
+      const dealii::Point<dim, VectorizedArrayType> &q_point,
+      DofReadView                                    w_m,
+      DofWriteView                                   w_p)
   {
     // homogeneous Neumann
     w_p.density()      = w_m.density();
@@ -405,16 +413,16 @@ namespace MeltPoolDG::CompressibleFlow
       }
 
     // Dirichlet
-    auto p_dyn = dealii::VectorizedArray<number>(0.);
+    auto p_dyn = VectorizedArrayType(0.);
     for (unsigned int i = 0; i < dim; ++i)
       p_dyn += w_m.momentum(i) * w_m.momentum(i);
 
     p_dyn /= (w_m.density() * 2.);
-    const dealii::VectorizedArray<number> pressure = boundary_conditions.get_boundary_value(
+    const VectorizedArrayType pressure = boundary_conditions.get_boundary_value(
       boundary_id, BoundaryConditionType::subsonic_outflow_fixed_pressure, q_point, 0);
 
     // consider equation of state for computation of inner energy from given pressure
-    const dealii::VectorizedArray<number> inner_energy = w_m.inner_energy_from_pressure(pressure);
+    const VectorizedArrayType inner_energy = w_m.inner_energy_from_pressure(pressure);
 
     w_p.total_energy()      = inner_energy + p_dyn;
     w_p.grad_total_energy() = w_m.grad_total_energy();
@@ -425,11 +433,11 @@ namespace MeltPoolDG::CompressibleFlow
   void
   BoundaryStateEvaluation<dim, number, n_species>::
     apply_subsonic_outflow_with_fixed_energy_boundary(
-      const BoundaryConditions<dim, number>                     &boundary_conditions,
-      const dealii::types::boundary_id                           boundary_id,
-      const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
-      DofReadView                                                w_m,
-      DofWriteView                                               w_p)
+      const BoundaryConditions<dim, number>         &boundary_conditions,
+      const dealii::types::boundary_id               boundary_id,
+      const dealii::Point<dim, VectorizedArrayType> &q_point,
+      DofReadView                                    w_m,
+      DofWriteView                                   w_p)
   {
     // homogeneous Neumann
     w_p.density()      = w_m.density();
@@ -450,13 +458,13 @@ namespace MeltPoolDG::CompressibleFlow
   template <typename DofReadView, typename DofWriteView>
   void
   BoundaryStateEvaluation<dim, number, n_species>::apply_combined_inflow_no_slip_wall_boundary(
-    const BoundaryConditions<dim, number>                     &boundary_conditions,
-    const dealii::types::boundary_id                           boundary_id,
-    const dealii::Point<dim, dealii::VectorizedArray<number>> &q_point,
-    DofReadView                                                w_m,
-    DofWriteView                                               w_p)
+    const BoundaryConditions<dim, number>         &boundary_conditions,
+    const dealii::types::boundary_id               boundary_id,
+    const dealii::Point<dim, VectorizedArrayType> &q_point,
+    DofReadView                                    w_m,
+    DofWriteView                                   w_p)
   {
-    dealii::VectorizedArray<number> is_inflow = boundary_conditions.get_boundary_value(
+    VectorizedArrayType is_inflow = boundary_conditions.get_boundary_value(
       boundary_id,
       BoundaryConditionType::combined_inflow_no_slip_wall,
       q_point,
@@ -483,8 +491,10 @@ namespace MeltPoolDG::CompressibleFlow
     apply_no_slip_wall_boundary(w_m, w_p);
 
     auto apply_mask = [](auto mask, auto true_value, auto false_value) -> auto {
-      return dealii::compare_and_apply_mask<dealii::SIMDComparison::equal>(
-        mask, dealii::VectorizedArray<number>(1.0), true_value, false_value);
+      return dealii::compare_and_apply_mask<dealii::SIMDComparison::equal>(mask,
+                                                                           VectorizedArrayType(1.0),
+                                                                           true_value,
+                                                                           false_value);
     };
 
     w_p.density() = apply_mask(is_inflow, inflow_density, w_p.density());
@@ -509,16 +519,16 @@ namespace MeltPoolDG::CompressibleFlow
   template <typename ReadView>
   void
   BoundaryStateEvaluation<dim, number, n_species>::evaluate_point(
-    const unsigned int                                             q,
-    const dealii::types::boundary_id                               boundary_id,
-    const std::bitset<dealii::VectorizedArray<number>::size()>    &lanes,
-    const dealii::Point<dim, dealii::VectorizedArray<number>>     &location,
-    const dealii::Tensor<1, dim, dealii::VectorizedArray<number>> &normal,
-    const ConservedVariablesType<dim, number, n_species>          &interior_value,
-    const ConservedVariablesGradientType<dim, number, n_species>  &interior_gradient,
-    const MaterialPhaseData<number>                               &material,
-    const dealii::EvaluationFlags::EvaluationFlags                 evaluation_flags,
-    const bool                                                     use_mirror_principle)
+    const unsigned int                                            q,
+    const dealii::types::boundary_id                              boundary_id,
+    const std::bitset<VectorizedArrayType::size()>               &lanes,
+    const dealii::Point<dim, VectorizedArrayType>                &location,
+    const dealii::Tensor<1, dim, VectorizedArrayType>            &normal,
+    const ConservedVariablesType<dim, number, n_species>         &interior_value,
+    const ConservedVariablesGradientType<dim, number, n_species> &interior_gradient,
+    const MaterialPhaseData<number>                              &material,
+    const dealii::EvaluationFlags::EvaluationFlags                evaluation_flags,
+    const bool                                                    use_mirror_principle)
   {
     ConservedVariablesType<dim, number, n_species>         exterior_value;
     ConservedVariablesGradientType<dim, number, n_species> exterior_gradient;
@@ -544,8 +554,8 @@ namespace MeltPoolDG::CompressibleFlow
       }
     else
       {
-        const dealii::VectorizedArray<number> lane_mask = bitset_to_vectorized_mask<number>(lanes);
-        const dealii::VectorizedArray<number> one       = 1.;
+        const VectorizedArrayType lane_mask = bitset_to_vectorized_mask<number>(lanes);
+        const VectorizedArrayType one       = 1.;
 
         for (unsigned int c = 0; c < n_conserved_variables<dim, n_species>; ++c)
           {
@@ -557,6 +567,149 @@ namespace MeltPoolDG::CompressibleFlow
                   dealii::compare_and_apply_mask<dealii::SIMDComparison::equal>(
                     lane_mask, one, exterior_gradient[c][d], exterior_gradients[q][c][d]);
           }
+      }
+  }
+
+  template <int dim, typename number, int n_species>
+  template <typename ReadView>
+  void
+  BoundaryStateEvaluation<dim, number, n_species>::evaluate_non_reflecting_outflow(
+    const FEFaceIntegrator<dim, n_conserved_variables<dim, n_species>, number> &phi_m,
+    const MaterialPhaseData<number>                                            &material,
+    const dealii::EvaluationFlags::EvaluationFlags                              evaluation_flags)
+  {
+    AssertThrow(not(evaluation_flags & dealii::EvaluationFlags::gradients),
+                dealii::ExcMessage("The exterior gradient of the non-reflecting pressure outflow "
+                                   "is not implemented yet."));
+
+    const unsigned int degree = phi_m.get_shape_info().data[0].fe_degree;
+    Assert(phi_m.get_shape_info().data[0].nodal_at_cell_boundaries,
+           dealii::ExcMessage("The non-reflecting pressure outflow requires a basis that is nodal "
+                              "at the cell boundaries, e.g. that of FE_DGQ."));
+    Assert(degree >= 1,
+           dealii::ExcMessage(
+             "The non-reflecting pressure outflow requires a polynomial degree of at least 1."));
+    Assert(phi_m.get_shape_info().data[0].n_q_points_1d == degree + 1,
+           dealii::ExcMessage(
+             std::format("The non-reflecting pressure outflow requires N + 1 = {} quadrature "
+                         "points per direction, but the face quadrature has {}.",
+                         degree + 1,
+                         phi_m.get_shape_info().data[0].n_q_points_1d)));
+
+    // Pass 1 computes the face-averaged normal Mach number of each lane. The Mach number only needs
+    // the interior values, so the views get a zero gradient.
+    const ConservedVariablesGradientType<dim, number, n_species> zero_gradient{};
+    VectorizedArrayType                                          mach_number_integral = 0.;
+    VectorizedArrayType                                          face_area            = 0.;
+    for (const unsigned int q : phi_m.quadrature_point_indices())
+      {
+        const ConservedVariablesType<dim, number, n_species> interior_value = phi_m.get_value(q);
+        const ReadView interior(interior_value, zero_gradient, material);
+
+        mach_number_integral +=
+          phi_m.JxW(q) * (interior.velocity() * phi_m.normal_vector(q)) / interior.speed_of_sound();
+        face_area += phi_m.JxW(q);
+      }
+    const VectorizedArrayType mean_mach_number = mach_number_integral / face_area;
+
+    // Precompute some values
+    const dealii::Tensor<1, dim, VectorizedArrayType> reference_normal_derivative =
+      phi_m.normal_vector(0) * phi_m.inverse_jacobian(0);
+    const VectorizedArrayType delta =
+      2. / (static_cast<number>(degree * (degree + 1)) * reference_normal_derivative.norm());
+
+
+    const typename BoundaryConditionData<number>::NonReflectingOutflow &coefficients =
+      boundary_conditions.get_boundary_condition_data().non_reflecting_outflow;
+    const VectorizedArrayType relaxation_factor = coefficients.relaxation_coefficient *
+                                                  (1. - mean_mach_number * mean_mach_number) /
+                                                  (2. * coefficients.reference_length);
+
+    // Pass 2 computes the exterior value at every quadrature point.
+    for (const unsigned int q : phi_m.quadrature_point_indices())
+      {
+        // Read interior values and gradients at the quadrature point.
+        const ConservedVariablesType<dim, number, n_species> interior_value = phi_m.get_value(q);
+        const ConservedVariablesGradientType<dim, number, n_species> interior_gradient =
+          phi_m.get_gradient(q);
+        const ReadView interior(interior_value, interior_gradient, material);
+
+        const dealii::Tensor<1, dim, VectorizedArrayType> normal   = phi_m.normal_vector(q);
+        const VectorizedArrayType                         density  = interior.density();
+        const dealii::Tensor<1, dim, VectorizedArrayType> velocity = interior.velocity();
+        const VectorizedArrayType                         pressure = interior.pressure();
+        const VectorizedArrayType speed_of_sound                   = interior.speed_of_sound();
+        const dealii::Tensor<1, dim, dealii::Tensor<1, dim, VectorizedArrayType>>
+          velocity_gradient = interior.grad_velocity();
+        const dealii::Tensor<1, dim, VectorizedArrayType> pressure_gradient =
+          interior.grad_pressure();
+
+        // Compute normal and tangential components of the velocity and its derivatives.
+        const VectorizedArrayType                         normal_velocity = velocity * normal;
+        const dealii::Tensor<1, dim, VectorizedArrayType> tangential_velocity =
+          velocity - normal_velocity * normal;
+
+        dealii::Tensor<1, dim, VectorizedArrayType> normal_derivative_of_velocity;
+        dealii::Tensor<1, dim, VectorizedArrayType> tangential_derivative_of_velocity;
+        VectorizedArrayType                         velocity_divergence = 0.;
+        for (unsigned int d = 0; d < dim; ++d)
+          {
+            normal_derivative_of_velocity[d]     = velocity_gradient[d] * normal;
+            tangential_derivative_of_velocity[d] = velocity_gradient[d] * tangential_velocity;
+            velocity_divergence += velocity_gradient[d][d];
+          }
+
+        // Compute the interior amplitude and the transverse term
+        const VectorizedArrayType inverse_impedance = 1. / (2. * density * speed_of_sound);
+
+        const VectorizedArrayType normal_derivative_of_normal_velocity =
+          normal * normal_derivative_of_velocity;
+        const VectorizedArrayType interior_amplitude =
+          (normal_velocity - speed_of_sound) * (inverse_impedance * (pressure_gradient * normal) -
+                                                0.5 * normal_derivative_of_normal_velocity);
+
+        // Compute the prescribed exterior amplitude
+        const VectorizedArrayType transverse_term =
+          inverse_impedance * (tangential_velocity * pressure_gradient) -
+          0.5 * (normal * tangential_derivative_of_velocity) +
+          0.5 * speed_of_sound * (velocity_divergence - normal_derivative_of_normal_velocity);
+
+        const VectorizedArrayType target_pressure = boundary_conditions.get_boundary_value(
+          phi_m.boundary_id(),
+          BoundaryConditionType::subsonic_non_reflecting_pressure_outflow,
+          phi_m.quadrature_point(q),
+          0);
+        const VectorizedArrayType exterior_amplitude =
+          relaxation_factor * (pressure - target_pressure) / density -
+          coefficients.transverse_coefficient * transverse_term;
+
+        // Compute the exterior primitive variables Q^+
+        const VectorizedArrayType jump_amplitude =
+          delta * (exterior_amplitude - interior_amplitude) / (normal_velocity - speed_of_sound);
+        const VectorizedArrayType exterior_density =
+          density + jump_amplitude * density / speed_of_sound;
+        const dealii::Tensor<1, dim, VectorizedArrayType> exterior_velocity =
+          velocity - jump_amplitude * normal;
+        const VectorizedArrayType exterior_pressure =
+          pressure + jump_amplitude * density * speed_of_sound;
+
+        // Convert the exterior primitive variables to conserved variables
+        ConservedVariablesType<dim, number, n_species>         exterior_value;
+        ConservedVariablesGradientType<dim, number, n_species> exterior_gradient;
+        const typename ReadView::template rebind<typename ReadView::state_type,
+                                                 typename ReadView::gradient_type>
+          exterior(exterior_value, exterior_gradient, material);
+
+        exterior.density() = exterior_density;
+        for (unsigned int d = 0; d < dim; ++d)
+          exterior.momentum(d) = exterior_density * exterior_velocity[d];
+        if constexpr (n_species > 1)
+          for (unsigned int species = 0; species < n_species - 1; ++species)
+            exterior.partial_density(species) = exterior_density * interior.mass_fraction(species);
+        exterior.total_energy() = exterior.inner_energy_from_pressure(exterior_pressure) +
+                                  0.5 * exterior_density * (exterior_velocity * exterior_velocity);
+
+        exterior_values[q] = exterior_value;
       }
   }
 } // namespace MeltPoolDG::CompressibleFlow

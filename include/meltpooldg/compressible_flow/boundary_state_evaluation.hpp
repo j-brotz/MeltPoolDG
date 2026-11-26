@@ -87,6 +87,8 @@ namespace MeltPoolDG::CompressibleFlow
   template <int dim, typename number, int n_species>
   class BoundaryStateEvaluation
   {
+    using VectorizedArrayType = dealii::VectorizedArray<number>;
+
   public:
     /**
      * @brief Constructor. Allocates the buffers for @p n_points boundary points per batch.
@@ -110,6 +112,14 @@ namespace MeltPoolDG::CompressibleFlow
      * exterior values are requested. The boundary id, the quadrature points, the normal vectors and
      * the interior values and gradients are then read from @p phi_m. All lanes of a boundary face
      * batch lie on the same boundary.
+     *
+     * At a non-reflecting outflow boundary, the exterior state follows from the data of the whole
+     * face (spec 001). All geometric data comes from @p phi_m, i.e. its JxW values, normal vectors,
+     * quadrature points and inverse Jacobians. The tangential derivatives of the exterior values
+     * along the face are computed with the 1D collocation derivative of the face quadrature. This
+     * requires a nodal element with its nodes at the Gauss-Lobatto points, \f$N + 1\f$ quadrature
+     * points per direction and an axis-aligned rectangular or cuboid cell, which is asserted in
+     * debug mode.
      *
      * @tparam ReadView The view type built on the interior state at each boundary point, see
      * IsBoundaryStateView. The default is the view used by the compressible flow solver.
@@ -401,6 +411,31 @@ namespace MeltPoolDG::CompressibleFlow
                    const MaterialPhaseData<number>                               &material,
                    const dealii::EvaluationFlags::EvaluationFlags                 evaluation_flags,
                    const bool use_mirror_principle);
+
+    /**
+     * @brief Compute the exterior state at the quadrature points of a batch of non-reflecting
+     * outflow faces.
+     *
+     * The exterior state follows from the static-pressure outlet of the polynomial-correction NSCBC
+     * of [1], extended to multiple species. Unlike in [1], the mean Mach number \f$\overline{M}\f$
+     * is averaged over each boundary face instead of the whole boundary, so no global communication
+     * is needed.
+     *
+     * [1] Shehadi and van der Weide (2024), "A polynomial-correction Navier-Stokes characteristic
+     * boundary condition", Computer Physics Communications 303, 109194,
+     * https://doi.org/10.1016/j.cpc.2024.109194
+     *
+     * @param phi_m The evaluator of the interior side, as in evaluate().
+     * @param material The material data passed to the views.
+     * @param evaluation_flags EvaluationFlags::values or EvaluationFlags::values |
+     * EvaluationFlags::gradients.
+     */
+    template <typename ReadView>
+    void
+    evaluate_non_reflecting_outflow(
+      const FEFaceIntegrator<dim, n_conserved_variables<dim, n_species>, number> &phi_m,
+      const MaterialPhaseData<number>                                            &material,
+      const dealii::EvaluationFlags::EvaluationFlags                              evaluation_flags);
 
     /// A reference to the storage of the boundary conditions, from which the evaluator takes the
     /// boundary types and functions.
