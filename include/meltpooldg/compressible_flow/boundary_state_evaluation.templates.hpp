@@ -7,6 +7,7 @@
 #include <meltpooldg/utilities/matrix_free_util.hpp>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <format>
 #include <functional>
@@ -578,10 +579,6 @@ namespace MeltPoolDG::CompressibleFlow
     const MaterialPhaseData<number>                                            &material,
     const dealii::EvaluationFlags::EvaluationFlags                              evaluation_flags)
   {
-    AssertThrow(not(evaluation_flags & dealii::EvaluationFlags::gradients),
-                dealii::ExcMessage("The exterior gradient of the non-reflecting pressure outflow "
-                                   "is not implemented yet."));
-
     const unsigned int degree = phi_m.get_shape_info().data[0].fe_degree;
     Assert(phi_m.get_shape_info().data[0].nodal_at_cell_boundaries,
            dealii::ExcMessage("The non-reflecting pressure outflow requires a basis that is nodal "
@@ -625,7 +622,8 @@ namespace MeltPoolDG::CompressibleFlow
                                                   (1. - mean_mach_number * mean_mach_number) /
                                                   (2. * coefficients.reference_length);
 
-    // Pass 2 computes the exterior value at every quadrature point.
+    // Pass 2 computes the exterior value at every quadrature point and, if requested, the exterior
+    // gradient with the corrected normal derivative.
     for (const unsigned int q : phi_m.quadrature_point_indices())
       {
         // Read interior values and gradients at the quadrature point.
@@ -683,9 +681,14 @@ namespace MeltPoolDG::CompressibleFlow
           relaxation_factor * (pressure - target_pressure) / density -
           coefficients.transverse_coefficient * transverse_term;
 
+        // The factor alpha by which the corrected normal derivative differs from the interior one
+        // along the eigenvector r_1 of the incoming acoustic wave, and the jump Q^+ - Q^- =
+        // delta alpha r_1.
+        const VectorizedArrayType normal_derivative_correction =
+          (exterior_amplitude - interior_amplitude) / (normal_velocity - speed_of_sound);
+        const VectorizedArrayType jump_amplitude = delta * normal_derivative_correction;
+
         // Compute the exterior primitive variables Q^+
-        const VectorizedArrayType jump_amplitude =
-          delta * (exterior_amplitude - interior_amplitude) / (normal_velocity - speed_of_sound);
         const VectorizedArrayType exterior_density =
           density + jump_amplitude * density / speed_of_sound;
         const dealii::Tensor<1, dim, VectorizedArrayType> exterior_velocity =
@@ -710,6 +713,74 @@ namespace MeltPoolDG::CompressibleFlow
                                   0.5 * exterior_density * (exterior_velocity * exterior_velocity);
 
         exterior_values[q] = exterior_value;
+
+        // To compute the exterior gradient, we start from the interior gradient and correct it such
+        // that we get the desired exterior gradient. This contains of two parts: (1) the correction
+        // of the normal derivative such that the exterior amplitude is achieved, and (2) the
+        // tangential gradient which should equal the tangential gradient of U^+.
+
+        // Step (1): Apply the correction of the normal derivative to the interior gradient. The
+        // normal derivative
+        if (evaluation_flags & dealii::EvaluationFlags::gradients)
+          {
+            exterior_gradient = interior_gradient;
+
+            const VectorizedArrayType scaled_correction =
+              normal_derivative_correction * density / speed_of_sound;
+            const VectorizedArrayType total_enthalpy =
+              (interior.total_energy() + pressure) / density;
+
+            exterior.grad_density() += scaled_correction * normal;
+            for (unsigned int d = 0; d < dim; ++d)
+              exterior.grad_momentum(d) +=
+                scaled_correction * (velocity[d] - speed_of_sound * normal[d]) * normal;
+            exterior.grad_total_energy() +=
+              scaled_correction * (total_enthalpy - speed_of_sound * normal_velocity) * normal;
+            if constexpr (n_species > 1)
+              for (unsigned int species = 0; species < n_species - 1; ++species)
+                exterior.grad_partial_density(species) +=
+                  scaled_correction * interior.mass_fraction(species) * normal;
+
+            exterior_gradients[q] = exterior_gradient;
+          }
+      }
+
+    if (not(evaluation_flags & dealii::EvaluationFlags::gradients))
+      return;
+
+    // Pass 3
+    const dealii::internal::MatrixFreeFunctions::UnivariateShapeData<number> &shape_data =
+      phi_m.get_shape_info().data[0];
+    const unsigned int n_q_points_1d = shape_data.n_q_points_1d;
+
+    const std::function<unsigned int(const unsigned int)> face_dir_to_space_dir =
+      [&phi_m](const unsigned int face_dir) -> unsigned int {
+      const unsigned int normal_axis = phi_m.get_face_no() / 2;
+      return (normal_axis + 1 + face_dir) % dim;
+    };
+
+    for (const unsigned int q : phi_m.quadrature_point_indices())
+      {
+        for (unsigned int face_direction = 0; face_direction < dim - 1; ++face_direction)
+          {
+            const unsigned int stride = dealii::Utilities::pow(n_q_points_1d, face_direction);
+            const unsigned int position_of_q = (q / stride) % n_q_points_1d;
+            const unsigned int first_point   = q - position_of_q * stride;
+
+            ConservedVariablesType<dim, number, n_species> derivative_of_jump;
+            for (unsigned int i = 0; i < n_q_points_1d; ++i)
+              {
+                const unsigned int point_on_line = first_point + i * stride;
+                derivative_of_jump +=
+                  shape_data.shape_gradients_collocation[i * n_q_points_1d + position_of_q] *
+                  (exterior_values[point_on_line] - phi_m.get_value(point_on_line));
+              }
+
+            const unsigned int face_dir = face_dir_to_space_dir(face_direction);
+            for (unsigned int c = 0; c < n_conserved_variables<dim, n_species>; ++c)
+              exterior_gradients[q][c][face_dir] +=
+                phi_m.inverse_jacobian(0)[face_dir][face_direction] * derivative_of_jump[c];
+          }
       }
   }
 } // namespace MeltPoolDG::CompressibleFlow

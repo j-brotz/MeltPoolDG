@@ -3,6 +3,7 @@
 #include <deal.II/base/bounding_box.h>
 #include <deal.II/base/function.h>
 #include <deal.II/base/point.h>
+#include <deal.II/base/polynomial.h>
 #include <deal.II/base/quadrature.h>
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/tensor.h>
@@ -323,6 +324,15 @@ namespace
     /// A vector storing the exterior value computed by BoundaryStateEvaluation at each face
     /// quadrature point. The index is the index of the quadrature point.
     std::vector<ConservedVariablesType<dim, double, n_species, double>> exterior_values;
+
+    /// A vector storing the interior gradient at each face quadrature point. The index is the index
+    /// of the quadrature point. It is empty if the gradients were not evaluated.
+    std::vector<ConservedVariablesGradientType<dim, double, n_species, double>> interior_gradients;
+
+    /// A vector storing the exterior gradient computed by BoundaryStateEvaluation at each face
+    /// quadrature point. The index is the index of the quadrature point. It is empty if the
+    /// gradients were not evaluated.
+    std::vector<ConservedVariablesGradientType<dim, double, n_species, double>> exterior_gradients;
   };
 
   /**
@@ -376,13 +386,17 @@ namespace
     }
 
     /**
-     * Evaluate the exterior values with BoundaryStateEvaluation on all boundary face batches and
-     * return the data of all outlet faces, i.e. of all active lanes.
+     * Evaluate the exterior state with BoundaryStateEvaluation on all boundary face batches and
+     * return the data of all outlet faces, i.e. of all active lanes. The gradients are only
+     * evaluated and returned if @p evaluation_flags contains EvaluationFlags::gradients.
      */
     std::vector<OutletFace<dim, n_species>>
-    evaluate_outlet(const BoundaryConditions<dim, double> &boundary_conditions,
-                    const MaterialPhaseData<double>       &material) const
+    evaluate_outlet(const BoundaryConditions<dim, double>         &boundary_conditions,
+                    const MaterialPhaseData<double>               &material,
+                    const dealii::EvaluationFlags::EvaluationFlags evaluation_flags) const
     {
+      const bool with_gradients = evaluation_flags & dealii::EvaluationFlags::gradients;
+
       FEFaceIntegrator<dim, n_components, double>     phi_m(matrix_free, true);
       BoundaryStateEvaluation<dim, double, n_species> boundary_state(boundary_conditions,
                                                                      phi_m.n_q_points);
@@ -396,7 +410,7 @@ namespace
           phi_m.gather_evaluate(solution,
                                 dealii::EvaluationFlags::values |
                                   dealii::EvaluationFlags::gradients);
-          boundary_state.evaluate(phi_m, material, dealii::EvaluationFlags::values);
+          boundary_state.evaluate(phi_m, material, evaluation_flags);
 
           for (unsigned int lane = 0; lane < matrix_free.n_active_entries_per_face_batch(face);
                ++lane)
@@ -434,6 +448,22 @@ namespace
                   outlet_face.JxW.push_back(phi_m.JxW(q)[lane]);
                   outlet_face.interior_values.push_back(interior_value);
                   outlet_face.exterior_values.push_back(exterior_value);
+
+                  if (with_gradients)
+                    {
+                      ConservedVariablesGradientType<dim, double, n_species, double>
+                        interior_gradient;
+                      ConservedVariablesGradientType<dim, double, n_species, double>
+                        exterior_gradient;
+                      for (unsigned int c = 0; c < n_components; ++c)
+                        for (unsigned int d = 0; d < dim; ++d)
+                          {
+                            interior_gradient[c][d] = phi_m.get_gradient(q)[c][d][lane];
+                            exterior_gradient[c][d] = boundary_state.get_gradient(q)[c][d][lane];
+                          }
+                      outlet_face.interior_gradients.push_back(interior_gradient);
+                      outlet_face.exterior_gradients.push_back(exterior_gradient);
+                    }
                 }
 
               outlet_faces.push_back(outlet_face);
@@ -633,7 +663,9 @@ TYPED_TEST(NonReflectingOutflowTest, JumpIsIncomingAcousticWave)
     BoundaryConditionType::subsonic_non_reflecting_pressure_outflow, boundary_functions);
 
   const std::vector<OutletFace<dim, n_species>> outlet_faces =
-    discretization.evaluate_outlet(boundary_conditions, this->material);
+    discretization.evaluate_outlet(boundary_conditions,
+                                   this->material,
+                                   dealii::EvaluationFlags::values);
   ASSERT_EQ(outlet_faces.size(), 2 * dim);
 
   double largest_pressure_jump = 0.;
@@ -725,7 +757,9 @@ TYPED_TEST(NonReflectingOutflowTest, CorrectedNormalDerivative)
     BoundaryConditionType::subsonic_non_reflecting_pressure_outflow, boundary_functions);
 
   const std::vector<OutletFace<dim, n_species>> outlet_faces =
-    discretization.evaluate_outlet(boundary_conditions, this->material);
+    discretization.evaluate_outlet(boundary_conditions,
+                                   this->material,
+                                   dealii::EvaluationFlags::values);
   ASSERT_EQ(outlet_faces.size(), 2 * dim);
 
   const dealii::FE_DGQ<dim>              scalar_fe(OutletDiscretization<dim, n_species>::degree);
@@ -828,6 +862,219 @@ TYPED_TEST(NonReflectingOutflowTest, CorrectedNormalDerivative)
 
 
 /**
+ * This test checks that the normal derivative of the exterior gradient of the non-reflecting
+ * pressure outflow is the corrected one, i.e. that it differs from the interior normal derivative
+ * by alpha r_1 in conserved variables (spec 001, Method step 4).
+ * The test sets up a single axis-aligned cell with different extents in all directions and the
+ * outlet on all of its faces, such that the faces have the normals +-x, +-y and, in 3D, +-z. The
+ * interior state is PrimitiveState. The expected change of the normal derivative is alpha r_1 with
+ * alpha from the formulas of the theory note and the face-averaged normal Mach number, and with the
+ * eigenvector r_1 = rho / c (1, u - c n, H - c u_n, Y_k) of the incoming acoustic wave in conserved
+ * variables, where H is the total enthalpy.
+ * The computed changes of the normal derivative are then checked to agree with the expected ones
+ * at all face quadrature points.
+ */
+TYPED_TEST(NonReflectingOutflowTest, NormalDerivativeOfExteriorGradient)
+{
+  constexpr int          dim          = TestFixture::dim;
+  constexpr int          n_species    = TestFixture::n_species;
+  constexpr unsigned int n_components = TestFixture::n_components;
+
+  dealii::Tensor<2, dim> identity;
+  for (unsigned int d = 0; d < dim; ++d)
+    identity[d][d] = 1.;
+  const dealii::Tensor<1, dim> no_shift;
+
+  const double       extents[3] = {0.9, 0.7, 0.5};
+  dealii::Point<dim> upper_corner;
+  for (unsigned int d = 0; d < dim; ++d)
+    upper_corner[d] = extents[d];
+
+  const OutletDiscretization<dim, n_species> discretization(
+    upper_corner,
+    std::vector<unsigned int>(dim, 1),
+    TestFixture::quadrature_rule,
+    ConservedState<dim, n_species>(identity, no_shift));
+
+  const std::shared_ptr<TargetPressure<dim>> target_pressure =
+    std::make_shared<TargetPressure<dim>>(identity, no_shift);
+  std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>> boundary_functions;
+  for (unsigned int boundary_id = 0; boundary_id < 2 * dim; ++boundary_id)
+    boundary_functions[boundary_id] = target_pressure;
+  BoundaryConditions<dim, double> boundary_conditions(TestFixture::boundary_condition_data());
+  boundary_conditions.set_boundary_condition(
+    BoundaryConditionType::subsonic_non_reflecting_pressure_outflow, boundary_functions);
+
+  const std::vector<OutletFace<dim, n_species>> outlet_faces =
+    discretization.evaluate_outlet(boundary_conditions,
+                                   this->material,
+                                   dealii::EvaluationFlags::values |
+                                     dealii::EvaluationFlags::gradients);
+  ASSERT_EQ(outlet_faces.size(), 2 * dim);
+
+  for (const OutletFace<dim, n_species> &outlet_face : outlet_faces)
+    {
+      const double mean_mach_number = TestFixture::reference_mean_mach_number(outlet_face);
+
+      for (unsigned int q = 0; q < outlet_face.locations.size(); ++q)
+        {
+          SCOPED_TRACE(::testing::Message()
+                       << "face batch " << outlet_face.face_batch << ", q " << q);
+
+          const dealii::Point<dim>     &location = outlet_face.locations[q];
+          const dealii::Tensor<1, dim> &normal   = outlet_face.normals[q];
+          const double                  density  = PrimitiveState<dim>::density();
+          const dealii::Tensor<1, dim>  velocity = PrimitiveState<dim>::velocity(location);
+          const double                  pressure = PrimitiveState<dim>::pressure(location);
+          const double speed_of_sound            = PrimitiveState<dim>::speed_of_sound(location);
+          const double total_enthalpy =
+            ratio_of_specific_heats / (ratio_of_specific_heats - 1.) * pressure / density +
+            0.5 * (velocity * velocity);
+          const double correction_factor = TestFixture::reference_correction_factor(
+            location, normal, mean_mach_number, target_pressure->value(location, 0));
+
+          dealii::Tensor<1, n_components> eigenvector;
+          eigenvector[0] = density / speed_of_sound;
+          for (unsigned int d = 0; d < dim; ++d)
+            eigenvector[1 + d] =
+              density / speed_of_sound * (velocity[d] - speed_of_sound * normal[d]);
+          eigenvector[dim + 1] =
+            density / speed_of_sound * (total_enthalpy - speed_of_sound * (velocity * normal));
+          if constexpr (n_species > 1)
+            eigenvector[dim + 2] =
+              density / speed_of_sound * PrimitiveState<dim>::mass_fraction(location);
+
+          for (unsigned int c = 0; c < n_components; ++c)
+            {
+              const double derivative_change =
+                (outlet_face.exterior_gradients[q][c] - outlet_face.interior_gradients[q][c]) *
+                normal;
+              const double expected_change = correction_factor * eigenvector[c];
+              EXPECT_NEAR(derivative_change,
+                          expected_change,
+                          tolerance * std::max(1., std::abs(expected_change)))
+                << "component " << c;
+            }
+        }
+    }
+}
+
+
+
+/**
+ * This test checks that the tangential derivatives of the exterior gradient of the non-reflecting
+ * pressure outflow are those of the exterior values along the face, i.e. that the exterior gradient
+ * differs from the interior one along the face by the derivative of the interpolant of the jump
+ * U^+ - U^- (spec 001, Method step 4).
+ * The test sets up a single axis-aligned cell with different extents in all directions and the
+ * outlet on all of its faces, such that the faces have the normals +-x, +-y and, in 3D, +-z. The
+ * interior state is PrimitiveState. For every face quadrature point and every coordinate direction
+ * along the face, the test interpolates the jump at the face quadrature points on the line through
+ * the point in this direction with Lagrange polynomials and differentiates the interpolant.
+ * The computed changes of the tangential derivatives are then checked to agree with these
+ * derivatives, and the largest derivative is checked to be nonzero.
+ */
+TYPED_TEST(NonReflectingOutflowTest, TangentialDerivativeOfExteriorGradient)
+{
+  constexpr int          dim          = TestFixture::dim;
+  constexpr int          n_species    = TestFixture::n_species;
+  constexpr unsigned int n_components = TestFixture::n_components;
+
+  dealii::Tensor<2, dim> identity;
+  for (unsigned int d = 0; d < dim; ++d)
+    identity[d][d] = 1.;
+  const dealii::Tensor<1, dim> no_shift;
+
+  const double       extents[3] = {0.9, 0.7, 0.5};
+  dealii::Point<dim> upper_corner;
+  for (unsigned int d = 0; d < dim; ++d)
+    upper_corner[d] = extents[d];
+
+  const OutletDiscretization<dim, n_species> discretization(
+    upper_corner,
+    std::vector<unsigned int>(dim, 1),
+    TestFixture::quadrature_rule,
+    ConservedState<dim, n_species>(identity, no_shift));
+
+  std::map<dealii::types::boundary_id, std::shared_ptr<dealii::Function<dim>>> boundary_functions;
+  for (unsigned int boundary_id = 0; boundary_id < 2 * dim; ++boundary_id)
+    boundary_functions[boundary_id] = std::make_shared<TargetPressure<dim>>(identity, no_shift);
+  BoundaryConditions<dim, double> boundary_conditions(TestFixture::boundary_condition_data());
+  boundary_conditions.set_boundary_condition(
+    BoundaryConditionType::subsonic_non_reflecting_pressure_outflow, boundary_functions);
+
+  const std::vector<OutletFace<dim, n_species>> outlet_faces =
+    discretization.evaluate_outlet(boundary_conditions,
+                                   this->material,
+                                   dealii::EvaluationFlags::values |
+                                     dealii::EvaluationFlags::gradients);
+  ASSERT_EQ(outlet_faces.size(), 2 * dim);
+
+  double largest_derivative = 0.;
+  for (const OutletFace<dim, n_species> &outlet_face : outlet_faces)
+    {
+      const unsigned int            n_q_points = outlet_face.locations.size();
+      const dealii::Tensor<1, dim> &normal     = outlet_face.normals[0];
+
+      for (unsigned int q = 0; q < n_q_points; ++q)
+        for (unsigned int k = 0; k < dim; ++k)
+          {
+            if (std::abs(normal[k]) > 0.5)
+              continue;
+
+            SCOPED_TRACE(::testing::Message() << "face batch " << outlet_face.face_batch << ", q "
+                                              << q << ", direction " << k);
+
+            // The face quadrature points on the line through q in the direction k.
+            std::vector<unsigned int> line_points;
+            for (unsigned int p = 0; p < n_q_points; ++p)
+              {
+                bool on_line = true;
+                for (unsigned int d = 0; d < dim; ++d)
+                  if (d != k and
+                      std::abs(outlet_face.locations[p][d] - outlet_face.locations[q][d]) > 1e-12)
+                    on_line = false;
+                if (on_line)
+                  line_points.push_back(p);
+              }
+            ASSERT_EQ(line_points.size(), (OutletDiscretization<dim, n_species>::degree + 1));
+
+            std::vector<dealii::Point<1>> coordinates;
+            for (const unsigned int p : line_points)
+              coordinates.emplace_back(outlet_face.locations[p][k]);
+            const std::vector<dealii::Polynomials::Polynomial<double>> lagrange_basis =
+              dealii::Polynomials::generate_complete_Lagrange_basis(coordinates);
+
+            dealii::Tensor<1, n_components> expected_derivative;
+            for (unsigned int i = 0; i < line_points.size(); ++i)
+              {
+                std::vector<double> value_and_derivative(2);
+                lagrange_basis[i].value(outlet_face.locations[q][k], value_and_derivative);
+                for (unsigned int c = 0; c < n_components; ++c)
+                  expected_derivative[c] +=
+                    value_and_derivative[1] * (outlet_face.exterior_values[line_points[i]][c] -
+                                               outlet_face.interior_values[line_points[i]][c]);
+              }
+
+            for (unsigned int c = 0; c < n_components; ++c)
+              {
+                const double derivative_change =
+                  outlet_face.exterior_gradients[q][c][k] - outlet_face.interior_gradients[q][c][k];
+                EXPECT_NEAR(derivative_change,
+                            expected_derivative[c],
+                            tolerance * std::max(1., std::abs(expected_derivative[c])))
+                  << "component " << c;
+                largest_derivative = std::max(largest_derivative, std::abs(expected_derivative[c]));
+              }
+          }
+    }
+
+  EXPECT_GT(largest_derivative, 1e-4);
+}
+
+
+
+/**
  * This test checks that the faces of one face batch use the mean normal Mach number of their own
  * face, also if these differ between the faces (spec 001, R2).
  * The test sets up a box with several cells along each boundary and the outlet on all boundaries,
@@ -872,7 +1119,9 @@ TYPED_TEST(NonReflectingOutflowTest, FacesOfOneBatchUseTheirOwnMeanMachNumber)
     BoundaryConditionType::subsonic_non_reflecting_pressure_outflow, boundary_functions);
 
   const std::vector<OutletFace<dim, n_species>> outlet_faces =
-    discretization.evaluate_outlet(boundary_conditions, this->material);
+    discretization.evaluate_outlet(boundary_conditions,
+                                   this->material,
+                                   dealii::EvaluationFlags::values);
 
   // A map storing the mean Mach numbers of the faces of each face batch by the index of the batch.
   std::map<unsigned int, std::vector<double>> mean_mach_numbers_of_batch;
@@ -936,12 +1185,12 @@ TYPED_TEST(NonReflectingOutflowTest, FacesOfOneBatchUseTheirOwnMeanMachNumber)
 /**
  * This test checks that the non-reflecting pressure outflow treats opposite sides of the domain
  * alike, i.e. that mirroring the cell and the state at a coordinate plane mirrors the exterior
- * values.
+ * values and gradients.
  * The test sets up a single axis-aligned cell with the outlet on all of its faces twice, once with
  * PrimitiveState and once with the state and the target pressure mirrored at the plane through the
  * center of the cell normal to x_0. The mirrored cell coincides with the original one.
- * The computed exterior values of the mirrored setup are then checked to agree with the mirrored
- * exterior values of the original setup at the mirrored points.
+ * The computed exterior values and gradients of the mirrored setup are then checked to agree with
+ * the mirrored exterior values and gradients of the original setup at the mirrored points.
  */
 TYPED_TEST(NonReflectingOutflowTest, MirroredState)
 {
@@ -974,7 +1223,10 @@ TYPED_TEST(NonReflectingOutflowTest, MirroredState)
     BoundaryConditionType::subsonic_non_reflecting_pressure_outflow, boundary_functions);
 
   const std::vector<OutletFace<dim, n_species>> outlet_faces =
-    discretization.evaluate_outlet(boundary_conditions, this->material);
+    discretization.evaluate_outlet(boundary_conditions,
+                                   this->material,
+                                   dealii::EvaluationFlags::values |
+                                     dealii::EvaluationFlags::gradients);
 
   // The mirrored setup with x' = P x + b, where P reverses x_0 and b shifts the cell back onto
   // itself.
@@ -1000,7 +1252,10 @@ TYPED_TEST(NonReflectingOutflowTest, MirroredState)
     BoundaryConditionType::subsonic_non_reflecting_pressure_outflow, mirrored_boundary_functions);
 
   const std::vector<OutletFace<dim, n_species>> mirrored_outlet_faces =
-    mirrored_discretization.evaluate_outlet(mirrored_boundary_conditions, this->material);
+    mirrored_discretization.evaluate_outlet(mirrored_boundary_conditions,
+                                            this->material,
+                                            dealii::EvaluationFlags::values |
+                                              dealii::EvaluationFlags::gradients);
   ASSERT_EQ(mirrored_outlet_faces.size(), outlet_faces.size());
 
   for (const OutletFace<dim, n_species> &mirrored_face : mirrored_outlet_faces)
@@ -1039,6 +1294,28 @@ TYPED_TEST(NonReflectingOutflowTest, MirroredState)
                               expected_value[c],
                               tolerance * std::max(1., std::abs(expected_value[c])))
                     << "component " << c;
+
+                // A scalar component s'(x') = s(x) has the gradient P grad s, and the momentum
+                // m'(x') = P m(x) is additionally mirrored in its components.
+                const ConservedVariablesGradientType<dim, double, n_species, double>
+                  &original_gradient = outlet_face.exterior_gradients[p];
+                ConservedVariablesGradientType<dim, double, n_species, double> expected_gradient;
+                for (unsigned int c = 0; c < n_components; ++c)
+                  expected_gradient[c] = mirror * original_gradient[c];
+                for (unsigned int i = 0; i < dim; ++i)
+                  {
+                    dealii::Tensor<1, dim> momentum_gradient;
+                    for (unsigned int j = 0; j < dim; ++j)
+                      momentum_gradient += mirror[i][j] * (mirror * original_gradient[1 + j]);
+                    expected_gradient[1 + i] = momentum_gradient;
+                  }
+
+                for (unsigned int c = 0; c < n_components; ++c)
+                  for (unsigned int d = 0; d < dim; ++d)
+                    EXPECT_NEAR(mirrored_face.exterior_gradients[q][c][d],
+                                expected_gradient[c][d],
+                                tolerance * std::max(1., std::abs(expected_gradient[c][d])))
+                      << "gradient of component " << c << " in direction " << d;
               }
         EXPECT_TRUE(found);
       }
@@ -1048,12 +1325,14 @@ TYPED_TEST(NonReflectingOutflowTest, MirroredState)
 
 /**
  * This test checks that the non-reflecting pressure outflow treats all coordinate directions alike,
- * i.e. that permuting the coordinate axes of the cell and the state permutes the exterior values.
+ * i.e. that permuting the coordinate axes of the cell and the state permutes the exterior values
+ * and gradients. Since the permuted cell has its faces in a different order, this also checks the
+ * ordering of the tangential directions in the tangential derivatives of the exterior gradients.
  * The test sets up a single axis-aligned cell with different extents in all directions and the
  * outlet on all of its faces twice, once with PrimitiveState and once with the cell, the state and
  * the target pressure transformed by the cyclic permutation x'_i = x_{i+1} of the axes.
- * The computed exterior values of the permuted setup are then checked to agree with the permuted
- * exterior values of the original setup at the permuted points.
+ * The computed exterior values and gradients of the permuted setup are then checked to agree with
+ * the permuted exterior values and gradients of the original setup at the permuted points.
  */
 TYPED_TEST(NonReflectingOutflowTest, PermutedAxes)
 {
@@ -1086,7 +1365,10 @@ TYPED_TEST(NonReflectingOutflowTest, PermutedAxes)
     BoundaryConditionType::subsonic_non_reflecting_pressure_outflow, boundary_functions);
 
   const std::vector<OutletFace<dim, n_species>> outlet_faces =
-    discretization.evaluate_outlet(boundary_conditions, this->material);
+    discretization.evaluate_outlet(boundary_conditions,
+                                   this->material,
+                                   dealii::EvaluationFlags::values |
+                                     dealii::EvaluationFlags::gradients);
 
   // The permuted setup with x' = P x, where P maps x_{i+1} to x'_i.
   dealii::Tensor<2, dim> permutation;
@@ -1111,7 +1393,10 @@ TYPED_TEST(NonReflectingOutflowTest, PermutedAxes)
     BoundaryConditionType::subsonic_non_reflecting_pressure_outflow, permuted_boundary_functions);
 
   const std::vector<OutletFace<dim, n_species>> permuted_outlet_faces =
-    permuted_discretization.evaluate_outlet(permuted_boundary_conditions, this->material);
+    permuted_discretization.evaluate_outlet(permuted_boundary_conditions,
+                                            this->material,
+                                            dealii::EvaluationFlags::values |
+                                              dealii::EvaluationFlags::gradients);
   ASSERT_EQ(permuted_outlet_faces.size(), outlet_faces.size());
 
   for (const OutletFace<dim, n_species> &permuted_face : permuted_outlet_faces)
@@ -1151,6 +1436,29 @@ TYPED_TEST(NonReflectingOutflowTest, PermutedAxes)
                               expected_value[c],
                               tolerance * std::max(1., std::abs(expected_value[c])))
                     << "component " << c;
+
+                // A scalar component s'(x') = s(x) has the gradient P grad s, and the momentum
+                // m'(x') = P m(x) is additionally permuted in its components.
+                const ConservedVariablesGradientType<dim, double, n_species, double>
+                  &original_gradient = outlet_face.exterior_gradients[p];
+                ConservedVariablesGradientType<dim, double, n_species, double> expected_gradient;
+                for (unsigned int c = 0; c < n_components; ++c)
+                  expected_gradient[c] = permutation * original_gradient[c];
+                for (unsigned int i = 0; i < dim; ++i)
+                  {
+                    dealii::Tensor<1, dim> momentum_gradient;
+                    for (unsigned int j = 0; j < dim; ++j)
+                      momentum_gradient +=
+                        permutation[i][j] * (permutation * original_gradient[1 + j]);
+                    expected_gradient[1 + i] = momentum_gradient;
+                  }
+
+                for (unsigned int c = 0; c < n_components; ++c)
+                  for (unsigned int d = 0; d < dim; ++d)
+                    EXPECT_NEAR(permuted_face.exterior_gradients[q][c][d],
+                                expected_gradient[c][d],
+                                tolerance * std::max(1., std::abs(expected_gradient[c][d])))
+                      << "gradient of component " << c << " in direction " << d;
               }
         EXPECT_TRUE(found);
       }

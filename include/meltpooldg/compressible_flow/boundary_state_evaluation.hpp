@@ -114,12 +114,10 @@ namespace MeltPoolDG::CompressibleFlow
      * batch lie on the same boundary.
      *
      * At a non-reflecting outflow boundary, the exterior state follows from the data of the whole
-     * face (spec 001). All geometric data comes from @p phi_m, i.e. its JxW values, normal vectors,
-     * quadrature points and inverse Jacobians. The tangential derivatives of the exterior values
+     * face. All geometric data comes from @p phi_m. The tangential derivatives of the exterior values
      * along the face are computed with the 1D collocation derivative of the face quadrature. This
      * requires a nodal element with its nodes at the Gauss-Lobatto points, \f$N + 1\f$ quadrature
-     * points per direction and an axis-aligned rectangular or cuboid cell, which is asserted in
-     * debug mode.
+     * points per direction and an axis-aligned rectangular or cuboid cell.
      *
      * @tparam ReadView The view type built on the interior state at each boundary point, see
      * IsBoundaryStateView. The default is the view used by the compressible flow solver.
